@@ -1,0 +1,44 @@
+{
+	"name": "databroker",
+	"version": "0.0.2",
+	"deprecated": false,
+	"description": "Senti Data Broker service",
+	"main": "server.js",
+	"scripts": {},
+	  "repository": {
+		  "type": "git",
+		  "url": "git+https://github.com/senti-iot/senti-databroker.git"
+	  },
+	  "keywords": [
+		  "Senti.Cloud",
+		  "Senti.IoT",
+		  "Senti",
+		  "IoT",
+		  "Message Broker",
+		  "NodeJS",
+		  "Express",
+		  "Micro Service"
+	  ],
+	  "author": {
+		  "name": "Christian Broberg",
+		  "email": "apisupport@senti.cloud",
+		  "url": "https://senti.io/"
+	  },
+	  "license": "MIT",
+	  "bugs": {
+		  "url": "https://github.com/senti-iot/senti-databroker/issues"
+	  },
+	  "homepage": "https://github.com/senti-iot/senti-databroker#readme",  
+	  "dependencies": {
+		  "apisauce": "^1.0.1",
+		  "cors": "^2.8.5",
+		  "dotenv": "^6.2.0",
+		  "express": "^4.16.4",
+		  "find-config": "^1.0.0",
+		  "helmet": "^3.15.0",
+		  "moment": "^2.22.2",
+		  "mqtt": "^2.18.8",
+		  "senti-apicore": "0.0.17"
+	  }
+  }
+  
