@@ -1,2 +1,2 @@
-# senti-messagebroker
-Senti Message Broker Service
+# Senti Data Broker
+Senti Data Broker Service
