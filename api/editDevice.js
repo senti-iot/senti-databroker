@@ -4,31 +4,34 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../mysql/mysql_handler')
 
-router.post('/:version/createdt', async (req, res, next) => {
+router.post('/:version/editdevice/:id', async (req, res, next) => {
 	let apiVersion = req.params.version
+	let deviceID = req.params.id
 	let authToken = req.headers.auth
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query  ="INSERT INTO `Device_type`(type_name) VALUES ('"
-			+ data.type_name + '\')'
-			try{
-				mysqlConn.query(query, (uglyError, result) => {
-					if(uglyError) {
-						console.log('here')
-						res.status(500).json(uglyError)
-					}
-					res.status(200).json(true)
+			if (deviceID) {
+				let findDevQ = "SELECT * from `Device` where id=?"
+				let device = mysqlConn.query(findDevQ, deviceID, (err, result) => {
+					if (err) { res.status(404).json(err) }
+					return result
 				})
-				// res.status(200).json(true)
+				if (device) {
+					mysqlConn.query("UPDATE `Device` SET name = ?, type_id = ?, reg_id = ? WHERE id = ?", [data.name, data.type_id, data.reg_id, deviceID], function (err, result) {
+						if (err) {
+							console.log("error: ", err);
+							res.status(404).json(err)
+						}
+						else {
+							res.status(200).json(true);
+						}
+					});
+				}
+
+			
 			}
-			catch(e) {
-				res.status(500).json(e)
-			}
-			// res.json('API/sigfox POST Access Authenticated!')
-			// console.log('API/sigfox POST Access Authenticated!')
-			//Send the data to DataBroker
-			// dataBrokerChannel.sendMessage(`${JSON.stringify(data)}`)
+			
 		} else {
 			res.status(403).json('Unauthorized Access! 403')
 			console.log('Unauthorized Access!')
@@ -38,7 +41,7 @@ router.post('/:version/createdt', async (req, res, next) => {
 		res.send(`API/sigfox version: ${apiVersion} not supported`)
 	}
 })
-router.get('/', async (req,res, netxt)=> {
+router.get('/', async (req, res, netxt) => {
 	res.json('API/MessageBroker GET Success!')
 })
 module.exports = router

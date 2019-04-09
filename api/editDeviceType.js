@@ -13,11 +13,8 @@ router.post('/:version/createdt', async (req, res, next) => {
 			let query  ="INSERT INTO `Device_type`(type_name) VALUES ('"
 			+ data.type_name + '\')'
 			try{
-				mysqlConn.query(query, (uglyError, result) => {
-					if(uglyError) {
-						console.log('here')
-						res.status(500).json(uglyError)
-					}
+				mysqlConn.query(query, (err, result) => {
+					if(err) {res.status(500).json(err)}
 					res.status(200).json(true)
 				})
 				// res.status(200).json(true)

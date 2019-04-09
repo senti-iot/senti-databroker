@@ -16,9 +16,10 @@ const app = express()
 // const apiVersionRouter = require('./api/apiversion')
 // const templateRouter = require('./api/template')
 
+const editDevice = require('./api/editDevice')
 const createDevice = require('./api/createDevice')
 const createDT = require('./api/createDeviceType')
-const createReg = require('./api/createDeviceRegistry')
+const createReg = require('./api/createRegistry')
 const storeRouter = require('./api/store')
 const port = process.env.NODE_PORT || 3001
 
@@ -30,7 +31,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cors())
 
 app.use('/', createDT)
-app.use('/', createDevice)
+app.use('/', [createDevice, editDevice])
 app.use('/', createReg)
 // app.use('/weather', weatherRouter)
 // app.use('/holidays', holidaysRouter)
