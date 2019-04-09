@@ -10,11 +10,14 @@ router.post('/:version/createdt', async (req, res, next) => {
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			console.log(data)
-			let query  ="INSERT INTO `Device_type`(type_name) VALUES ('"+ data.type_name + '\')'
+			let query  ="INSERT INTO `Device_type`(type_name) VALUES ('"
+			+ data.type_name + '\')'
 			try{
-				mysqlConn.query(query)
-				res.status(200).json(true)
+				mysqlConn.query(query, (err, result) => {
+					if(err) {res.status(500).json(err)}
+					res.status(200).json(true)
+				})
+				// res.status(200).json(true)
 			}
 			catch(e) {
 				res.status(500).json(e)
