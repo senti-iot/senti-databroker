@@ -4,33 +4,51 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../mysql/mysql_handler')
 
-router.post('/:version/createreg', async (req, res, next) => {
+router.post('/:version/editreg/:id', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let data = req.body
+	let regId = req.params.id
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			console.log(data)
-			
-			let query  ='INSERT INTO `Registry`(`name`,`region`,`protocol`,`ca_certificate`,`org_id`) VALUES (\''
-			+ data.name + '\',\'' 
-			+ data.region + '\',\'' 
-			+ data.protocol + '\',\'' 
-			+ data.ca_certificate + '\',\'' 
-			+ data.org_id + '\');'
-			try{
-				mysqlConn.query(query, (err, result) => {
-					if(err) {res.status(500).json(err)}
-					res.status(200).json(true)
+			if (regId) {
+				let findDevQ = "SELECT * from `Registry` where id=?"
+				let registry = []
+				 mysqlConn.query(findDevQ, regId, (err, result) => {
+					console.log('RESULT',result)
+					if (err || result.length === 0) {return null }
+					return registry = result
 				})
+				console.log(registry)
+				if (registry.length !== 0) {
+					mysqlConn.query(`UPDATE \`Registry\` 
+					SET 
+						name = ?,
+						region = ?,
+						protocol = ?,
+						ca_certificate = ?,
+						org_id = ?
+					WHERE id = ?`, [
+						data.name, 
+						data.region, 
+						data.protocol, 
+						data.ca_certificate,
+						data.org_id,
+						regId], function (err, result) {
+							if (err) {
+								console.log("error: ", err);
+								res.status(404).json(err)
+							}
+							else {
+								res.status(200).json(true);
+							}
+						});
+				}
+				else {
+					console.log("error:");
+					res.status(404).json(null)
+				}
 			}
-			catch(e) {
-				res.status(500).json(e)
-			}
-			// res.json('API/sigfox POST Access Authenticated!')
-			// console.log('API/sigfox POST Access Authenticated!')
-			//Send the data to DataBroker
-			// dataBrokerChannel.sendMessage(`${JSON.stringify(data)}`)
 		} else {
 			res.status(403).json('Unauthorized Access! 403')
 			console.log('Unauthorized Access!')
@@ -40,7 +58,7 @@ router.post('/:version/createreg', async (req, res, next) => {
 		res.send(`API/sigfox version: ${apiVersion} not supported`)
 	}
 })
-router.get('/', async (req,res, netxt)=> {
+router.get('/', async (req, res, netxt) => {
 	res.json('API/MessageBroker GET Success!')
 })
 module.exports = router

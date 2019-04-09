@@ -7,20 +7,11 @@ const cors = require('cors')
 const helmet = require('helmet')
 const app = express()
 
-
-// API endpoint imports
-// const indexRouter = require('./api/index')
-// const weatherRouter = require('./api/weather')
-// const holidaysRouter = require('./api/holidays')
-// const annualRouter = require('./api/annual')
-// const apiVersionRouter = require('./api/apiversion')
-// const templateRouter = require('./api/template')
-
 const editDevice = require('./api/editDevice')
 const createDevice = require('./api/createDevice')
 const createDT = require('./api/createDeviceType')
+const editReg = require('./api/editRegistry')
 const createReg = require('./api/createRegistry')
-const storeRouter = require('./api/store')
 const port = process.env.NODE_PORT || 3001
 
 app.use(helmet())
@@ -32,7 +23,7 @@ app.use(cors())
 
 app.use('/', createDT)
 app.use('/', [createDevice, editDevice])
-app.use('/', createReg)
+app.use('/', [createReg, editReg])
 // app.use('/weather', weatherRouter)
 // app.use('/holidays', holidaysRouter)
 // app.use('/annual', annualRouter)
