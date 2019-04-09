@@ -15,6 +15,8 @@ const app = express()
 // const annualRouter = require('./api/annual')
 // const apiVersionRouter = require('./api/apiversion')
 // const templateRouter = require('./api/template')
+const createDT = require('./api/createDeviceType')
+const createReg = require('./api/createDeviceRegistry')
 const storeRouter = require('./api/store')
 const port = process.env.NODE_PORT || 3001
 
@@ -25,7 +27,8 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
 
-// app.use('/', indexRouter)
+app.use('/', createDT)
+app.use('/', createReg)
 // app.use('/weather', weatherRouter)
 // app.use('/holidays', holidaysRouter)
 // app.use('/annual', annualRouter)
