@@ -4,38 +4,53 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../mysql/mysql_handler')
 
-router.post('/:version/createdt', async (req, res, next) => {
+router.post('/:version/editdt/:id', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
+	let dtId = req.params.id
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query  ="INSERT INTO `Device_type`(type_name) VALUES ('"
-			+ data.type_name + '\')'
-			try{
-				mysqlConn.query(query, (err, result) => {
-					if(err) {res.status(500).json(err)}
-					res.status(200).json(true)
+			if (dtId) {
+				let findDevQ = "SELECT * from `Device_type` where type_id=?"
+				// let registry = []
+				console.log(dtId)
+				mysqlConn.query(findDevQ, dtId, (err, result) => {
+					if (err) { return null }
+					if (result.length !== 0) {
+						mysqlConn.query(`UPDATE \`Device_type\` 
+						SET 
+							type_name = ?
+						WHERE type_id = ?`, [
+								data.type_name,
+								dtId], function (err, result) {
+									if (err) {
+										console.log("error: ", err);
+										res.status(404).json(err)
+									}
+									else {
+										res.status(200).json(true);
+									}
+								});
+					}
+					else {
+						console.log("error");
+						res.status(404).json(null)
+					}
 				})
-				// res.status(200).json(true)
+				
 			}
-			catch(e) {
-				res.status(500).json(e)
-			}
-			// res.json('API/sigfox POST Access Authenticated!')
-			// console.log('API/sigfox POST Access Authenticated!')
-			//Send the data to DataBroker
-			// dataBrokerChannel.sendMessage(`${JSON.stringify(data)}`)
 		} else {
 			res.status(403).json('Unauthorized Access! 403')
 			console.log('Unauthorized Access!')
 		}
-	} else {
+	}
+	else {
 		console.log(`API/sigfox version: ${apiVersion} not supported`)
 		res.send(`API/sigfox version: ${apiVersion} not supported`)
 	}
 })
-router.get('/', async (req,res, netxt)=> {
+router.get('/', async (req, res, netxt) => {
 	res.json('API/MessageBroker GET Success!')
 })
 module.exports = router

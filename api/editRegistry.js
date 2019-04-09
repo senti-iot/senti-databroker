@@ -14,40 +14,38 @@ router.post('/:version/editreg/:id', async (req, res, next) => {
 			if (regId) {
 				let findDevQ = "SELECT * from `Registry` where id=?"
 				let registry = []
-				 mysqlConn.query(findDevQ, regId, (err, result) => {
-					console.log('RESULT',result)
-					if (err || result.length === 0) {return null }
-					return registry = result
+				mysqlConn.query(findDevQ, regId, (err, result) => {
+					if (err || result.length === 0) { return null }
+					if (result.length !== 0) {
+						mysqlConn.query(`UPDATE \`Registry\` 
+						SET 
+							name = ?,
+							region = ?,
+							protocol = ?,
+							ca_certificate = ?,
+							org_id = ?
+						WHERE id = ?`, [
+								data.name,
+								data.region,
+								data.protocol,
+								data.ca_certificate,
+								data.org_id,
+								regId], function (err, result) {
+									if (err) {
+										console.log("error: ", err);
+										res.status(404).json(err)
+									}
+									else {
+										res.status(200).json(true);
+									}
+								});
+					}
+					else {
+						console.log("error:");
+						res.status(404).json(null)
+					}
 				})
-				console.log(registry)
-				if (registry.length !== 0) {
-					mysqlConn.query(`UPDATE \`Registry\` 
-					SET 
-						name = ?,
-						region = ?,
-						protocol = ?,
-						ca_certificate = ?,
-						org_id = ?
-					WHERE id = ?`, [
-						data.name, 
-						data.region, 
-						data.protocol, 
-						data.ca_certificate,
-						data.org_id,
-						regId], function (err, result) {
-							if (err) {
-								console.log("error: ", err);
-								res.status(404).json(err)
-							}
-							else {
-								res.status(200).json(true);
-							}
-						});
-				}
-				else {
-					console.log("error:");
-					res.status(404).json(null)
-				}
+
 			}
 		} else {
 			res.status(403).json('Unauthorized Access! 403')

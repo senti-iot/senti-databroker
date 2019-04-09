@@ -9,9 +9,10 @@ const app = express()
 
 const editDevice = require('./api/editDevice')
 const createDevice = require('./api/createDevice')
-const createDT = require('./api/createDeviceType')
 const editReg = require('./api/editRegistry')
 const createReg = require('./api/createRegistry')
+const editDT = require('./api/editDeviceType')
+const createDT = require('./api/createDeviceType')
 const port = process.env.NODE_PORT || 3001
 
 app.use(helmet())
@@ -21,7 +22,7 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
 
-app.use('/', createDT)
+app.use('/', [createDT,editDT])
 app.use('/', [createDevice, editDevice])
 app.use('/', [createReg, editReg])
 // app.use('/weather', weatherRouter)
