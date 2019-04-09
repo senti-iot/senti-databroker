@@ -13,25 +13,21 @@ router.post('/:version/editdevice/:id', async (req, res, next) => {
 		if (authenticate(authToken)) {
 			if (deviceID) {
 				let findDevQ = "SELECT * from `Device` where id=?"
-				let device = mysqlConn.query(findDevQ, deviceID, (err, result) => {
+				mysqlConn.query(findDevQ, deviceID, (err, result) => {
 					if (err) { res.status(404).json(err) }
-					return result
+					if (result.length !== 0) {
+						mysqlConn.query("UPDATE `Device` SET name = ?, type_id = ?, reg_id = ? WHERE id = ?", [data.name, data.type_id, data.reg_id, deviceID], function (err, result) {
+							if (err) {
+								console.log("error: ", err);
+								res.status(404).json(err)
+							}
+							else {
+								res.status(200).json(true);
+							}
+						});
+					}
 				})
-				if (device) {
-					mysqlConn.query("UPDATE `Device` SET name = ?, type_id = ?, reg_id = ? WHERE id = ?", [data.name, data.type_id, data.reg_id, deviceID], function (err, result) {
-						if (err) {
-							console.log("error: ", err);
-							res.status(404).json(err)
-						}
-						else {
-							res.status(200).json(true);
-						}
-					});
-				}
-
-			
 			}
-			
 		} else {
 			res.status(403).json('Unauthorized Access! 403')
 			console.log('Unauthorized Access!')
