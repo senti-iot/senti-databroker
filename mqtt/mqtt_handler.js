@@ -4,14 +4,14 @@ class MqttHandler {
   constructor(topic) {
     this.mqttClient = null;
     this.host = 'mqtt://hive.senti.cloud';
-    this.username = 'YOUR_USER'; // mqtt credentials if these are needed to connect
-	this.password = 'YOUR_PASSWORD';
-	this.topic = topic
+    // this.username = 'YOUR_USER'; // mqtt credentials if these are needed to connect
+	// this.password = 'YOUR_PASSWORD';
+	this.topic = 'v1/+/location/+/registries/+/devices/+/publish'
   }
   init() {}
   connect() {
     // Connect mqtt with credentials (in case of needed, otherwise we can omit 2nd param)
-    this.mqttClient = mqtt.connect(this.host, { username: this.username, password: this.password });
+    this.mqttClient = mqtt.connect(this.host/*,  { username: this.username, password: this.password } */);
 
     // Mqtt error calback
     this.mqttClient.on('error', (err) => {
