@@ -6,17 +6,22 @@ class StoreMqttHandler extends MqttHandler {
 		this.mqttClient.on('message', (topic, message) => {
 			let arr = topic.split('/')
 			console.log(arr)
-			this.storeData(message.toString(), arr[arr.length-1])
+			console.log(message.toString())
+			this.storeData(message.toString(), arr[arr.length - 2])
 		})
 	}
 	storeData(data, deviceID) {
-		let pData = JSON.parse(data)
-		console.log(deviceID)
-		// console.log(pData.data)
+		try {
 
-		let query  ="INSERT INTO `Device_data`(data,device_name) VALUES ('"+ JSON.stringify(pData.data) + '\',\'' + pData.deviceID + "')"
-		console.log(query)
-		mysqlConn.query(query)
+			let pData = JSON.parse(data)
+			let query = "INSERT INTO `Device_data`(data,device_name) VALUES ('" + JSON.stringify(pData.data) + '\',\'' + deviceID + "')"
+			console.log(query)
+			mysqlConn.query(query)
+		}
+		catch (e) {
+			console.log("ERROR:", e.message)
+		}
+		// console.log(pData.data)
 	}
 
 }
