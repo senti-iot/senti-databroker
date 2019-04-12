@@ -16,7 +16,7 @@ class StoreMqttHandler extends MqttHandler {
 			let pData = JSON.parse(data)
 			let query = `INSERT INTO Device_data
 			(data, topic, created, device_id)
-			SELECT '${pData}', '', NOW(),Device.id as device_id from Registry
+			SELECT '${JSON.stringify(pData)}', '', NOW(),Device.id as device_id from Registry
 			INNER JOIN Device ON Registry.id = Device.reg_id
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
 			where uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.name='${regName}'
