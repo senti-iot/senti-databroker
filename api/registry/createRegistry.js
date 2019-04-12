@@ -2,9 +2,9 @@ const express = require('express')
 const router = express.Router()
 const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
-var mysqlConn = require('../mysql/mysql_handler')
+var mysqlConn = require('../../mysql/mysql_handler')
 
-router.post('/:version/createdevice', async (req, res, next) => {
+router.put('/:version/registry', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let data = req.body
@@ -12,10 +12,12 @@ router.post('/:version/createdevice', async (req, res, next) => {
 		if (authenticate(authToken)) {
 			console.log(data)
 			
-			let query  ='INSERT INTO `Device`(`name`,`type_id`,`reg_id`) VALUES (\''
+			let query  ='INSERT INTO `Registry`(`name`,`region`,`protocol`,`ca_certificate`,`org_id`) VALUES (\''
 			+ data.name + '\',\'' 
-			+ data.type_id + '\',\'' 
-			+ data.reg_id + '\');'
+			+ data.region + '\',\'' 
+			+ data.protocol + '\',\'' 
+			+ data.ca_certificate + '\',\'' 
+			+ data.org_id + '\');'
 			try{
 				mysqlConn.query(query, (err, result) => {
 					if(err) {res.status(500).json(err)}

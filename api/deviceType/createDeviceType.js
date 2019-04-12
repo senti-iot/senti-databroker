@@ -2,27 +2,25 @@ const express = require('express')
 const router = express.Router()
 const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
-var mysqlConn = require('../mysql/mysql_handler')
+var mysqlConn = require('../../mysql/mysql_handler')
 
-router.post('/:version/createreg', async (req, res, next) => {
+router.put('/:version/devicetype', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			console.log(data)
-			
-			let query  ='INSERT INTO `Registry`(`name`,`region`,`protocol`,`ca_certificate`,`org_id`) VALUES (\''
-			+ data.name + '\',\'' 
-			+ data.region + '\',\'' 
-			+ data.protocol + '\',\'' 
-			+ data.ca_certificate + '\',\'' 
-			+ data.org_id + '\');'
+			let query  ="INSERT INTO `Device_type`(type_name) VALUES ('"
+			+ data.type_name + '\')'
 			try{
-				mysqlConn.query(query, (err, result) => {
-					if(err) {res.status(500).json(err)}
+				mysqlConn.query(query, (uglyError, result) => {
+					if(uglyError) {
+						console.log('here')
+						res.status(500).json(uglyError)
+					}
 					res.status(200).json(true)
 				})
+				// res.status(200).json(true)
 			}
 			catch(e) {
 				res.status(500).json(e)

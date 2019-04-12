@@ -2,9 +2,9 @@ const express = require('express')
 const router = express.Router()
 const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
-var mysqlConn = require('../mysql/mysql_handler')
+var mysqlConn = require('../../mysql/mysql_handler')
 
-router.post('/:version/editdevice/:id', async (req, res, next) => {
+router.post('/:version/device/:id', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let deviceID = req.params.id
 	let authToken = req.headers.auth

@@ -6,13 +6,13 @@ class MqttHandler {
     this.host = 'mqtt://hive.senti.cloud';
     // this.username = 'YOUR_USER'; // mqtt credentials if these are needed to connect
 	// this.password = 'YOUR_PASSWORD';
-	this.topic = 'v1/+/location/+/registries/+/devices/+/publish'
+	this.topic = ''
   }
   init() {}
   connect() {
     // Connect mqtt with credentials (in case of needed, otherwise we can omit 2nd param)
     this.mqttClient = mqtt.connect(this.host/*,  { username: this.username, password: this.password } */);
-
+	this.init()
     // Mqtt error calback
     this.mqttClient.on('error', (err) => {
       console.log(err);
@@ -25,7 +25,7 @@ class MqttHandler {
     });
 
     // mqtt subscriptions
-	this.mqttClient.subscribe(this.topic, {qos: 0});
+	this.mqttClient.subscribe(this.topic, {qos: 1});
 	console.log(this.topic)
 
     // When a message arrives, console.log it
@@ -33,10 +33,9 @@ class MqttHandler {
       console.log(message);
     });
 
-    this.mqttClient.on('close', () => {
-      console.log(`mqtt client disconnected`);
+    this.mqttClient.on('close', (err) => {
+      console.log(`mqtt client disconnected`, err);
 	});
-	this.init()
   }
 
   // Sends a mqtt message to topic: mytopic

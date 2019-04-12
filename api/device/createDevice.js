@@ -2,25 +2,25 @@ const express = require('express')
 const router = express.Router()
 const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
-var mysqlConn = require('../mysql/mysql_handler')
+var mysqlConn = require('../../mysql/mysql_handler')
 
-router.post('/:version/createdt', async (req, res, next) => {
+router.put('/:version/device', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query  ="INSERT INTO `Device_type`(type_name) VALUES ('"
-			+ data.type_name + '\')'
+			console.log(data)
+			
+			let query  ='INSERT INTO `Device`(`name`,`type_id`,`reg_id`) VALUES (\''
+			+ data.name + '\',\'' 
+			+ data.type_id + '\',\'' 
+			+ data.reg_id + '\');'
 			try{
-				mysqlConn.query(query, (uglyError, result) => {
-					if(uglyError) {
-						console.log('here')
-						res.status(500).json(uglyError)
-					}
+				mysqlConn.query(query, (err, result) => {
+					if(err) {res.status(500).json(err)}
 					res.status(200).json(true)
 				})
-				// res.status(200).json(true)
 			}
 			catch(e) {
 				res.status(500).json(e)
@@ -38,7 +38,7 @@ router.post('/:version/createdt', async (req, res, next) => {
 		res.send(`API/sigfox version: ${apiVersion} not supported`)
 	}
 })
-router.get('/', async (req,res, netxt)=> {
-	res.json('API/MessageBroker GET Success!')
-})
+// router.get('/', async (req,res, netxt)=> {
+// 	res.json('API/MessageBroker GET Success!')
+// })
 module.exports = router
