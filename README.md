@@ -1,2 +1,2 @@
 # Senti Data Broker
-Senti Data Broker Service
+Senti Data Broker Micro Service
