@@ -32,6 +32,7 @@ class StoreMqttHandler extends MqttHandler {
 				lastId = res.insertId;
 			})
 			let [device, fields] = await mysqlConn.query(deviceQ)
+			console.log(device)
 			if (device[0].normalize === 1) {
 				let normalized = await engineAPI.post('/', { ...JSON.parse(data), flag: device[0].normalize }).then(rs => { console.log(rs.status); return rs.data })
 				// console.log(normalized)
