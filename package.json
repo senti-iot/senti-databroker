@@ -30,7 +30,7 @@
 	},
 	"homepage": "https://github.com/senti-iot/senti-databroker#readme",
 	"dependencies": {
-		"apisauce": "^1.0.1",
+		"apisauce": "^1.0.2",
 		"cors": "^2.8.5",
 		"dotenv": "^6.2.0",
 		"express": "^4.16.4",
