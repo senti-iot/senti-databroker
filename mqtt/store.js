@@ -1,6 +1,8 @@
 var MqttHandler = require('./mqtt_handler.js')
 var mysqlConn = require('../mysql/mysql_handler')
 const engineAPI = require('../api/engine/engine')
+const logger = require('../server').logger
+
 class StoreMqttHandler extends MqttHandler {
 	init() {
 		this.topic = 'v1/+/location/+/registries/+/devices/+/publish'
@@ -9,6 +11,8 @@ class StoreMqttHandler extends MqttHandler {
 			// console.log(arr)
 			// console.log(message.toString())
 			this.storeData(message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] })
+			// logger.info({ MIX: { IN: true } })
+			logger.info("Storing Data", message.toString())
 		})
 	}
 	async storeData(data, { deviceName, regName, customerID }) {
@@ -28,28 +32,37 @@ class StoreMqttHandler extends MqttHandler {
 			where uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.name='${regName}'
 			`
 			let lastId = null
-			await mysqlConn.query(query).then(([res, fi])=> {
+			await mysqlConn.query(query).then(([res, fi]) => {
 				lastId = res.insertId;
 			})
 			let [device, fields] = await mysqlConn.query(deviceQ)
-			console.log(device)
-			if (device[0].normalize === 1) {
-				let normalized = await engineAPI.post('/', { ...JSON.parse(data), flag: device[0].normalize }).then(rs => { console.log(rs.status); return rs.data })
-				// console.log(normalized)
-				let normalizedQ = `INSERT INTO Device_data_clean
+
+			if (device.length > 0) {
+
+				if (device[0].normalize === 1) {
+					let normalized = await engineAPI.post('/', { ...JSON.parse(data), flag: device[0].normalize }).then(rs => { console.log(rs.status); return rs.data })
+					// console.log(normalized)
+					let normalizedQ = `INSERT INTO Device_data_clean
 				(data, created, device_id, device_data_id)
 				SELECT '${normalized}', NOW(),Device.id as device_id, ${lastId} from Registry
 				INNER JOIN Device ON Registry.id = Device.reg_id
 				INNER JOIN Customer ON Customer.id = Registry.customer_id
 				where uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.name='${regName}'
 				`
-				await mysqlConn.query(normalizedQ).then().catch(e=> {
-					console.log(e)
-				})
+					await mysqlConn.query(normalizedQ).then().catch(e => {
+						console.log(e)
+					})
+				}
+				return true
+			}
+			else {
+				return false
+				// res.status('404').json({'Error':'Device not found'});
 			}
 		}
 		catch (e) {
 			console.log("ERROR:", e.message)
+			return false
 		}
 		// console.log(pData.data)
 	}

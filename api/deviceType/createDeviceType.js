@@ -15,7 +15,6 @@ router.put('/:version/devicetype', async (req, res, next) => {
 			try{
 				mysqlConn.query(query, (uglyError, result) => {
 					if(uglyError) {
-						console.log('here')
 						res.status(500).json(uglyError)
 					}
 					res.status(200).json(true)

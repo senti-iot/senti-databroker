@@ -1,7 +1,7 @@
 const mqtt = require('mqtt');
 
 class MqttHandler {
-  constructor(topic) {
+  constructor() {
     this.mqttClient = null;
     this.host = 'mqtt://hive.senti.cloud';
     // this.username = 'YOUR_USER'; // mqtt credentials if these are needed to connect

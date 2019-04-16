@@ -13,8 +13,8 @@ router.get('/:version/:customerID/location/:location/registries/:registryName/de
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			if (deviceName && registryName) {
-				let regQ = "SELECT * from `Registry` where name=? && isDeleted = 0"
-				let devQ = "SELECT * from `Device` where reg_name=? && isDeleted = 0"
+				let regQ = "SELECT * from `Registry` where name=?"
+				let devQ = "SELECT * from `Device` where reg_name=?"
 				let devDataQ = "SELECT * from `Device_data` where device_name=? && reg_name=?"
 				let registriy = null
 				// console.log(devDataQ, deviceName, registryName)
