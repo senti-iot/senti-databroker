@@ -9,17 +9,14 @@ router.put('/:version/device', async (req, res, next) => {
 	let authToken = req.headers.auth
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
-		if (authenticate(authToken)) {
-			console.log(data)
-			
-			let query  ='INSERT INTO `Device`(`name`,`type_id`,`reg_id`) VALUES (\''
-			+ data.name + '\',\'' 
-			+ data.type_id + '\',\'' 
-			+ data.reg_id + '\');'
+		if (authenticate(authToken)) {			
+			let query  ='INSERT INTO `Device`(name, type_id, reg_id, `normalize`, description, lat, lng, address, locType, available, communication, tags, logging) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)'
 			try{
-				mysqlConn.query(query, (err, result) => {
-					if(err) {res.status(500).json(err)}
+				let arr = [data.name,data.type_id, data.reg_id, data.normalize, data.description, data.lat, data.long, data.address, data.locType, data.available, data.communication, data.tags.join(','), data.logging]
+				mysqlConn.query(query, arr).then(res => {
 					res.status(200).json(true)
+				}).catch(err => {
+					if(err) {res.status(500).json(err)}
 				})
 			}
 			catch(e) {

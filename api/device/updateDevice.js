@@ -4,6 +4,16 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
+let update_set = (obj) => Object.keys(obj).map(value => {
+	if(typeof obj[value] === 'string'){
+		return  `${value} = '${obj[value]}'` 
+	}
+	if(typeof obj[value] === 'object') {
+		return `${value} = '${obj[value].join(',')}'`
+	}
+	return `${value}  = ${obj[value]}`;
+});
+
 router.post('/:version/device/:id', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let deviceID = req.params.id
@@ -13,19 +23,29 @@ router.post('/:version/device/:id', async (req, res, next) => {
 		if (authenticate(authToken)) {
 			if (deviceID) {
 				let findDevQ = "SELECT * from `Device` where id=?"
-				mysqlConn.query(findDevQ, deviceID, (err, result) => {
-					if (err) { res.status(404).json(err) }
+				mysqlConn.query(findDevQ, deviceID).then(result => {
+
 					if (result.length !== 0) {
-						mysqlConn.query("UPDATE `Device` SET name = ?, type_id = ?, reg_id = ? WHERE id = ?", [data.name, data.type_id, data.reg_id, deviceID], function (err, result) {
-							if (err) {
-								console.log("error: ", err);
-								res.status(404).json(err)
-							}
-							else {
-								res.status(200).json(true);
-							}
-						});
+						let query = `UPDATE Device 
+						SET 
+						${update_set(data).join(",\n")}
+						WHERE id = ${deviceID}
+						`
+						console.log(query)
+						// let arr = [data.name,data.type_id, data.reg_id, data.normalize, data.description, data.lat, data.long, data.address, data.locType, data.available, data.communication, data.tags.join(','), data.logging]
+						mysqlConn.query(query).then((result) => {
+							// else {
+							res.status(200).send(deviceID);
+							// }
+						}).catch(err => {
+							// if (err) {
+							console.log("error: ", err);
+							res.status(404).json(err)
+							// }
+						})
 					}
+				}).catch(err => {
+					if (err) { res.status(404).json(err) }
 				})
 			}
 		} else {
