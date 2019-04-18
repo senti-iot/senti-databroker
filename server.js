@@ -26,6 +26,7 @@ const updateDevice = require('./api/device/updateDevice')
 const createDevice = require('./api/device/createDevice')
 const updateReg = require('./api/registry/updateRegistry')
 const createReg = require('./api/registry/createRegistry')
+const getRegs = require('./api/registry/getRegistries')
 const updateDT = require('./api/deviceType/updateDeviceType')
 const createDT = require('./api/deviceType/createDeviceType')
 const getDeviceData = require('./api/deviceData/getDeviceData')
@@ -41,7 +42,7 @@ app.use(cors())
 
 app.use('/', [createDT, updateDT])
 app.use('/', [createDevice, updateDevice])
-app.use('/', [createReg, updateReg])
+app.use('/', [getRegs,createReg, updateReg])
 app.use('/', [getDeviceData])
 
 const startAPIServer = () => {
