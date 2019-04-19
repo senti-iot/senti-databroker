@@ -4,16 +4,14 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-router.get('/:version/devicedata/:deviceID', async (req, res, next) => {
+router.get('/:version/:customerID/deviceType/:id', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let customerID = req.params.customerID
-	let deviceID = req.params.deviceID
+	let deviceTypeID = req.params.id
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT id, \`data\`, topic, created, device_id
-			FROM sentidatastorage3.Device_data;			
-			WHERE and Device.id=${deviceID}`
+			let query = `SELECT * from Device_type where customer_id=${customerID} and type_id=${deviceTypeID}`
 			await mysqlConn.query(query).then(rs => {
 					res.status(200).json(rs[0])
 				}).catch(err => {
