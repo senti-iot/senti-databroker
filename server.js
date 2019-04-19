@@ -22,14 +22,31 @@ const expressPino = require('express-pino-logger')({
 // logger2.debug("TEST")
 // logger2.error({ MIX: { IN: true } })
 
+//#region Device
+const getDevice = require('./api/device/getDevice')
+const getDevices = require('./api/device/getDevices')
 const updateDevice = require('./api/device/updateDevice')
 const createDevice = require('./api/device/createDevice')
-const updateReg = require('./api/registry/updateRegistry')
+//#endregion
+
+//#region Registries
+const getRegistries = require('./api/registry/getRegistries')
+const getRegistryDevices = require('./api/registry/getRegistryDevices')
+const getRegistry = require('./api/registry/getRegistry')
 const createReg = require('./api/registry/createRegistry')
-const getRegs = require('./api/registry/getRegistries')
+const updateReg = require('./api/registry/updateRegistry')
+//#endregion
+
+//#region Device Types
+const getDT = require('./api/deviceType/getDeviceType')
+const getDTs = require('./api/deviceType/getDeviceTypes')
 const updateDT = require('./api/deviceType/updateDeviceType')
 const createDT = require('./api/deviceType/createDeviceType')
+//#endregion
+
+//#region Device Data
 const getDeviceData = require('./api/deviceData/getDeviceData')
+//#endregion
 
 const port = process.env.NODE_PORT
 
@@ -40,9 +57,9 @@ app.use(expressPino)
 
 app.use(cors())
 
-app.use('/', [createDT, updateDT])
-app.use('/', [createDevice, updateDevice])
-app.use('/', [getRegs,createReg, updateReg])
+app.use('/', [getDT, getDTs, createDT, updateDT])
+app.use('/', [getDevice, getDevices, createDevice, updateDevice])
+app.use('/', [getRegistry, getRegistryDevices, getRegistries,createReg, updateReg])
 app.use('/', [getDeviceData])
 
 const startAPIServer = () => {
