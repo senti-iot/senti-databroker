@@ -13,7 +13,7 @@ router.get('/:version/devicedata/:deviceID', async (req, res, next) => {
 		if (authenticate(authToken)) {
 			let query = `SELECT id, \`data\`, topic, created, device_id
 			FROM sentidatastorage3.Device_data;			
-			WHERE and Device.id=${deviceID}`
+			WHER Device.id=${deviceID}`
 			await mysqlConn.query(query).then(rs => {
 					res.status(200).json(rs[0])
 				}).catch(err => {

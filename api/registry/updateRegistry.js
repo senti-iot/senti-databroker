@@ -14,35 +14,33 @@ router.post('/:version/registry/:id', async (req, res, next) => {
 			if (regId) {
 				let findDevQ = "SELECT * from `Registry` where id=?"
 				let registry = []
-				mysqlConn.query(findDevQ, regId, (err, result) => {
-					if (err || result.length === 0) { return null }
-					if (result.length !== 0) {
-						mysqlConn.query(`UPDATE \`Registry\` 
+				await mysqlConn.query(findDevQ, regId).then(async result => {
+					if (result[0].length === 0) {
+						return res.status(404).json(err)
+					}
+					if (result[0].length !== 0) {
+						let query = `UPDATE \`Registry\` 
 						SET 
 							name = ?,
 							region = ?,
 							protocol = ?,
 							ca_certificate = ?,
-							org_id = ?
-						WHERE id = ?`, [
-								data.name,
-								data.region,
-								data.protocol,
-								data.ca_certificate,
-								data.org_id,
-								regId], function (err, result) {
-									if (err) {
-										console.log("error: ", err);
-										res.status(404).json(err)
-									}
-									else {
-										res.status(200).json(true);
-									}
-								});
+							customer_id = ?
+						WHERE id = ?`
+						await mysqlConn.query(query, [data.name, data.region, data.protocol, data.ca_certificate, data.customer_id, regId])
+							.then((result) => {
+								res.status(200).json(true)
+							}).catch(err => {
+								if (err) {
+									console.log("error: ", err);
+									res.status(404).json(err)
+								}
+							})
 					}
-					else {
-						console.log("error:");
-						res.status(404).json(null)
+				}).catch(err => {
+					if (err) {
+						console.log("error: ", err);
+						res.status(404).json(err)
 					}
 				})
 

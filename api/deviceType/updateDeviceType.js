@@ -15,30 +15,33 @@ router.post('/:version/devicetype/:id', async (req, res, next) => {
 				let findDevQ = "SELECT * from `Device_type` where type_id=?"
 				// let registry = []
 				console.log(dtId)
-				mysqlConn.query(findDevQ, dtId, (err, result) => {
-					if (err) { return null }
-					if (result.length !== 0) {
-						mysqlConn.query(`UPDATE \`Device_type\` 
+				await mysqlConn.query(findDevQ, dtId).then((result) => {
+					if (result[0].length !== 0) {
+						let query = `UPDATE \`Device_type\` 
 						SET 
-							type_name = ?
-						WHERE type_id = ?`, [
-								data.type_name,
-								dtId], function (err, result) {
-									if (err) {
-										console.log("error: ", err);
-										res.status(404).json(err)
-									}
-									else {
-										res.status(200).json(true);
-									}
-								});
+							type_name = ?,
+							structure = ?,
+							customer_id = ?
+						WHERE type_id = ?`
+						let values = [data.type_name, JSON.stringify(data.structure), data.customer_id, dtId]
+						mysqlConn.query(query, values)
+							.then((result) => {
+								res.status(200).json(true);
+							})
+							.catch(err => {
+								console.log("error: ", err);
+								res.status(404).json(err)
+							})
 					}
 					else {
 						console.log("error");
 						res.status(404).json(null)
 					}
+				}).catch(err => {
+					console.log("error: ", err);
+					res.status(404).json(err)
 				})
-				
+
 			}
 		} else {
 			res.status(403).json('Unauthorized Access! 403')

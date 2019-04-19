@@ -10,24 +10,15 @@ router.put('/:version/devicetype', async (req, res, next) => {
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query  ="INSERT INTO `Device_type`(type_name) VALUES ('"
-			+ data.type_name + '\')'
-			try{
-				mysqlConn.query(query, (uglyError, result) => {
-					if(uglyError) {
-						res.status(500).json(uglyError)
-					}
-					res.status(200).json(true)
-				})
-				// res.status(200).json(true)
-			}
-			catch(e) {
-				res.status(500).json(e)
-			}
-			// res.json('API/sigfox POST Access Authenticated!')
-			// console.log('API/sigfox POST Access Authenticated!')
-			//Send the data to DataBroker
-			// dataBrokerChannel.sendMessage(`${JSON.stringify(data)}`)
+			let query = "INSERT INTO `Device_type`(type_name, `structure`, customer_id) VALUES (?,?)"
+			let values = [data.type_name, JSON.stringify(data.structure), data.customer_id,]
+			// try{
+			await mysqlConn.query(query, values).then(result => {
+
+				res.status(200).json(true)
+			}).catch(err => {
+				res.status(500).json(err)
+			})
 		} else {
 			res.status(403).json('Unauthorized Access! 403')
 			console.log('Unauthorized Access!')
@@ -37,7 +28,7 @@ router.put('/:version/devicetype', async (req, res, next) => {
 		res.send(`API/sigfox version: ${apiVersion} not supported`)
 	}
 })
-router.get('/', async (req,res, netxt)=> {
+router.get('/', async (req, res, netxt) => {
 	res.json('API/MessageBroker GET Success!')
 })
 module.exports = router

@@ -11,22 +11,20 @@ router.put('/:version/registry', async (req, res, next) => {
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			console.log(data)
-			
-			let query  ='INSERT INTO `Registry`(`name`,`region`,`protocol`,`ca_certificate`,`org_id`) VALUES (\''
-			+ data.name + '\',\'' 
-			+ data.region + '\',\'' 
-			+ data.protocol + '\',\'' 
-			+ data.ca_certificate + '\',\'' 
-			+ data.org_id + '\');'
-			try{
-				mysqlConn.query(query, (err, result) => {
-					if(err) {res.status(500).json(err)}
-					res.status(200).json(true)
-				})
-			}
-			catch(e) {
-				res.status(500).json(e)
-			}
+
+			let query = 'INSERT INTO `Registry`(`name`,`region`,`protocol`,`ca_certificate`,`customer_id`, `created`) VALUES (\''
+				+ data.name + '\',\''
+				+ data.region + '\',\''
+				+ data.protocol + '\',\''
+				+ data.ca_certificate + '\',\''
+				+ data.customer_id + '\','
+				+ 'NOW()' + ');'
+			await mysqlConn.query(query).then((result) => {
+				res.status(200).json(true)
+			}).catch(err => {
+				res.status(500).json(err)
+			})
+
 			// res.json('API/sigfox POST Access Authenticated!')
 			// console.log('API/sigfox POST Access Authenticated!')
 			//Send the data to DataBroker
@@ -40,7 +38,7 @@ router.put('/:version/registry', async (req, res, next) => {
 		res.send(`API/sigfox version: ${apiVersion} not supported`)
 	}
 })
-router.get('/', async (req,res, netxt)=> {
+router.get('/', async (req, res, netxt) => {
 	res.json('API/MessageBroker GET Success!')
 })
 module.exports = router
