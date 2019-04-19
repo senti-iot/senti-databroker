@@ -59,7 +59,7 @@ app.use(cors())
 
 app.use('/', [getDT, getDTs, createDT, updateDT])
 app.use('/', [getDevice, getDevices, createDevice, updateDevice])
-app.use('/', [getRegistry, getRegistryDevices, getRegistries,createReg, updateReg])
+app.use('/', [getRegistry, getRegistryDevices, getRegistries, createReg, updateReg])
 app.use('/', [getDeviceData])
 
 const startAPIServer = () => {
