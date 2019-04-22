@@ -13,9 +13,10 @@ router.get('/:version/:customerID/registry/:id/devices', async (req, res, next) 
 		if (authenticate(authToken)) {
 			let query = `SELECT * from Device where reg_id=${regID}`
 			await mysqlConn.query(query).then(rs => {
-					res.status(200).json(rs[0])
-				}).catch(err => {
-					if(err) {res.status(500).json(err)}
+				console.log(rs[0])
+				res.status(200).json(rs[0])
+			}).catch(err => {
+				if (err) { res.status(500).json(err) }
 			})
 		} else {
 			res.status(403).json('Unauthorized Access! 403')
