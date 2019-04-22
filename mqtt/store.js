@@ -47,7 +47,7 @@ class StoreMqttHandler extends MqttHandler {
 				SELECT '${normalized}', NOW(),Device.id as device_id, ${lastId} from Registry
 				INNER JOIN Device ON Registry.id = Device.reg_id
 				INNER JOIN Customer ON Customer.id = Registry.customer_id
-				where uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.name='${regName}'
+				where Customer.uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.uuid='${regName}'
 				`
 					await mysqlConn.query(normalizedQ).then().catch(e => {
 						console.log(e)
