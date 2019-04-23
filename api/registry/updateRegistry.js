@@ -4,19 +4,18 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-router.post('/:version/registry/:id', async (req, res, next) => {
+router.post('/:version/registry', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let data = req.body
-	let regId = req.params.id
+	let regId = req.body.id
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			if (regId) {
+			if (regId !== null || regId !== undefined) {
 				let findDevQ = "SELECT * from `Registry` where id=?"
-				let registry = []
-				await mysqlConn.query(findDevQ, regId).then(async result => {
+				await mysqlConn.query(findDevQ, [regId]).then(async result => {
 					if (result[0].length === 0) {
-						return res.status(404).json(err)
+						return res.status(404).json(false)
 					}
 					if (result[0].length !== 0) {
 						let query = `UPDATE \`Registry\` 
@@ -44,9 +43,12 @@ router.post('/:version/registry/:id', async (req, res, next) => {
 					}
 				})
 
+			} else {
+				res.status(400).json('Bad Request')
+				console.log('Unauthorized Access!')
 			}
 		} else {
-			res.status(403).json('Unauthorized Access! 403')
+			res.status(503).json('Unauthorized Access!')
 			console.log('Unauthorized Access!')
 		}
 	} else {

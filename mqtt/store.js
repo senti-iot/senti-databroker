@@ -22,14 +22,14 @@ class StoreMqttHandler extends MqttHandler {
 			let deviceQ = `SELECT Device.id, Device.name, Device.type_id, Device.reg_id, Device.normalize from Device
 			INNER JOIN Registry ON Registry.id = Device.reg_id
 			INNER JOIN Customer on Customer.id = Registry.customer_id
-			where uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.name='${regName}';
+			where Customer.uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.uuid='${regName}';
 			`
 			let query = `INSERT INTO Device_data
 			(data, topic, created, device_id)
 			SELECT '${JSON.stringify(pData)}', '', NOW(),Device.id as device_id from Registry
 			INNER JOIN Device ON Registry.id = Device.reg_id
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
-			where uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.name='${regName}'
+			where Customer.uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.uuid='${regName}'
 			`
 			let lastId = null
 			await mysqlConn.query(query).then(([res, fi]) => {
@@ -47,7 +47,7 @@ class StoreMqttHandler extends MqttHandler {
 				SELECT '${normalized}', NOW(),Device.id as device_id, ${lastId} from Registry
 				INNER JOIN Device ON Registry.id = Device.reg_id
 				INNER JOIN Customer ON Customer.id = Registry.customer_id
-				where uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.name='${regName}'
+				where Customer.uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.uuid='${regName}'
 				`
 					await mysqlConn.query(normalizedQ).then().catch(e => {
 						console.log(e)

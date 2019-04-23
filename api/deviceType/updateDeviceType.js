@@ -12,14 +12,14 @@ router.post('/:version/devicetype/:id', async (req, res, next) => {
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			if (dtId) {
-				let findDevQ = "SELECT * from `Device_type` where type_id=?"
+				let findDevQ = "SELECT * from `Device_type` where id=?"
 				// let registry = []
 				console.log(dtId)
 				await mysqlConn.query(findDevQ, dtId).then((result) => {
 					if (result[0].length !== 0) {
 						let query = `UPDATE \`Device_type\` 
 						SET 
-							type_name = ?,
+							name = ?,
 							structure = ?,
 							customer_id = ?
 						WHERE type_id = ?`

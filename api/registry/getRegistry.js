@@ -13,9 +13,16 @@ router.get('/:version/:customerID/registry/:id', async (req, res, next) => {
 		if (authenticate(authToken)) {
 			let query = `SELECT * from Registry where customer_id=${customerID} AND id=${regID}`
 			await mysqlConn.query(query).then(rs => {
+				console.log(rs[0][0])
+				if (rs[0][0])
+				{
 					res.status(200).json(rs[0][0])
-				}).catch(err => {
-					if(err) {res.status(500).json(err)}
+				}
+				else {
+					res.status(404).json(false)
+				}
+			}).catch(err => {
+				if (err) { res.status(500).json(err) }
 			})
 		} else {
 			res.status(403).json('Unauthorized Access! 403')

@@ -19,7 +19,7 @@ class StateMqttHandler extends MqttHandler {
 			SELECT '${JSON.stringify(pData)}', '', NOW(),Device.id as device_id, '${state}' from Registry
 			INNER JOIN Device ON Registry.id = Device.reg_id
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
-			where uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.name='${regName}'
+			where Customer.uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.uuid='${regName}'
 			`
 			// VALUES ('" + JSON.stringify(pData.data) + '\',\'' + deviceName + '\',\'' + customerID + '\',\'' + regName + "')`
 			console.log(query)
