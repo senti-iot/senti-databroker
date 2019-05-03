@@ -11,7 +11,7 @@ router.put('/:version/devicetype', async (req, res, next) => {
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			let query = "INSERT INTO `Device_type`(name, `structure`, customer_id) VALUES (?,?,?)"
-			let values = [data.type_name, JSON.stringify(data.structure), data.customer_id]
+			let values = [data.name, JSON.stringify(data.structure), data.customer_id]
 			// try{
 			await mysqlConn.query(query, values).then(result => {
 
