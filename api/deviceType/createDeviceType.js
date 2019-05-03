@@ -15,7 +15,7 @@ router.put('/:version/devicetype', async (req, res, next) => {
 			// try{
 			await mysqlConn.query(query, values).then(result => {
 
-				res.status(200).json(true)
+				res.status(200).json(result[0].insertId)
 			}).catch(err => {
 				res.status(500).json(err)
 			})
