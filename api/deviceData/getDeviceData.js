@@ -13,7 +13,7 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to', async (req, res, ne
 	let to = req.params.to
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT id, \`data\`, topic, created, device_id
+			let query = `SELECT id, \`data\`, created, device_id
 			FROM Device_data_clean;			
 			WHERE Device.id=${deviceID} AND \`data\` NOT LIKE '%null%' AND created >= ${from} and created <= ${to}`
 			await mysqlConn.query(query).then(rs => {
