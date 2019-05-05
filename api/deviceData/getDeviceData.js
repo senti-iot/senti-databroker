@@ -39,7 +39,7 @@ router.get('/:version/devicedata/:deviceID', async (req, res, next) => {
 		if (authenticate(authToken)) {
 			let query = `SELECT id, \`data\`, topic, created, device_id
 			FROM Device_data;			
-			WHERE Device.id=${deviceID}`
+			WHERE device_id=${deviceID}`
 			await mysqlConn.query(query).then(rs => {
 					res.status(200).json(rs[0])
 				}).catch(err => {
