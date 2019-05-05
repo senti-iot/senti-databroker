@@ -4,16 +4,18 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-router.get('/:version/devicedata-clean/:deviceID', async (req, res, next) => { 
+router.get('/:version/devicedata-clean/:deviceID/:from/:to', async (req, res, next) => { 
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let customerID = req.params.customerID
 	let deviceID = req.params.deviceID
+	let from = req.params.from
+	let to = req.params.to
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			let query = `SELECT id, \`data\`, topic, created, device_id
 			FROM Device_data_clean;			
-			WHERE Device.id=${deviceID} AND \`data\` NOT LIKE '%null%'`
+			WHERE Device.id=${deviceID} AND \`data\` NOT LIKE '%null%' AND created >= ${from} and created <= ${to}`
 			await mysqlConn.query(query).then(rs => {
 					res.status(200).json(rs[0])
 				}).catch(err => {
