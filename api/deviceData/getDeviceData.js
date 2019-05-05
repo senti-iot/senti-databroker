@@ -15,11 +15,11 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to', async (req, res, ne
 		if (authenticate(authToken)) {
 			let query = `SELECT id, \`data\`, created, device_id
 			FROM Device_data_clean;			
-			WHERE device_id=${deviceID} AND \`data\` NOT LIKE '%null%' AND created >= '${from}' and created <= '${to}'`
+			WHERE device_id=${deviceID} AND \`data\` NOT LIKE '%null%' AND created >= '${from}' AND created <= '${to}'`
 			await mysqlConn.query(query).then(rs => {
 					res.status(200).json(rs[0])
 				}).catch(err => {
-					if(err) {res.status(500).json(err)}
+					if(err) {res.status(500).json({err, query})}
 			})
 		} else {
 			res.status(403).json('Unauthorized Access! 403')
