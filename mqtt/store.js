@@ -12,17 +12,18 @@ class StoreMqttHandler extends MqttHandler {
 			// console.log(message.toString())
 			this.storeData(message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] })
 			// logger.info({ MIX: { IN: true } })
-			logger.info("Storing Data", [message.toString(),  { deviceName: arr[7], regName: arr[5], customerID: arr[1] }])
+			logger.info("Storing Data", [message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] }])
 		})
 	}
 	async storeData(data, { deviceName, regName, customerID }) {
 		try {
 			console.log(deviceName, regName, customerID)
 			let pData = JSON.parse(data)
-			let deviceQ = `SELECT Device.id, Device.name, Device.type_id, Device.reg_id, Device.normalize from Device
-			INNER JOIN Registry ON Registry.id = Device.reg_id
-			INNER JOIN Customer on Customer.id = Registry.customer_id
-			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}';
+			let deviceQ = `SELECT d.id, d.name, d.type_id, d.reg_id, d.\`normalize\`, dm.\`data\` as metadata from Device d
+			INNER JOIN Registry r ON r.id = d.reg_id
+			INNER JOIN Customer c on c.id = r.customer_id
+			LEFT JOIN Device_metadata dm on dm.device_id = d.id
+			where c.uuid='${customerID}' AND d.uuid='${deviceName}' AND r.uuid='${regName}';
 			`
 			let query = `INSERT INTO Device_data
 			(data, topic, created, device_id)
@@ -31,6 +32,7 @@ class StoreMqttHandler extends MqttHandler {
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
 			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
 			`
+			console.log(deviceQ)
 			let lastId = null
 			await mysqlConn.query(query).then(([res, fi]) => {
 				lastId = res.insertId;
@@ -38,8 +40,9 @@ class StoreMqttHandler extends MqttHandler {
 			let [device, fields] = await mysqlConn.query(deviceQ)
 			if (device.length > 0) {
 				if (device[0].normalize === 1) {
-					let normalized = await engineAPI.post('/', { ...JSON.parse(data), flag: device[0].normalize }).then(rs => { console.log(rs.status); return rs.data })
-					// console.log(normalized)
+					console.log(device[0])
+					let normalized = await engineAPI.post('/', { ...JSON.parse(data),key: device[0].metadata.key, flag: device[0].normalize }).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
+					console.log(normalized)
 					let normalizedQ = `INSERT INTO Device_data_clean
 				(data, created, device_id, device_data_id)
 				SELECT '${normalized}', NOW(),Device.id as device_id, ${lastId} from Registry
