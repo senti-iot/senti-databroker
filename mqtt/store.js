@@ -12,33 +12,31 @@ class StoreMqttHandler extends MqttHandler {
 			// console.log(message.toString())
 			this.storeData(message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] })
 			// logger.info({ MIX: { IN: true } })
-			logger.info("Storing Data", message.toString())
+			logger.info("Storing Data", [message.toString(),  { deviceName: arr[7], regName: arr[5], customerID: arr[1] }])
 		})
 	}
 	async storeData(data, { deviceName, regName, customerID }) {
 		try {
-
+			console.log(deviceName, regName, customerID)
 			let pData = JSON.parse(data)
 			let deviceQ = `SELECT Device.id, Device.name, Device.type_id, Device.reg_id, Device.normalize from Device
 			INNER JOIN Registry ON Registry.id = Device.reg_id
 			INNER JOIN Customer on Customer.id = Registry.customer_id
-			where Customer.uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.uuid='${regName}';
+			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}';
 			`
 			let query = `INSERT INTO Device_data
 			(data, topic, created, device_id)
 			SELECT '${JSON.stringify(pData)}', '', NOW(),Device.id as device_id from Registry
 			INNER JOIN Device ON Registry.id = Device.reg_id
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
-			where Customer.uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.uuid='${regName}'
+			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
 			`
 			let lastId = null
 			await mysqlConn.query(query).then(([res, fi]) => {
 				lastId = res.insertId;
 			})
 			let [device, fields] = await mysqlConn.query(deviceQ)
-
 			if (device.length > 0) {
-
 				if (device[0].normalize === 1) {
 					let normalized = await engineAPI.post('/', { ...JSON.parse(data), flag: device[0].normalize }).then(rs => { console.log(rs.status); return rs.data })
 					// console.log(normalized)
@@ -47,7 +45,7 @@ class StoreMqttHandler extends MqttHandler {
 				SELECT '${normalized}', NOW(),Device.id as device_id, ${lastId} from Registry
 				INNER JOIN Device ON Registry.id = Device.reg_id
 				INNER JOIN Customer ON Customer.id = Registry.customer_id
-				where Customer.uuid='${customerID}' AND Device.name='${deviceName}' AND Registry.uuid='${regName}'
+				where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
 				`
 					await mysqlConn.query(normalizedQ).then().catch(e => {
 						console.log(e)
