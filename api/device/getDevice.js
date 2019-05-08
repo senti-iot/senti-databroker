@@ -11,7 +11,7 @@ router.get('/:version/:customerID/device/:id', async (req, res, next) => {
 	let deviceID = req.params.id
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT  Device.id, Device.name, type_id, reg_id, \`normalize\`, Device.description, lat, lng, address, locType, available, communication, tags, logging, \`data\` as metadata, Registry.name as regName, Registry.uuid as regUUID, Registry.protocol as protocol, Registry.id as regId
+			let query = `SELECT Device.id, Device.name,Device.uuid, type_id, reg_id, \`normalize\`, Device.description, lat, lng, address, locType, available, communication, tags, logging, \`data\` as metadata, Registry.name as regName, Registry.uuid as regUUID, Registry.protocol as protocol, Registry.id as regId
 			FROM Device
 			LEFT JOIN Registry on Registry.id = Device.reg_id
 			INNER JOIN Customer on Customer.id = Registry.customer_id
