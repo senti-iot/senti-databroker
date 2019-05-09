@@ -27,7 +27,7 @@ class StoreMqttHandler extends MqttHandler {
 			`
 			let query = `INSERT INTO Device_data
 			(data, topic, created, device_id)
-			SELECT '${JSON.stringify(pData)}', '', NOW(),Device.id as device_id from Registry
+			SELECT '${JSON.stringify(pData)}', '', '${pData.created}',Device.id as device_id from Registry
 			INNER JOIN Device ON Registry.id = Device.reg_id
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
 			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
@@ -41,15 +41,18 @@ class StoreMqttHandler extends MqttHandler {
 			if (device.length > 0) {
 				if (device[0].normalize === 1) {
 					console.log(device[0])
+					let nData = JSON.parse(data)
+					console.log('nData',nData)
 					let normalized = await engineAPI.post('/', { ...JSON.parse(data),key: device[0].metadata.key, flag: device[0].normalize }).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
 					console.log(normalized)
 					let normalizedQ = `INSERT INTO Device_data_clean
 				(data, created, device_id, device_data_id)
-				SELECT '${normalized}', NOW(),Device.id as device_id, ${lastId} from Registry
+				SELECT '${normalized}', '${nData.created}',Device.id as device_id, ${lastId} from Registry
 				INNER JOIN Device ON Registry.id = Device.reg_id
 				INNER JOIN Customer ON Customer.id = Registry.customer_id
 				where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
 				`
+				console.log(normalizedQ)
 					await mysqlConn.query(normalizedQ).then().catch(e => {
 						console.log(e)
 					})
