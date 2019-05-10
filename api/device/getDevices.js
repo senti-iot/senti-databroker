@@ -10,11 +10,12 @@ router.get('/:version/:customerID/devices', async (req, res, next) => {
 	let customerID = req.params.customerID
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT Device.id, Device.name, type_id, reg_id, \`normalize\`, Device.description, lat, lng, address, locType, available, communication, tags, logging, \`data\` as metadata
-			FROM Device
-			LEFT JOIN Device_metadata ON Device.id = Device_metadata.device_id
-			INNER JOIN Registry on Registry.id = Device.reg_id
-			INNER JOIN Customer on Customer.id = Registry.customer_id
+			let query = `SELECT d.id, d.name,d.uuid, type_id, reg_id, \`normalize\`, d.description, lat, lng, address, 
+			locType, available, communication, tags, logging, r.name as reg_name, r.uuid as reg_uuid
+						FROM Device d
+						LEFT JOIN Device_metadata dm ON d.id = dm.device_id
+						INNER JOIN Registry r on r.id = d.reg_id
+						INNER JOIN Customer c on c.id = r.customer_id
 			WHERE customer_id=${customerID}`
 			// let query = `SELECT * from Device where customer_id=${customerID}`
 			await mysqlConn.query(query).then(rs => {
