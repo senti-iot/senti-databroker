@@ -9,7 +9,7 @@ class StoreMqttHandler extends MqttHandler {
 		this.mqttClient.on('message', (topic, message) => {
 			let arr = topic.split('/')
 			// console.log(arr)
-			// console.log(message.toString())
+			// console.log(arr[7], arr[5], arr[1])
 			this.storeData(message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] })
 			// logger.info({ MIX: { IN: true } })
 			logger.info("Storing Data", [message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] }])
@@ -38,21 +38,22 @@ class StoreMqttHandler extends MqttHandler {
 				lastId = res.insertId;
 			})
 			let [device, fields] = await mysqlConn.query(deviceQ)
+			// console.log('Device', device[0])
 			if (device.length > 0) {
 				if (device[0].normalize === 1) {
-					console.log(device[0])
+					// console.log(device[0])
 					let nData = JSON.parse(data)
-					console.log('nData',nData)
+					// console.log('nData',nData)
 					let normalized = await engineAPI.post('/', { ...JSON.parse(data),key: device[0].metadata.key, flag: device[0].normalize }).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
-					console.log(normalized)
+					console.log('EngineAPI:',normalized)
 					let normalizedQ = `INSERT INTO Device_data_clean
 				(data, created, device_id, device_data_id)
-				SELECT '${normalized}', '${nData.created}',Device.id as device_id, ${lastId} from Registry
+				SELECT '${normalized}', NOW() ,Device.id as device_id, ${lastId} from Registry
 				INNER JOIN Device ON Registry.id = Device.reg_id
 				INNER JOIN Customer ON Customer.id = Registry.customer_id
 				where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
 				`
-				console.log(normalizedQ)
+				// console.log(normalizedQ)
 					await mysqlConn.query(normalizedQ).then().catch(e => {
 						console.log(e)
 					})
