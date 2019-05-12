@@ -12,6 +12,7 @@ class MDataStoreMqttHandler extends MqttHandler {
 			// console.log(arr)
 			// console.log(arr[7], arr[5], arr[1])
 			this.storeData(message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1], dataId: arr[9] })
+			console.log(topic)
 			// logger.info({ MIX: { IN: true } })
 			// logger.info("Storing Data", [message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] }])
 		})
@@ -61,7 +62,7 @@ class MDataStoreMqttHandler extends MqttHandler {
 				INNER JOIN Customer ON Customer.id = Registry.customer_id
 				where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
 				`
-				// console.log(normalizedQ)
+				console.log(normalizedQ)
 					await mysqlConn.query(normalizedQ).then().catch(e => {
 						console.log(e)
 					})

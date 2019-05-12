@@ -8,19 +8,15 @@ const helmet = require('helmet')
 const pino = require('pino')
 const fs = require('fs');
 const app = express()
-module.exports.logger=pino(pino.destination(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}-others.json`))
+// module.exports.logger = console
+// module.exports.logger=pino(pino.destination(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}-others.json`))
 const logger=pino(pino.destination(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}.json`))
-// logger.info({ MIX: { IN: true } }) // only a one time post
-
-// module.exports.logger = pino(pino.extreme(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}.json`))
+module.exports.logger = pino(pino.extreme(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}.json`))
 const expressPino = require('express-pino-logger')({
 	logger: logger
 })
-// logger.info('test')
-// logger.error('test2')
-// logger2.info("TEST2")
-// logger2.debug("TEST")
-// logger2.error({ MIX: { IN: true } })
+app.use(expressPino)
+
 
 //#region Device
 const getDevice = require('./api/device/getDevice')
@@ -53,7 +49,6 @@ const port = process.env.NODE_PORT
 app.use(helmet())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-app.use(expressPino)
 
 app.use(cors())
 
