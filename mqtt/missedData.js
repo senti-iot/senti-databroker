@@ -54,10 +54,10 @@ class MDataStoreMqttHandler extends MqttHandler {
 					else { 
 						normalized = await engineAPI.post('/', { ...JSON.parse(data), flag: device[0].normalize }).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
 					}
-					console.log('EngineAPI:',normalized)
+					console.log('EngineAPI:', normalized)
 					let normalizedQ = `INSERT INTO Device_data_clean
 				(data, created, device_id, device_data_id)
-				SELECT '${normalized}', '${moment(pData.created).format('YYYY-MM-DD HH:mm:ss')}' ,Device.id as device_id, ${dataId} from Registry
+				SELECT '${normalized}', '${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}' ,Device.id as device_id, ${dataId} from Registry
 				INNER JOIN Device ON Registry.id = Device.reg_id
 				INNER JOIN Customer ON Customer.id = Registry.customer_id
 				where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
