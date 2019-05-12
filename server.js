@@ -85,6 +85,10 @@ var StoreMqttHandler = require('./mqtt/store')
 let mqttStoreClient = new StoreMqttHandler()
 mqttStoreClient.connect()
 
+var MDataStoreMqttHandler = require('./mqtt/missedData')
+let mqttmDataStoreClient = new MDataStoreMqttHandler()
+mqttmDataStoreClient.connect()
+
 var StateMqttHandler = require('./mqtt/state')
 let mqttStateClient = new StateMqttHandler()
 mqttStateClient.connect()
