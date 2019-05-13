@@ -12,7 +12,7 @@ class StoreMqttHandler extends MqttHandler {
 			// console.log(arr[7], arr[5], arr[1])
 			this.storeData(message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] })
 			// logger.info({ MIX: { IN: true } })
-			logger.info("Storing Data", [message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] }])
+			logger.info([message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] }])
 		})
 	}
 	async storeData(data, { deviceName, regName, customerID }) {
