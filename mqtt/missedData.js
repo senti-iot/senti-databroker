@@ -34,6 +34,7 @@ class MDataStoreMqttHandler extends MqttHandler {
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
 			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
 			`
+			console.log(JSON.stringify(pData))
 			// console.log(deviceQ)
 			let lastId = null
 			await mysqlConn.query(query).then(([res, fi]) => {

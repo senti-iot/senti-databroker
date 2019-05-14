@@ -17,6 +17,7 @@ class StoreMqttHandler extends MqttHandler {
 	}
 	async storeData(data, { deviceName, regName, customerID }) {
 		try {
+			console.log('STORING DATA')
 			console.log(deviceName, regName, customerID)
 			let pData = JSON.parse(data)
 			let deviceQ = `SELECT d.id, d.name, d.type_id, d.reg_id, d.\`normalize\`, dm.\`data\` as metadata from Device d
@@ -40,11 +41,11 @@ class StoreMqttHandler extends MqttHandler {
 			let [device, fields] = await mysqlConn.query(deviceQ)
 			// console.log('Device', device[0])
 			if (device.length > 0) {
-				if (device[0].normalize === 1) {
+				if (device[0].normalize >= 1) {					
 					// console.log(device[0])
 					let nData = JSON.parse(data)
 					// console.log('nData',nData)
-					let normalized = await engineAPI.post('/', { ...JSON.parse(data),key: device[0].metadata.key, flag: device[0].normalize }).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
+					let normalized = await engineAPI.post('/', { ...JSON.parse(data),key: device[0].metadata.key, flag: device[0].normalize,deviceId: pData.deviceId, seq: pData.seqnr}).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
 					console.log('EngineAPI:',normalized)
 					let normalizedQ = `INSERT INTO Device_data_clean
 				(data, created, device_id, device_data_id)
