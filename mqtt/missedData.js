@@ -6,7 +6,7 @@ const moment = require('moment')
 
 class MDataStoreMqttHandler extends MqttHandler {
 	init() {
-		this.topic = 'v1/+/location/+/registries/+/devices/+/missed/+'
+		this.topic = 'v1/+/location/+/registries/+/devices/+/missed'
 		this.mqttClient.on('message', (topic, message) => {
 			let arr = topic.split('/')
 			// console.log(arr)
