@@ -50,10 +50,10 @@ class MDataStoreMqttHandler extends MqttHandler {
 					// console.log('nData',nData)
 					let normalized = null
 					if (device[0].metadata) {
-						normalized = await engineAPI.post('/', { ...JSON.parse(data), key: device[0].metadata.key, flag: device[0].normalize }).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
+						normalized = await engineAPI.post('/', { ...JSON.parse(data), key: device[0].metadata.key, flag: device[0].normalize, deviceId: device[0].uuid, seq: pData.seqnr }).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
 					}
 					else { 
-						normalized = await engineAPI.post('/', { ...JSON.parse(data), flag: device[0].normalize }).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
+						normalized = await engineAPI.post('/', { ...JSON.parse(data), flag: device[0].normalize, deviceId: device[0].uuid, seq: pData.seqnr  }).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
 					}
 					console.log('EngineAPI:', normalized)
 					let normalizedQ = `INSERT INTO Device_data_clean
