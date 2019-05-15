@@ -16,8 +16,8 @@ router.post('/:version/customer', async (req, res, next) => {
 			VALUES (?, CONCAT(?, '-', CAST(LEFT(UUID(),8) as CHAR(50))), ?)`
 
 			let arr = [data.name, data.name.replace(/\s+/g, '-').toLowerCase(), data.org_id]
-			mysqlConn.query(query, arr).then(res => {
-				console.log('CUSTOMER CREATED', res);
+			mysqlConn.query(query, arr).then(r => {
+				console.log('CUSTOMER CREATED', r);
 				res.status(200).json(true)
 			}).catch(err => {
 				console.log('CUSTOMER NOT CREATED', err)
