@@ -14,7 +14,7 @@ let update_set = (obj) => Object.keys(obj).map(value => {
 	return `${value}  = ${obj[value]}`;
 });
 
-router.post('/:version/customer', async (req, res, next) => {
+router.put('/:version/customer', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let OrgID = req.body.ODEUM_org_id
 	let authToken = req.headers.auth

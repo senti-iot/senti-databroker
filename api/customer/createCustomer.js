@@ -4,7 +4,7 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-router.put('/:version/customer', async (req, res, next) => {
+router.post('/:version/customer', async (req, res, next) => {
 	console.log('CREATE CUSTOMER')
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
