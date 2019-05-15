@@ -36,7 +36,7 @@ router.put('/:version/customer', async (req, res, next) => {
 						`
 						mysqlConn.query(query).then((result) => {
 							// else {
-							res.status(200).send(OrgID);
+							res.status(200).json(OrgID);
 							// }
 						}).catch(err => {
 							// if (err) {
