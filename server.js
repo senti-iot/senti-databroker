@@ -44,6 +44,10 @@ const createDT = require('./api/deviceType/createDeviceType')
 const getDeviceData = require('./api/deviceData/getDeviceData')
 //#endregion
 
+//#region Customer
+const createCustomer = require('./api/customer/createCustomer')
+
+//#endregion
 const port = process.env.NODE_PORT
 
 app.use(helmet())
@@ -56,6 +60,7 @@ app.use('/', [getDT, getDTs, createDT, updateDT])
 app.use('/', [getDevice, getDevices, createDevice, updateDevice])
 app.use('/', [getRegistry, getRegistryDevices, getRegistries, createReg, updateReg])
 app.use('/', [getDeviceData])
+app.use('/', [createCustomer])
 
 const startAPIServer = () => {
 	console.clear()
