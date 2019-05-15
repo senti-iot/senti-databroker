@@ -16,7 +16,7 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type', async (req, r
 		if (authenticate(authToken)) {
 			let query = `SELECT id, \`data\`, created, device_id
 			FROM Device_data_clean	
-			WHERE device_id=${deviceID} AND \`data\` NOT LIKE '%null%' AND created >= '${from}' AND created <= '${to}'`
+			WHERE device_id=${deviceID} AND \`data\` NOT LIKE '%null%' AND created >= '${from}' AND created <= '${to}' ORDER BY created`
 			await mysqlConn.query(query).then(rs => {
 					let rawData = rs[0]
 					let cleanData = {}
