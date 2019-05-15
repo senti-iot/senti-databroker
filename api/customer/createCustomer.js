@@ -10,21 +10,20 @@ router.post('/:version/customer', async (req, res, next) => {
 	let authToken = req.headers.auth
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
-		if (authenticate(authToken)) {			
-			let query  =`INSERT INTO Customer
+		if (authenticate(authToken)) {
+			let query = `INSERT INTO Customer
 			(name, uuid, ODEUM_org_id) 
 			VALUES (?, CONCAT(?, '-', CAST(LEFT(UUID(),8) as CHAR(50))), ?)`
-			try{
-				let arr = [data.name, data.name.replace(/\s+/g, '-').toLowerCase(), data.org_id]
-				mysqlConn.query(query, arr).then(res => {
-					res.status(200).json(true)
-				}).catch(err => {
-					if(err) {res.status(500).json(err)}
-				})
-			}
-			catch(e) {
-				res.status(500).json(e)
-			}
+
+			let arr = [data.name, data.name.replace(/\s+/g, '-').toLowerCase(), data.org_id]
+			mysqlConn.query(query, arr).then(res => {
+				console.log('CUSTOMER CREATED', res);
+				res.status(200).json(true)
+			}).catch(err => {
+				console.log('CUSTOMER NOT CREATED', err)
+				if (err) { res.status(500).json(err) }
+			})
+
 		} else {
 			res.status(403).json('Unauthorized Access! 403')
 			console.log('Unauthorized Access!')
