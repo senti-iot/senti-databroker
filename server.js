@@ -45,8 +45,9 @@ const getDeviceData = require('./api/deviceData/getDeviceData')
 //#endregion
 
 //#region Customer
+const updateCustomer = require('./api/customer/updateCustomer')
 const createCustomer = require('./api/customer/createCustomer')
-
+const getCustomer = require('./api/customer/getCustomer')
 //#endregion
 const port = process.env.NODE_PORT
 
@@ -60,7 +61,7 @@ app.use('/', [getDT, getDTs, createDT, updateDT])
 app.use('/', [getDevice, getDevices, createDevice, updateDevice])
 app.use('/', [getRegistry, getRegistryDevices, getRegistries, createReg, updateReg])
 app.use('/', [getDeviceData])
-app.use('/', [createCustomer])
+app.use('/', [createCustomer, getCustomer, updateCustomer])
 
 const startAPIServer = () => {
 	console.clear()

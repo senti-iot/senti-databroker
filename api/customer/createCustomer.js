@@ -12,7 +12,7 @@ router.put('/:version/customer', async (req, res, next) => {
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {			
 			let query  =`INSERT INTO Customer
-			(displayName, uuid, ODEUM_org_id) 
+			(name, uuid, ODEUM_org_id) 
 			VALUES (?, CONCAT(?, '-', CAST(LEFT(UUID(),8) as CHAR(50))), ?)`
 			try{
 				let arr = [data.name, data.name.replace(/\s+/g, '-').toLowerCase(), data.org_id]

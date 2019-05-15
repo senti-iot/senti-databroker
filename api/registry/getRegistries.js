@@ -10,7 +10,7 @@ router.get('/:version/:customerID/registries', async (req, res, next) => {
 	let customerID = req.params.customerID
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT r.id, r.name, r.uuid, r.region, r.protocol, r.customer_id, r.created, r.description, c.displayName as customer_name, c.ODEUM_org_id from Registry r
+			let query = `SELECT r.id, r.name, r.uuid, r.region, r.protocol, r.customer_id, r.created, r.description, c.name as customer_name, c.ODEUM_org_id from Registry r
 			INNER JOIN Customer c on c.id = r.customer_id
 			where customer_id=${customerID}`
 			await mysqlConn.query(query).then(rs => {
