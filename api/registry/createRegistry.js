@@ -12,16 +12,26 @@ router.put('/:version/registry', async (req, res, next) => {
 		if (authenticate(authToken)) {
 			console.log(data)
 
-			let query = 'INSERT INTO `Registry`(`name`,`region`,`protocol`,`ca_certificate`,`customer_id`, `created`, `uuid`) VALUES (\''
-				+ data.name + '\',\''
-				+ data.region + '\',\''
-				+ data.protocol + '\',\''
-				+ data.ca_certificate + '\',\''
-				+ data.customer_id + '\','
-				+ 'NOW()' + ' ,' 
-				+ 'CONCAT(\''+ data.name.replace(/\s+/g, '-').toLowerCase()+ '-' + '\',CAST(LEFT(UUID(),8) as CHAR(50)))' + ');'
+			// let query = 'INSERT INTO `Registry`(`name`,`region`,`protocol`,`ca_certificate`,`customer_id`, `created`, `uuid`) VALUES (\''
+			// 	+ data.name + '\',\''
+			// 	+ data.region + '\',\''
+			// 	+ data.protocol + '\',\''
+			// 	+ data.ca_certificate + '\',\''
+			// 	+ data.customer_id + '\','
+			// 	+ 'NOW()' + ' ,'
+			// 	+ 'CONCAT(\'' + data.name.replace(/\s+/g, '-').toLowerCase() + '-' + '\',CAST(LEFT(UUID(),8) as CHAR(50)))' + ');'
+
+
+			let query = `INSERT INTO \`Registry\`(name,region,protocol,ca_certificate,customer_id, created, uuid) VALUES (?,?,?,?,?, NOW(), CONCAT(?,'-',CAST(LEFT(UUID(),8) as CHAR(50))));`
 			console.log(query);
-			await mysqlConn.query(query).then((result) => {
+			await mysqlConn.query(query, [
+				data.name,
+				data.region,
+				data.protocol,
+				data.ca_certificate,
+				data.customer_id,
+				data.name.replace(/\s+/g, '-').toLowerCase()
+			]).then((result) => {
 				res.status(200).json(result[0].insertId)
 			}).catch(err => {
 				res.status(500).json(err)

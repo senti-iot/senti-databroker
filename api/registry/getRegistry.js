@@ -11,8 +11,8 @@ router.get('/:version/:customerID/registry/:id', async (req, res, next) => {
 	let regID = req.params.id
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT * from Registry where customer_id=${customerID} AND id=${regID} AND deleted=0`
-			await mysqlConn.query(query).then(rs => {
+			let query = `SELECT * from Registry where customer_id=? AND id=? AND deleted=0`
+			await mysqlConn.query(query, [customerID, regID]).then(rs => {
 				console.log(rs[0][0])
 				if (rs[0][0])
 				{

@@ -28,11 +28,27 @@ router.post('/:version/device/:id', async (req, res, next) => {
 					if (result.length !== 0) {
 						let query = `UPDATE Device 
 						SET 
-						${update_set(data).join(",\n")}
-						WHERE id = ${deviceID}
+							name=?
+							type_id=?
+							reg_id=?
+							\`normalize\`=?
+							description=?
+							lat=?
+							lng=?
+							address=?
+							locType=?
+							available=?
+							communication=?
+							tags=?
+							logging=?
+						WHERE id = ?
 						`
+						// ${update_set(data).join(",\n")} ${deviceID}
+
 						console.log(query)
-						// let arr = [data.name,data.type_id, data.reg_id, data.normalize, data.description, data.lat, data.long, data.address, data.locType, data.available, data.communication, data.tags.join(','), data.logging]
+						let arr = [data.name,data.type_id, 
+							data.reg_id, data.normalize, 
+							data.description, data.lat, data.long, data.address, data.locType, data.available, data.communication, data.tags.join(','), data.logging, deviceID]
 						mysqlConn.query(query).then((result) => {
 							// else {
 							res.status(200).send(deviceID);

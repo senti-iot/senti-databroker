@@ -10,8 +10,8 @@ router.get('/:version/:customerID/deviceTypes', async (req, res, next) => {
 	let customerID = req.params.customerID
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT * from Device_type where customer_id=${customerID} and deleted=0`
-			await mysqlConn.query(query).then(rs => {
+			let query = `SELECT * from Device_type where customer_id=? and deleted=0`
+			await mysqlConn.query(query, [customerID]).then(rs => {
 					res.status(200).json(rs[0])
 				}).catch(err => {
 					if(err) {res.status(500).json(err)}

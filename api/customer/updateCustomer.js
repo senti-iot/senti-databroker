@@ -31,10 +31,10 @@ router.put('/:version/customer', async (req, res, next) => {
 					if (result.length !== 0) {
 						let query = `UPDATE Customer 
 						SET 
-						${update_set(data).join(",\n")}
-						WHERE ODEUM_org_id = ${OrgID}
+							name=?
+						WHERE ODEUM_org_id = ?
 						`
-						mysqlConn.query(query).then((result) => {
+						mysqlConn.query(query,[data.name, OrgID]).then((result) => {
 							// else {
 							res.status(200).json(OrgID);
 							// }

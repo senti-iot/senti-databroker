@@ -11,8 +11,8 @@ router.get('/:version/:customerID/registry/:id/devices', async (req, res, next) 
 	let regID = req.params.id
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT * from Device where reg_id=${regID}`
-			await mysqlConn.query(query).then(rs => {
+			let query = `SELECT * from Device where reg_id=?`
+			await mysqlConn.query(query, [regID]).then(rs => {
 				console.log(rs[0])
 				res.status(200).json(rs[0])
 			}).catch(err => {
