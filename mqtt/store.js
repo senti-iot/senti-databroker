@@ -10,9 +10,9 @@ class StoreMqttHandler extends MqttHandler {
 			let arr = topic.split('/')
 			// console.log(arr)
 			// console.log(arr[7], arr[5], arr[1])
+			logger.info([message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] }])
 			this.storeData(message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] })
 			// logger.info({ MIX: { IN: true } })
-			logger.info([message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] }])
 		})
 	}
 	async storeData(data, { deviceName, regName, customerID }) {
@@ -24,7 +24,7 @@ class StoreMqttHandler extends MqttHandler {
 			INNER JOIN Registry r ON r.id = d.reg_id
 			INNER JOIN Customer c on c.id = r.customer_id
 			LEFT JOIN Device_metadata dm on dm.device_id = d.id
-			where c.uuid='${customerID}' AND d.uuid='${deviceName}' AND r.uuid='${regName}';
+			where c.uuid='${customerID}' AND d.uuid='${deviceName}' AND r.uuid='${regName} AND d.deleted = 0';
 			`
 			let query = `INSERT INTO Device_data
 			(data, topic, created, device_id)

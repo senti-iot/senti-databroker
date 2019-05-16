@@ -16,8 +16,8 @@ router.get('/:version/:customerID/device/:id', async (req, res, next) => {
 			LEFT JOIN Registry on Registry.id = Device.reg_id
 			INNER JOIN Customer on Customer.id = Registry.customer_id
 			LEFT JOIN Device_metadata ON Device.id = Device_metadata.device_id
-			WHERE customer_id=${customerID} and Device.id=${deviceID}`
-			await mysqlConn.query(query).then(rs => {
+			WHERE customer_id=? and Device.id=? and Device.deleted=0`
+			await mysqlConn.query(query, [customerID, deviceID]).then(rs => {
 					res.status(200).json(rs[0][0])
 				}).catch(err => {
 					if(err) {res.status(500).json(err)}
