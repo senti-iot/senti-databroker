@@ -6,7 +6,7 @@ const moment = require('moment')
 
 class MDataStoreMqttHandler extends MqttHandler {
 	init() {
-		this.topic = 'v1/+/location/+/registries/+/devices/+/missed/+'
+		this.topic = 'v1/+/location/+/registries/+/devices/+/missed'
 		this.mqttClient.on('message', (topic, message) => {
 			let arr = topic.split('/')
 			// console.log(arr)
@@ -34,6 +34,7 @@ class MDataStoreMqttHandler extends MqttHandler {
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
 			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
 			`
+			console.log(JSON.stringify(pData))
 			// console.log(deviceQ)
 			let lastId = null
 			await mysqlConn.query(query).then(([res, fi]) => {
@@ -49,10 +50,10 @@ class MDataStoreMqttHandler extends MqttHandler {
 					// console.log('nData',nData)
 					let normalized = null
 					if (device[0].metadata) {
-						normalized = await engineAPI.post('/', { ...JSON.parse(data), key: device[0].metadata.key, flag: device[0].normalize }).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
+						normalized = await engineAPI.post('/', { ...JSON.parse(data), key: device[0].metadata.key, flag: device[0].normalize, deviceId: device[0].uuid, seq: pData.seqnr }).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
 					}
 					else { 
-						normalized = await engineAPI.post('/', { ...JSON.parse(data), flag: device[0].normalize }).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
+						normalized = await engineAPI.post('/', { ...JSON.parse(data), flag: device[0].normalize, deviceId: device[0].uuid, seq: pData.seqnr  }).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
 					}
 					console.log('EngineAPI:', normalized)
 					let normalizedQ = `INSERT INTO Device_data_clean

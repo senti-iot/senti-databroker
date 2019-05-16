@@ -4,20 +4,26 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-router.get('/:version/:customerID/registries', async (req, res, next) => {
+router.post('/:version/customer', async (req, res, next) => {
+	console.log('CREATE CUSTOMER')
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
-	let customerID = req.params.customerID
+	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT r.id, r.name, r.uuid, r.region, r.protocol, r.customer_id, r.created, r.description, c.name as customer_name, c.ODEUM_org_id from Registry r
-			INNER JOIN Customer c on c.id = r.customer_id
-			where customer_id=${customerID}`
-			await mysqlConn.query(query).then(rs => {
-					res.status(200).json(rs[0])
-				}).catch(err => {
-					if(err) {res.status(500).json(err)}
+			let query = `INSERT INTO Customer
+			(name, uuid, ODEUM_org_id) 
+			VALUES (?, CONCAT(?, '-', CAST(LEFT(UUID(),8) as CHAR(50))), ?)`
+
+			let arr = [data.name, data.name.replace(/\s+/g, '-').toLowerCase(), data.org_id]
+			mysqlConn.query(query, arr).then(r => {
+				console.log('CUSTOMER CREATED', r);
+				res.status(200).json(true)
+			}).catch(err => {
+				console.log('CUSTOMER NOT CREATED', err)
+				if (err) { res.status(500).json(err) }
 			})
+
 		} else {
 			res.status(403).json('Unauthorized Access! 403')
 			console.log('Unauthorized Access!')
@@ -27,7 +33,5 @@ router.get('/:version/:customerID/registries', async (req, res, next) => {
 		res.send(`API/sigfox version: ${apiVersion} not supported`)
 	}
 })
-// router.get('/', async (req,res, netxt)=> {
-// 	res.json('API/MessageBroker GET Success!')
-// })
+
 module.exports = router
