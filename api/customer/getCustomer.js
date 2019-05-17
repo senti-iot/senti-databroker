@@ -10,7 +10,7 @@ router.get('/:version/customer/:odeumId', async (req, res, next) => {
 	let customerID = req.params.odeumId
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT * from Customer where ODEUM_org_id=?`
+			let query = `SELECT * from Customer where ODEUM_org_id=? and deleted=0`
 			await mysqlConn.query(query, [customerID]).then(rs => {
 				// console.log(rs[0][0])
 				if (rs[0][0])

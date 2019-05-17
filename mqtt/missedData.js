@@ -25,7 +25,7 @@ class MDataStoreMqttHandler extends MqttHandler {
 			INNER JOIN Registry r ON r.id = d.reg_id
 			INNER JOIN Customer c on c.id = r.customer_id
 			LEFT JOIN Device_metadata dm on dm.device_id = d.id
-			where c.uuid='${customerID}' AND d.uuid='${deviceName}' AND r.uuid='${regName}';
+			where c.uuid='${customerID}' AND d.uuid='${deviceName}' AND r.uuid='${regName} and d.deleted=0';
 			`
 			let query = `INSERT INTO Device_data
 			(data, topic, created, device_id)
