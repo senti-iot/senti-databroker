@@ -34,14 +34,14 @@ router.get('/:version/registry/:id', async (req, res, next) => {
 router.get('/:version/:customerID/registry/:id', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
-	let customerID = req.params.customerID
+	// let customerID = req.params.customerID
 	let regID = req.params.id
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			let query = `SELECT * from Registry r
 			INNER JOIN Customer c on c.id = r.customer_id
-			where c.ODEUM_org_id = ? and r.id = ?`
-			await mysqlConn.query(query, [customerID, regID]).then(rs => {
+			where r.id = ?`
+			await mysqlConn.query(query, [regID]).then(rs => {
 				console.log(rs[0][0])
 				if (rs[0][0])
 				{
