@@ -13,6 +13,7 @@ router.get('/:version/:customerID/devicetypes', async (req, res, next) => {
 			let query = `SELECT * from Device_type t
 			INNER JOIN Customer c on c.id = t.customer_id
 			where c.ODEUM_org_id = ?`
+			console.log(query)
 			await mysqlConn.query(query, [customerID]).then(rs => {
 					res.status(200).json(rs[0])
 				}).catch(err => {
