@@ -2,6 +2,7 @@ var MqttHandler = require('./mqtt_handler.js')
 var mysqlConn = require('../mysql/mysql_handler')
 const engineAPI = require('../api/engine/engine')
 const logger = require('../server').logger
+const moment = require('moment')
 
 class StoreMqttHandler extends MqttHandler {
 	init() {
@@ -28,7 +29,7 @@ class StoreMqttHandler extends MqttHandler {
 			`
 			let query = `INSERT INTO Device_data
 			(data, topic, created, device_id)
-			SELECT '${JSON.stringify(pData)}', '', NOW(), Device.id as device_id from Registry
+			SELECT '${JSON.stringify(pData)}', '', '${moment.unix(pData.time).startOfDay()}', Device.id as device_id from Registry
 			INNER JOIN Device ON Registry.id = Device.reg_id
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
 			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
@@ -49,12 +50,12 @@ class StoreMqttHandler extends MqttHandler {
 					console.log('EngineAPI:',normalized)
 					let normalizedQ = `INSERT INTO Device_data_clean
 				(data, created, device_id, device_data_id)
-				SELECT '${normalized}', NOW() ,Device.id as device_id, ${lastId} from Registry
+				SELECT '${normalized}', '${moment.unix(pData.time).startOfDay()}' ,Device.id as device_id, ${lastId} from Registry
 				INNER JOIN Device ON Registry.id = Device.reg_id
 				INNER JOIN Customer ON Customer.id = Registry.customer_id
 				where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
 				`
-				// console.log(normalizedQ)
+				console.log(normalizedQ)
 					await mysqlConn.query(normalizedQ).then().catch(e => {
 						console.log(e)
 					})
