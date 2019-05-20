@@ -4,7 +4,7 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-router.get('/:version/:customerID/deviceTypes', async (req, res, next) => {
+router.get('/:version/:customerID/devicetypes', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let customerID = req.params.customerID
@@ -27,7 +27,7 @@ router.get('/:version/:customerID/deviceTypes', async (req, res, next) => {
 		res.send(`API/sigfox version: ${apiVersion} not supported`)
 	}
 })
-router.get('/:version/deviceTypes', async (req, res, next) => {
+router.get('/:version/devicetypes', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let customerID = req.params.customerID
