@@ -25,7 +25,7 @@ class MDataStoreMqttHandler extends MqttHandler {
 			INNER JOIN Registry r ON r.id = d.reg_id
 			INNER JOIN Customer c on c.id = r.customer_id
 			LEFT JOIN Device_metadata dm on dm.device_id = d.id
-			where c.uuid='${customerID}' AND d.uuid='${deviceName}' AND r.uuid='${regName} and d.deleted=0';
+			where c.uuid='${customerID}' AND d.uuid='${deviceName}' AND r.uuid='${regName}' and d.deleted=0;
 			`
 			let query = `INSERT INTO Device_data
 			(data, topic, created, device_id)
@@ -34,18 +34,17 @@ class MDataStoreMqttHandler extends MqttHandler {
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
 			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
 			`
-			console.log(JSON.stringify(pData))
-			// console.log(deviceQ)
+			// console.log(JSON.stringify(pData))
+			console.log(deviceQ)
 			let lastId = null
 			await mysqlConn.query(query).then(([res, fi]) => {
 				lastId = res.insertId;
 			})
 			let [device, fields] = await mysqlConn.query(deviceQ)
-			// console.log('Device', device[0])
+			console.log('Device', device[0])
 			if (device.length > 0) {
 				console.log(device[0])
 				if (device[0].normalize >= 1) {
-					console.log(device[0])
 					let nData = JSON.parse(data)
 					// console.log('nData',nData)
 					let normalized = null

@@ -11,7 +11,7 @@ const app = express()
 // module.exports.logger = console
 // module.exports.logger=pino(pino.destination(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}-others.json`))
 const logger=pino(pino.destination(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}.json`))
-module.exports.logger = pino(pino.extreme(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}.json`))
+module.exports.logger = pino(pino.extreme(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}-others.json`))
 const expressPino = require('express-pino-logger')({
 	logger: logger
 })
