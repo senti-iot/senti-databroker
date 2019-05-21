@@ -46,7 +46,7 @@ class StoreMqttHandler extends MqttHandler {
 					// console.log(device[0])
 					let nData = JSON.parse(data)
 					// console.log('nData',nData)
-					let normalized = await engineAPI.post('/', {nId: device[0].normalize, data: { data:pData.data,k: device[0].metadata.key deviceId: deviceName, seq: pData.seqnr }).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
+					let normalized = await engineAPI.post('/', {nId: device[0].normalize, data: { data:pData.data,k: device[0].metadata.key, deviceId: deviceName, seq: pData.seqnr }}).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
 					console.log('EngineAPI:',normalized)
 					let normalizedQ = `INSERT INTO Device_data_clean
 				(data, created, device_id, device_data_id)
