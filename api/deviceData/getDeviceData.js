@@ -27,6 +27,7 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId', async (r
 				})
 				if(nId) {
 					let cData = await engineAPI.post('/', {nId: nId, data: cleanData}).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
+					return res.status(200).json(cData)
 				}
 				res.status(200).json(cleanData)
 			}).catch(err => {
