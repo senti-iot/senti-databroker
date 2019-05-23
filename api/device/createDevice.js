@@ -22,8 +22,8 @@ router.put('/:version/device', async (req, res, next) => {
 					data.long, data.address, data.locType,
 					 data.available, data.communication, 
 					 data.tags.join(','), data.logging]
-				mysqlConn.query(query, arr).then(res => {
-					res.status(200).json(true)
+				mysqlConn.query(query, arr).then(rs => {
+					res.status(200).json(rs[0].insertId)
 				}).catch(err => {
 					if(err) {res.status(500).json(err)}
 				})
