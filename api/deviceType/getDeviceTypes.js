@@ -35,7 +35,7 @@ router.get('/:version/devicetypes', async (req, res, next) => {
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			let query = `SELECT t.*, c.name as customer_name from Device_type t
-			INNER JOIN Customer c on c_id = t.customer_id`
+			INNER JOIN Customer c on c.id = t.customer_id`
 			await mysqlConn.query(query).then(rs => {
 					res.status(200).json(rs[0])
 				}).catch(err => {
