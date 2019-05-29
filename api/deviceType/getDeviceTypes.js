@@ -10,7 +10,7 @@ router.get('/:version/:customerID/devicetypes', async (req, res, next) => {
 	let customerID = req.params.customerID
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT t.name,t.id, t.\`structure\`, t.customer_id, c.name as customer_name, c.uuid from Device_type t
+			let query = `SELECT t.name,t.id, t.inbound, t.outbound, t.customer_id, c.name as customer_name, c.uuid from Device_type t
 			INNER JOIN Customer c on c.id = t.customer_id
 			where c.ODEUM_org_id=?`
 			console.log(query)
