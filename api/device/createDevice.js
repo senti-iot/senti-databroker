@@ -3,6 +3,14 @@ const router = express.Router()
 const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
+function cleanUpSpecialChars(str)
+{
+    return str
+        .replace(/[øØ]/g,"ou")
+        .replace(/[æÆ]/g,"ae")
+        .replace(/[åÅ]/g,"aa")
+        .replace(/[^a-z0-9]/gi,''); // final clean up
+}
 
 router.put('/:version/device', async (req, res, next) => {
 	let apiVersion = req.params.version
@@ -11,15 +19,16 @@ router.put('/:version/device', async (req, res, next) => {
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			let query = `INSERT INTO \`Device\`
-			(name, type_id, reg_id,
+			(uuid,name, type_id, reg_id,
 			description,
 			lat, lng, address, 
 			locType, 
 			available, communication) 
-			VALUES (?,?,?,?,?,?,?,?,?,?)`
+			VALUES (CONCAT(?,'-',CAST(LEFT(UUID(),8) as CHAR(50))),?,?,?,?,?,?,?,?,?,?)`
 			try {
 				console.log(data)
-				let arr = [data.name, data.type_id, data.reg_id,
+				let uuid = cleanUpSpecialChars(data.name).toLowerCase()
+				let arr = [uuid, data.name, data.type_id, data.reg_id,
 				data.description,
 				data.lat, data.long, data.address,
 				data.locType,

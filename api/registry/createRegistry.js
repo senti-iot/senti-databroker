@@ -3,7 +3,14 @@ const router = express.Router()
 const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
-
+function cleanUpSpecialChars(str)
+{
+    return str
+        .replace(/[øØ]/g,"ou")
+        .replace(/[æÆ]/g,"ae")
+        .replace(/[åÅ]/g,"aa")
+        .replace(/[^a-z0-9]/gi,''); // final clean up
+}
 router.put('/:version/registry', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
@@ -30,7 +37,7 @@ router.put('/:version/registry', async (req, res, next) => {
 				data.protocol,
 				data.ca_certificate,
 				data.customer_id,
-				data.name.replace(/\s+/g, '-').toLowerCase()
+				cleanUpSpecialChars(data.name).toLowerCase()
 			]).then((result) => {
 				res.status(200).json(result[0].insertId)
 			}).catch(err => {
