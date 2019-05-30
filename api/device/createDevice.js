@@ -9,7 +9,7 @@ function cleanUpSpecialChars(str)
         .replace(/[øØ]/g,"ou")
         .replace(/[æÆ]/g,"ae")
         .replace(/[åÅ]/g,"aa")
-        .replace(/[^a-z0-9]/gi,''); // final clean up
+        .replace(/[^a-z0-9]/gi,'-'); // final clean up
 }
 
 router.put('/:version/device', async (req, res, next) => {
