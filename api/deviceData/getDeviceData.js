@@ -4,25 +4,32 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 const moment = require('moment')
+const engineAPI = require('../engine/engine')
 
-router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type', async (req, res, next) => {
+router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let deviceID = req.params.deviceID
 	let from = req.params.from
 	let to = req.params.to
 	let type = req.params.type
+	let nId = req.params.nId
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			let query = `SELECT id, \`data\`, created, device_id
 			FROM Device_data_clean	
 			WHERE device_id=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
-			await mysqlConn.query(query, [deviceID, from, to]).then(rs => {
+			console.log('GETTING CLEAN DATA')
+			await mysqlConn.query(query, [deviceID, from, to]).then(async rs => {
 				let rawData = rs[0]
 				let cleanData = {}
 				rawData.forEach(r => {
 					cleanData[moment(r.created).format('YYYY-MM-DD HH:mm')] = r.data[type]
 				})
+				if(nId>0) {
+					let cData = await engineAPI.post('/', {nIds: [nId], data: cleanData}).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
+					return res.status(200).json(cData)
+				}
 				res.status(200).json(cleanData)
 			}).catch(err => {
 				if (err) { res.status(500).json({ err, query }) }

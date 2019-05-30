@@ -10,7 +10,7 @@ router.get('/:version/:customerID/devicetypes', async (req, res, next) => {
 	let customerID = req.params.customerID
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT t.name,t.id, t.\`structure\`, t.customer_id, c.name as customer_name, c.uuid from Device_type t
+			let query = `SELECT t.name,t.id, t.inbound, t.outbound, t.customer_id, c.name as customer_name, c.uuid from Device_type t
 			INNER JOIN Customer c on c.id = t.customer_id
 			where c.ODEUM_org_id=?`
 			console.log(query)
@@ -34,7 +34,8 @@ router.get('/:version/devicetypes', async (req, res, next) => {
 	let customerID = req.params.customerID
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT * from Device_type`
+			let query = `SELECT t.*, c.name as customer_name from Device_type t
+			INNER JOIN Customer c on c.id = t.customer_id`
 			await mysqlConn.query(query).then(rs => {
 					res.status(200).json(rs[0])
 				}).catch(err => {

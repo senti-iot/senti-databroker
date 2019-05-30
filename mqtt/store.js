@@ -21,7 +21,7 @@ class StoreMqttHandler extends MqttHandler {
 			console.log('STORING DATA')
 			console.log(deviceName, regName, customerID)
 			let pData = JSON.parse(data)
-			let deviceQ = `SELECT d.id, d.name, d.type_id, d.reg_id, d.\`normalize\`, dm.\`data\` as metadata from Device d
+			let deviceQ = `SELECT d.id, d.name, d.type_id, d.reg_id, d.\`normalize\`, dm.\`data\` as metadata, dm.inbound as cloudfunctions from Device d
 			INNER JOIN Registry r ON r.id = d.reg_id
 			INNER JOIN Customer c on c.id = r.customer_id
 			LEFT JOIN Device_metadata dm on dm.device_id = d.id
@@ -29,7 +29,11 @@ class StoreMqttHandler extends MqttHandler {
 			`
 			let query = `INSERT INTO Device_data
 			(data, topic, created, device_id)
-			SELECT '${JSON.stringify(pData)}', '', '${moment.unix(pData.time).startOf('day').format('YYYY-MM-DD HH:mm:ss')}', Device.id as device_id from Registry
+<<<<<<< HEAD
+			SELECT '${JSON.stringify(pData)}', '', '${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}', Device.id as device_id from Registry
+=======
+			SELECT '${JSON.stringify(pData)}', '', '${moment.unix(pData.time)}', Device.id as device_id from Registry
+>>>>>>> e3261f489c2c0cfecbc7cc4f1c70db93844ada2c
 			INNER JOIN Device ON Registry.id = Device.reg_id
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
 			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
@@ -42,20 +46,27 @@ class StoreMqttHandler extends MqttHandler {
 			let [device, fields] = await mysqlConn.query(deviceQ)
 			// console.log('Device', device[0])
 			if (device.length > 0) {
-				if (device[0].normalize >= 1) {					
+				if (device[0].normalize >= 1) {
 					// console.log(device[0])
 					let nData = JSON.parse(data)
 					// console.log('nData',nData)
-					let normalized = await engineAPI.post('/', {nId: device[0].normalize, data: { data:pData.data,k: device[0].metadata.key, deviceId: deviceName, seq: pData.seqnr }}).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
-					console.log('EngineAPI:',normalized)
+					let normalized = null
+					console.log(device[0])
+					normalized = await engineAPI.post(
+						'/',
+						{ nIds: device[0].cloudfunctions.map(n=> n.nId), data: {...pData, ...device[0].metadata } })
+						.then(rs => {
+							console.log('EngineAPI Response:', rs.status);
+							return rs.ok ? rs.data : null
+						})
 					let normalizedQ = `INSERT INTO Device_data_clean
 				(data, created, device_id, device_data_id)
-				SELECT '${normalized}', '${moment.unix(pData.time).startOf('day').format('YYYY-MM-DD HH:mm:ss')}' ,Device.id as device_id, ${lastId} from Registry
+				SELECT '${JSON.stringify(normalized)}', '${normalized.time ? moment(normalized.time).format('YYYY-MM-DD HH:mm:ss') : moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}',Device.id as device_id, ${lastId} from Registry
 				INNER JOIN Device ON Registry.id = Device.reg_id
 				INNER JOIN Customer ON Customer.id = Registry.customer_id
 				where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
 				`
-				console.log(normalizedQ)
+					console.log(normalizedQ)
 					await mysqlConn.query(normalizedQ).then().catch(e => {
 						console.log(e)
 					})
