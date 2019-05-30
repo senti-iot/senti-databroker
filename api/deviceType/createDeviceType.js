@@ -11,10 +11,10 @@ router.put('/:version/devicetype', async (req, res, next) => {
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			console.log('CREATING DEVICE_TYPE')
-			let query = `INSERT INTO Device_type (name, \`structure\`, customer_id, function_id) 
+			let query = `INSERT INTO Device_type (name, customer_id, function_id) 
 			SELECT ?, ?, c.id, ? from Customer c
 			where c.ODEUM_org_id=?`
-			let values = [data.name, JSON.stringify(data.structure), data.function_id, data.customer_id]
+			let values = [data.name, data.function_id, data.customer_id]
 			await mysqlConn.query(query, values).then(result => {
 				res.status(200).json(result[0].insertId)
 			}).catch(err => {
