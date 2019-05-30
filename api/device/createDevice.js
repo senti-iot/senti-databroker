@@ -9,26 +9,42 @@ router.put('/:version/device', async (req, res, next) => {
 	let authToken = req.headers.auth
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
-		if (authenticate(authToken)) {			
-			let query  =`INSERT INTO \`Device\`
+		if (authenticate(authToken)) {
+			let query = `INSERT INTO \`Device\`
 			(name, type_id, reg_id,
-			\`normalize\`, description,
-			 lat, lng, address, locType, 
-			 available, communication, tags, logging) 
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`
-			try{
-				let arr = [data.name,data.type_id, data.reg_id, 
-					data.normalize, data.description, data.lat, 
-					data.long, data.address, data.locType,
-					 data.available, data.communication, 
-					 data.tags.join(','), data.logging]
+			description,
+			lat, lng, address, 
+			locType, 
+			available, communication) 
+			VALUES (?,?,?,?,?,?,?,?,?,?)`
+			try {
+				let arr = [data.name, data.type_id, data.reg_id,
+				data.description,
+				data.lat, data.long, data.address,
+				data.locType,
+					data.available, data.communication]
+				
 				mysqlConn.query(query, arr).then(rs => {
-					res.status(200).json(rs[0].insertId)
+					console.log('Device Created', rs[0].insertId)
+					let mtd = data.metadata
+					let mtdQuery = `INSERT INTO Device_metadata
+					(device_id, \`data\`, inbound, outbound)
+					VALUES(?, ?, ?, ?);
+					`
+					console.log(mtd, mtdQuery)
+					let mtdArr = [rs[0].insertId, null, JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
+					mysqlConn.query(mtdQuery, mtdArr).then(r => { 
+						console.log('Created', r[0].insertId)
+						res.status(200).json(rs[0].insertId)
+					}).catch(err => { 
+						console.log('failed')
+						res.status(500).json(err)
+					})
 				}).catch(err => {
-					if(err) {res.status(500).json(err)}
+					 res.status(500).json(err)
 				})
 			}
-			catch(e) {
+			catch (e) {
 				res.status(500).json(e)
 			}
 			// res.json('API/sigfox POST Access Authenticated!')
