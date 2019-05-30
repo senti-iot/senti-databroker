@@ -29,7 +29,7 @@ class StoreMqttHandler extends MqttHandler {
 			`
 			let query = `INSERT INTO Device_data
 			(data, topic, created, device_id)
-			SELECT '${JSON.stringify(pData)}', '', ${moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time)}'` : 'NOW()'}, Device.id as device_id from Registry
+			SELECT '${JSON.stringify(pData)}', '', ${moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'` : 'NOW()'}, Device.id as device_id from Registry
 			INNER JOIN Device ON Registry.id = Device.reg_id
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
 			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
@@ -41,8 +41,9 @@ class StoreMqttHandler extends MqttHandler {
 			})
 			let [device, fields] = await mysqlConn.query(deviceQ)
 			// console.log('Device', device[0])
+			console.log(device[0])
 			if (device.length > 0) {
-				if (device[0].normalize >= 1) {
+				if (device[0].cloudfunctions.length >= 1) {
 					// console.log(device[0])
 					let nData = JSON.parse(data)
 					// console.log('nData',nData)
@@ -57,7 +58,12 @@ class StoreMqttHandler extends MqttHandler {
 						})
 					let normalizedQ = `INSERT INTO Device_data_clean
 				(data, created, device_id, device_data_id)
-				SELECT '${JSON.stringify(normalized)}', '${normalized.time ? moment(normalized.time).format('YYYY-MM-DD HH:mm:ss') : moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}',Device.id as device_id, ${lastId} from Registry
+				SELECT '${JSON.stringify(normalized)}', 
+							${normalized.time ?
+								`'${moment(normalized.time).format('YYYY-MM-DD HH:mm:ss')}'` :
+							moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'`
+								: 'NOW()'},
+					Device.id as device_id, ${lastId} from Registry
 				INNER JOIN Device ON Registry.id = Device.reg_id
 				INNER JOIN Customer ON Customer.id = Registry.customer_id
 				where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
