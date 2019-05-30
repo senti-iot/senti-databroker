@@ -29,11 +29,7 @@ class StoreMqttHandler extends MqttHandler {
 			`
 			let query = `INSERT INTO Device_data
 			(data, topic, created, device_id)
-<<<<<<< HEAD
-			SELECT '${JSON.stringify(pData)}', '', '${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}', Device.id as device_id from Registry
-=======
-			SELECT '${JSON.stringify(pData)}', '', '${moment.unix(pData.time)}', Device.id as device_id from Registry
->>>>>>> e3261f489c2c0cfecbc7cc4f1c70db93844ada2c
+			SELECT '${JSON.stringify(pData)}', '', '${moment.unix(pData.time).isValid() ? moment.unix(pData.time) : 'NOW()'}', Device.id as device_id from Registry
 			INNER JOIN Device ON Registry.id = Device.reg_id
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
 			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
