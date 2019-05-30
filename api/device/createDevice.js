@@ -18,6 +18,7 @@ router.put('/:version/device', async (req, res, next) => {
 			available, communication) 
 			VALUES (?,?,?,?,?,?,?,?,?,?)`
 			try {
+				console.log(data)
 				let arr = [data.name, data.type_id, data.reg_id,
 				data.description,
 				data.lat, data.long, data.address,
