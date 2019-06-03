@@ -43,36 +43,35 @@ class StoreMqttHandler extends MqttHandler {
 			// console.log('Device', device[0])
 			console.log(device[0])
 			if (device.length > 0) {
-				if (device[0].cloudfunctions.length >= 1) {
-					// console.log(device[0])
-					let nData = JSON.parse(data)
-					// console.log('nData',nData)
-					let normalized = null
-					console.log(device[0])
-					normalized = await engineAPI.post(
-						'/',
-						{ nIds: device[0].cloudfunctions.map(n=> n.nId), data: {...pData, ...device[0].metadata } })
-						.then(rs => {
-							console.log('EngineAPI Response:', rs.status);
-							return rs.ok ? rs.data : null
+				if (device[0].cloudfunctions)
+					if (device[0].cloudfunctions.length >= 1) {
+						// console.log(device[0])
+						let nData = JSON.parse(data)
+						// console.log('nData',nData)
+						let normalized = null
+						console.log(device[0])
+						normalized = await engineAPI.post(
+							'/',
+							{ nIds: device[0].cloudfunctions.map(n => n.nId), data: { ...pData, ...device[0].metadata } })
+							.then(rs => {
+								console.log('EngineAPI Response:', rs.status);
+								return rs.ok ? rs.data : null
+							})
+						let normalizedQ = `INSERT INTO Device_data_clean
+										(data, created, device_id, device_data_id)
+										SELECT '${JSON.stringify(normalized)}', 
+										${normalized.time ?
+										`'${moment(normalized.time).format('YYYY-MM-DD HH:mm:ss')}'` :
+											moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'`
+											: 'NOW()'},
+										Device.id as device_id, ${lastId} from Registry
+										INNER JOIN Device ON Registry.id = Device.reg_id
+										INNER JOIN Customer ON Customer.id = Registry.customer_id
+										where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'`
+						await mysqlConn.query(normalizedQ).then().catch(e => {
+							console.log(e)
 						})
-					let normalizedQ = `INSERT INTO Device_data_clean
-				(data, created, device_id, device_data_id)
-				SELECT '${JSON.stringify(normalized)}', 
-							${normalized.time ?
-								`'${moment(normalized.time).format('YYYY-MM-DD HH:mm:ss')}'` :
-							moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'`
-								: 'NOW()'},
-					Device.id as device_id, ${lastId} from Registry
-				INNER JOIN Device ON Registry.id = Device.reg_id
-				INNER JOIN Customer ON Customer.id = Registry.customer_id
-				where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
-				`
-					console.log(normalizedQ)
-					await mysqlConn.query(normalizedQ).then().catch(e => {
-						console.log(e)
-					})
-				}
+					}
 				return true
 			}
 			else {

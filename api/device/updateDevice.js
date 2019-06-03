@@ -4,65 +4,87 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-let update_set = (obj) => Object.keys(obj).map(value => {
-	if(typeof obj[value] === 'string'){
-		return  `${value} = '${obj[value]}'` 
-	}
-	if(typeof obj[value] === 'object') {
-		return `${value} = '${obj[value].join(',')}'`
-	}
-	return `${value}  = ${obj[value]}`;
-});
-
 router.post('/:version/device', async (req, res, next) => {
 	let apiVersion = req.params.version
-	console.log(req.body)
 	let deviceID = req.body.id
 	let authToken = req.headers.auth
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			if (deviceID) {
+				console.log('Searching for Device in DB')
 				let findDevQ = "SELECT * from `Device` where id=?"
 				mysqlConn.query(findDevQ, deviceID).then(result => {
-					console.log(result[0])
-					if (result.length !== 0) {
-						let query = `UPDATE Device 
-						SET 
-							name=?
-							type_id=?
-							reg_id=?
-							\`normalize\`=?
-							description=?
-							lat=?
-							lng=?
-							address=?
-							locType=?
-							available=?
-							communication=?
-							tags=?
-							logging=?
-						WHERE id = ?
+					console.log("Searched:", result[0].length)
+					if (result[0].length > 0) {
+						let query = `UPDATE Device
+						SET
+						name=?, 
+						type_id=?, 
+						reg_id=?, 
+						description=?, 
+						lat=?, 
+						lng=?, 
+						address=?, 
+						locType=?,  
+						communication=?, 
+						tags=?, 
+						deleted=0
+						WHERE id=?;
 						`
-						// ${update_set(data).join(",\n")} ${deviceID}
+						let queryDM = `
+						UPDATE Device_metadata
+						SET  
+						inbound=?, 
+						outbound=?
+						WHERE device_id=?;
+						`
+						let queryCreateDM = `
+						INSERT INTO Device_metadata(inbound,outbound,device_id) VALUES (?,?,?)
+						`
+						let queryFindDM = `SELECT * from Device_metadata where device_id=?`
+						let arr = [data.name, data.type_id,
+						data.reg_id, data.description,
+						data.lat, data.long, data.address, data.locType,
+						data.communication, data.tags.join(','), deviceID]
+						let arrDM = [JSON.stringify(data.metadata.inbound), JSON.stringify(data.metadata.outbound), deviceID]
+						console.log(arr, arrDM)
+						mysqlConn.query(query, arr).then((result) => {
+							console.log('Updated Device\n',result[0])
+							if (result[0].affectedRows > 0) {
+								mysqlConn.query(queryFindDM, [deviceID]).then(rs=> {
+									if(rs[0].length > 0)
+									{
+										console.log('Updating Metadata\n')
+										mysqlConn.query(queryDM, arrDM).then(rs => {
+											if (rs) {
+												console.log('Updated Metadata\n')
+												res.status(200).json(deviceID);
+											}
+										})
+									}
+									else {
+										console.log('Creating Device Metadata\n')
+										mysqlConn.query(queryCreateDM, [...arrDM, deviceID]).then(rs => {
+											if (rs) {
+												console.log('Created Device metadata\n');
+												res.status(200).json(deviceID);
+											}
+										})
+									}
+								})
 
-						console.log(query)
-						let arr = [data.name,data.type_id, 
-							data.reg_id, data.normalize, 
-							data.description, data.lat, data.long, data.address, data.locType, data.available, data.communication, data.tags.join(','), data.logging, deviceID]
-						// mysqlConn.query(query).then((result) => {
-						// 	// else {
-						// 	res.status(200).send(deviceID);
-						// 	// }
-						// }).catch(err => {
-						// 	// if (err) {
-						// 	console.log("error: ", err);
-						// 	res.status(404).json(err)
-						// 	// }
-						// })
+							
+							}
+						}).catch(err => {
+							// if (err) {
+							console.log("error: ", err);
+							res.status(500).json(err)
+							// }
+						})
 					}
 				}).catch(err => {
-					if (err) { res.status(404).json(err) }
+					res.status(500).json(err)
 				})
 			}
 		} else {
