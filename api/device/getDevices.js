@@ -10,8 +10,8 @@ router.get('/:version/devices', async (req, res, next) => {
 	let authToken = req.headers.auth
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT d.id, d.name,d.uuid, type_id, reg_id, \`normalize\`, d.description, lat, lng, address, 
-			locType, available, communication, tags, logging, r.name as reg_name, r.uuid as reg_uuid
+			let query = `SELECT d.id, d.name,d.uuid, type_id, reg_id, d.description, lat, lng, address, 
+			locType, communication, tags, r.name as reg_name, r.uuid as reg_uuid
 						FROM Device d
 						LEFT JOIN Device_metadata dm ON d.id = dm.device_id
 						INNER JOIN Registry r on r.id = d.reg_id
@@ -38,8 +38,8 @@ router.get('/:version/:customerID/devices', async (req, res, next) => {
 	let customerID = req.params.customerID
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT d.id, d.name,d.uuid, type_id, reg_id, \`normalize\`, d.description, lat, lng, address, 
-			locType, available, communication, tags, logging, r.name as reg_name, r.uuid as reg_uuid
+			let query = `SELECT d.id, d.name,d.uuid, type_id, reg_id, d.description, lat, lng, address, 
+			locType, communication, tags, r.name as reg_name, r.uuid as reg_uuid
 						FROM Device d
 						LEFT JOIN Device_metadata dm ON d.id = dm.device_id
 						INNER JOIN Registry r on r.id = d.reg_id

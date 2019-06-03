@@ -21,7 +21,7 @@ class StoreMqttHandler extends MqttHandler {
 			console.log('STORING DATA')
 			console.log(deviceName, regName, customerID)
 			let pData = JSON.parse(data)
-			let deviceQ = `SELECT d.id, d.name, d.type_id, d.reg_id, d.\`normalize\`, dm.\`data\` as metadata, dm.inbound as cloudfunctions from Device d
+			let deviceQ = `SELECT d.id, d.name, d.type_id, d.reg_id, dm.\`data\` as metadata, dm.inbound as cloudfunctions from Device d
 			INNER JOIN Registry r ON r.id = d.reg_id
 			INNER JOIN Customer c on c.id = r.customer_id
 			LEFT JOIN Device_metadata dm on dm.device_id = d.id
