@@ -74,6 +74,7 @@ class MDataStoreMqttHandler extends MqttHandler {
 					// res.status('404').json({'Error':'Device not found'});
 				}
 			}
+		}
 		catch (e) {
 				console.log("ERROR:", e.message)
 				return false
