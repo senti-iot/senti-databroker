@@ -45,7 +45,7 @@ router.post('/:version/device', async (req, res, next) => {
 						let queryFindDM = `SELECT * from Device_metadata where device_id=?`
 						let arr = [data.name, data.type_id,
 						data.reg_id, data.description,
-						data.lat, data.long, data.address, data.locType,
+						data.lat, data.lng, data.address, data.locType,
 						data.communication, data.tags.join(','), deviceID]
 						let arrDM = [JSON.stringify(data.metadata.inbound), JSON.stringify(data.metadata.outbound), deviceID]
 						console.log(arr, arrDM)
