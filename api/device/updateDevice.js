@@ -14,9 +14,10 @@ let update_set = (obj) => Object.keys(obj).map(value => {
 	return `${value}  = ${obj[value]}`;
 });
 
-router.post('/:version/device/:id', async (req, res, next) => {
+router.post('/:version/device', async (req, res, next) => {
 	let apiVersion = req.params.version
-	let deviceID = req.params.id
+	console.log(req.body)
+	let deviceID = req.body.id
 	let authToken = req.headers.auth
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
@@ -24,7 +25,7 @@ router.post('/:version/device/:id', async (req, res, next) => {
 			if (deviceID) {
 				let findDevQ = "SELECT * from `Device` where id=?"
 				mysqlConn.query(findDevQ, deviceID).then(result => {
-
+					console.log(result[0])
 					if (result.length !== 0) {
 						let query = `UPDATE Device 
 						SET 
@@ -49,16 +50,16 @@ router.post('/:version/device/:id', async (req, res, next) => {
 						let arr = [data.name,data.type_id, 
 							data.reg_id, data.normalize, 
 							data.description, data.lat, data.long, data.address, data.locType, data.available, data.communication, data.tags.join(','), data.logging, deviceID]
-						mysqlConn.query(query).then((result) => {
-							// else {
-							res.status(200).send(deviceID);
-							// }
-						}).catch(err => {
-							// if (err) {
-							console.log("error: ", err);
-							res.status(404).json(err)
-							// }
-						})
+						// mysqlConn.query(query).then((result) => {
+						// 	// else {
+						// 	res.status(200).send(deviceID);
+						// 	// }
+						// }).catch(err => {
+						// 	// if (err) {
+						// 	console.log("error: ", err);
+						// 	res.status(404).json(err)
+						// 	// }
+						// })
 					}
 				}).catch(err => {
 					if (err) { res.status(404).json(err) }
