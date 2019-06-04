@@ -50,11 +50,10 @@ router.post('/:version/device', async (req, res, next) => {
 						let arrDM = [JSON.stringify(data.metadata.inbound), JSON.stringify(data.metadata.outbound), deviceID]
 						console.log(arr, arrDM)
 						mysqlConn.query(query, arr).then((result) => {
-							console.log('Updated Device\n',result[0])
+							console.log('Updated Device\n', result[0])
 							if (result[0].affectedRows > 0) {
-								mysqlConn.query(queryFindDM, [deviceID]).then(rs=> {
-									if(rs[0].length > 0)
-									{
+								mysqlConn.query(queryFindDM, [deviceID]).then(rs => {
+									if (rs[0].length > 0) {
 										console.log('Updating Metadata\n')
 										mysqlConn.query(queryDM, arrDM).then(rs => {
 											if (rs) {
@@ -74,7 +73,7 @@ router.post('/:version/device', async (req, res, next) => {
 									}
 								})
 
-							
+
 							}
 						}).catch(err => {
 							// if (err) {

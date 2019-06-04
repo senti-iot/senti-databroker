@@ -28,8 +28,8 @@ class StoreMqttHandler extends MqttHandler {
 			where c.uuid='${customerID}' AND d.uuid='${deviceName}' AND r.uuid='${regName}' AND d.deleted = 0;
 			`
 			let query = `INSERT INTO Device_data
-			(data, topic, created, device_id)
-			SELECT '${JSON.stringify(pData)}', '', ${moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'` : 'NOW()'}, Device.id as device_id from Registry
+			(data, topic, created, device_id, signature)
+			SELECT '${JSON.stringify(pData)}', '', ${moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'` : 'NOW()'}, Device.id as device_id, SHA2('${JSON.stringify(pData)}',256) from Registry
 			INNER JOIN Device ON Registry.id = Device.reg_id
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
 			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
@@ -40,8 +40,8 @@ class StoreMqttHandler extends MqttHandler {
 				lastId = res.insertId;
 			})
 			let [device, fields] = await mysqlConn.query(deviceQ)
-			// console.log('Device', device[0])
-			console.log(device[0])
+			console.log('Device\n', device[0])
+			// console.log(device[0])
 			if (device.length > 0) {
 				if (device[0].cloudfunctions)
 					if (device[0].cloudfunctions.length >= 1) {
