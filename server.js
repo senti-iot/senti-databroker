@@ -42,6 +42,7 @@ const createDT = require('./api/deviceType/createDeviceType')
 
 //#region Device Data
 const getDeviceData = require('./api/deviceData/getDeviceData')
+const getMessages = require('./api/deviceData/getMessages')
 //#endregion
 
 //#region Customer
@@ -60,7 +61,7 @@ app.use(cors())
 app.use('/', [getDT, getDTs, createDT, updateDT])
 app.use('/', [getDevice, getDevices, createDevice, updateDevice])
 app.use('/', [getRegistry, getRegistryDevices, getRegistries, createReg, updateReg])
-app.use('/', [getDeviceData])
+app.use('/', [getDeviceData, getMessages])
 app.use('/', [createCustomer, getCustomer, updateCustomer])
 
 const startAPIServer = () => {

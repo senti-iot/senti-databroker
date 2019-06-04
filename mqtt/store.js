@@ -54,7 +54,7 @@ class StoreMqttHandler extends MqttHandler {
 							'/',
 							{ nIds: device[0].cloudfunctions.map(n => n.nId), data: { ...pData, ...device[0].metadata } })
 							.then(rs => {
-								console.log('EngineAPI Response:', rs.status);
+								console.log('EngineAPI Response:', rs.status, rs.data);
 								return rs.ok ? rs.data : null
 							})
 						let normalizedQ = `INSERT INTO Device_data_clean

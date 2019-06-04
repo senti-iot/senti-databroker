@@ -23,16 +23,15 @@ router.put('/:version/device', async (req, res, next) => {
 			description,
 			lat, lng, address, 
 			locType, 
-			available, communication) 
-			VALUES (CONCAT(?,'-',CAST(LEFT(UUID(),8) as CHAR(50))),?,?,?,?,?,?,?,?,?,?)`
+			communication) 
+			VALUES (CONCAT(?,'-',CAST(LEFT(UUID(),8) as CHAR(50))),?,?,?,?,?,?,?,?,?)`
 			try {
 				console.log(data)
 				let uuid = cleanUpSpecialChars(data.name).toLowerCase()
 				let arr = [uuid, data.name, data.type_id, data.reg_id,
 				data.description,
-				data.lat, data.long, data.address,
-				data.locType,
-					data.available, data.communication]
+				data.lat, data.lng, data.address,
+				data.locType, data.communication]
 				
 				mysqlConn.query(query, arr).then(rs => {
 					console.log('Device Created', rs[0].insertId)
