@@ -41,7 +41,7 @@ router.put('/:version/device', async (req, res, next) => {
 					VALUES(?, ?, ?, ?);
 					`
 					console.log(mtd, mtdQuery)
-					let mtdArr = [rs[0].insertId, null, JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
+					let mtdArr = [rs[0].insertId, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
 					mysqlConn.query(mtdQuery, mtdArr).then(r => { 
 						console.log('Created', r[0].insertId)
 						res.status(200).json(rs[0].insertId)
