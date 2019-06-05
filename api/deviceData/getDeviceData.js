@@ -20,6 +20,7 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId', async (r
 			FROM Device_data_clean	
 			WHERE device_id=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
 			console.log('GETTING CLEAN DATA')
+			console.log(deviceID, from, to, type, nId)
 			await mysqlConn.query(query, [deviceID, from, to]).then(async rs => {
 				console.log(rs[0])
 				let rawData = rs[0]
