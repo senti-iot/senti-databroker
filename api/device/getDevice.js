@@ -11,7 +11,7 @@ router.get('/:version/device/:id', async (req, res, next) => {
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			let query = `SELECT d.id, d.name, d.uuid, type_id, reg_id, d.description, lat, lng, address, 
-			locType, communication, tags, JSON_REMOVE(\`data\`,'$.key') as metadata, dm.outbound as dataKeys, dm.inbound, 
+			locType, communication, tags, \`data\` as metadata, dm.outbound as dataKeys, dm.inbound, 
 			r.name as regName, r.uuid as regUUID, r.protocol as protocol, r.id as regId,
 			c.name as customer_name, c.uuid as customer_uuid
 			FROM Device d
@@ -41,7 +41,7 @@ router.get('/:version/:customerID/device/:id', async (req, res, next) => {
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			let query = `SELECT d.id, d.name,d.uuid, type_id, reg_id, d.description, lat, lng, address, 
-			locType, communication, tags, JSON_REMOVE(\`data\`,'$.key') as metadata, dm.outbound as dataKeys, dm.inbound, r.name as regName, 
+			locType, communication, tags, \`data\` as metadata, dm.outbound as dataKeys, dm.inbound, r.name as regName, 
 			r.uuid as regUUID, r.protocol as protocol, r.id as regId
 			FROM Device d
 			LEFT JOIN Registry r on r.id = d.reg_id
