@@ -10,9 +10,10 @@ router.get('/:version/device/:id', async (req, res, next) => {
 	let deviceID = req.params.id
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT d.id, d.name,d.uuid, type_id, reg_id, d.description, lat, lng, address, 
+			let query = `SELECT d.id, d.name, d.uuid, type_id, reg_id, d.description, lat, lng, address, 
 			locType, communication, tags, JSON_REMOVE(\`data\`,'$.key') as metadata, dm.outbound as dataKeys, dm.inbound, 
-			r.name as regName, r.uuid as regUUID, r.protocol as protocol, r.id as regId
+			r.name as regName, r.uuid as regUUID, r.protocol as protocol, r.id as regId,
+			c.name as customer_name, c.uuid as customer_uuid
 			FROM Device d
 			LEFT JOIN Registry r on r.id = d.reg_id
 			INNER JOIN Customer c on c.id = r.customer_id
