@@ -19,14 +19,11 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId', async (r
 			let query = `SELECT id, \`data\`, created, device_id
 			FROM Device_data_clean	
 			WHERE device_id=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
-			console.log('GETTING CLEAN DATA')
-			console.log(deviceID, from, to, type, nId)
 			await mysqlConn.query(query, [deviceID, from, to]).then(async rs => {
-				console.log(rs[0])
 				let rawData = rs[0]
 				let cleanData = {}
 				rawData.forEach(r => {
-					cleanData[moment(r.created).format('YYYY-MM-DD HH:mm')] = r.data[type]
+					cleanData[moment(r.created).format('YYYY-MM-DD HH:mm:ss')] = r.data[type]
 				})
 				if(nId>0) {
 					let cData = await engineAPI.post('/', {nIds: [nId], data: cleanData}).then(rs => { console.log('EngineAPI Response:', rs.status); return rs.ok ? rs.data : null })
