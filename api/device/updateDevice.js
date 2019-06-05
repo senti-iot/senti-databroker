@@ -34,7 +34,8 @@ router.post('/:version/device', async (req, res, next) => {
 						`
 						let queryDM = `
 						UPDATE Device_metadata
-						SET  
+						SET 
+						\`data\`=?
 						inbound=?, 
 						outbound=?
 						WHERE device_id=?;
@@ -43,12 +44,14 @@ router.post('/:version/device', async (req, res, next) => {
 						INSERT INTO Device_metadata(\`data\`,inbound,outbound,device_id) VALUES (?,?,?,?)
 						`
 						let queryFindDM = `SELECT * from Device_metadata where device_id=?`
+
 						let arr = [data.name, data.type_id,
 						data.reg_id, data.description,
 						data.lat, data.lng, data.address, data.locType,
 						data.communication, data.tags.join(','), deviceID]
+						
 						let arrDM = [JSON.stringify(data.metadata.metadata), JSON.stringify(data.metadata.inbound), JSON.stringify(data.metadata.outbound), deviceID]
-						console.log(arr, arrDM)
+						
 						mysqlConn.query(query, arr).then((result) => {
 							console.log('Updated Device\n', result[0])
 							if (result[0].affectedRows > 0) {
