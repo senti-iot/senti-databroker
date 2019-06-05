@@ -35,7 +35,7 @@ router.post('/:version/device', async (req, res, next) => {
 						let queryDM = `
 						UPDATE Device_metadata
 						SET 
-						\`data\`=?
+						\`data\`=?,
 						inbound=?, 
 						outbound=?
 						WHERE device_id=?;
@@ -51,7 +51,7 @@ router.post('/:version/device', async (req, res, next) => {
 						data.communication, data.tags.join(','), deviceID]
 						
 						let arrDM = [JSON.stringify(data.metadata.metadata), JSON.stringify(data.metadata.inbound), JSON.stringify(data.metadata.outbound), deviceID]
-						
+
 						mysqlConn.query(query, arr).then((result) => {
 							console.log('Updated Device\n', result[0])
 							if (result[0].affectedRows > 0) {
