@@ -61,7 +61,7 @@ class StoreMqttHandler extends MqttHandler {
 										(data, created, device_id, device_data_id)
 										SELECT '${JSON.stringify(normalized)}', 
 										${normalized.time ?
-										`'${moment(normalized.time).utc().format('YYYY-MM-DD HH:mm:ss')}'` :
+										`'${moment(normalized.time).format('YYYY-MM-DD HH:mm:ss')}'` :
 											moment.utc().unix(pData.time).isValid() ? `'${moment.utc().unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'`
 											: 'NOW()'},
 										Device.id as device_id, ${lastId} from Registry
