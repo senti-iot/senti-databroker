@@ -24,7 +24,7 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId', async (r
 				let rawData = rs[0]
 				let cleanData = {}
 				rawData.forEach(r => {
-					cleanData[moment(r.created).format('YYYY-MM-DD HH:mm:ss')] = r.data[type]
+					cleanData[moment(r.created).utc().format('YYYY-MM-DD HH:mm:ss')] = r.data[type]
 				})
 				console.log(rawData)
 				console.log(cleanData)
