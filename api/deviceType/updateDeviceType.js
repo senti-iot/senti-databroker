@@ -4,10 +4,10 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-router.post('/:version/devicetype/:id', async (req, res, next) => {
+router.post('/:version/devicetype', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
-	let dtId = req.params.id
+	let dtId = req.body.id
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
@@ -24,7 +24,7 @@ router.post('/:version/devicetype/:id', async (req, res, next) => {
 							outbound = ?,
 							metadata = ?,
 							customer_id = ?
-						WHERE type_id = ?`
+						WHERE id = ?`
 						let values = [data.type_name, JSON.stringify(data.inbound), JSON.stringify(data.outbound), JSON.stringify(data.metadata), data.customer_id, dtId]
 						mysqlConn.query(query, values)
 							.then((result) => {
