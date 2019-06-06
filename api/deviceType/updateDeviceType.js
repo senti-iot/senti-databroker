@@ -25,7 +25,7 @@ router.post('/:version/devicetype', async (req, res, next) => {
 							metadata = ?,
 							customer_id = ?
 						WHERE id = ?`
-						let values = [data.type_name, JSON.stringify(data.inbound), JSON.stringify(data.outbound), JSON.stringify(data.metadata), data.customer_id, dtId]
+						let values = [data.name, JSON.stringify(data.inbound), JSON.stringify(data.outbound), JSON.stringify(data.metadata), data.customer_id, dtId]
 						mysqlConn.query(query, values)
 							.then((result) => {
 								res.status(200).json(true);
