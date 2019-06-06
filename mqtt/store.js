@@ -29,7 +29,7 @@ class StoreMqttHandler extends MqttHandler {
 			`
 			let query = `INSERT INTO Device_data
 			(data, topic, created, device_id, signature)
-			SELECT '${JSON.stringify(pData)}', '', ${moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'` : 'NOW()'}, Device.id as device_id, SHA2('${JSON.stringify(pData)}',256) from Registry
+			SELECT '${JSON.stringify(pData)}', '', ${moment.utc().unix(pData.time).isValid() ? `'${moment.utc().unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'` : 'NOW()'}, Device.id as device_id, SHA2('${JSON.stringify(pData)}',256) from Registry
 			INNER JOIN Device ON Registry.id = Device.reg_id
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
 			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
@@ -61,8 +61,8 @@ class StoreMqttHandler extends MqttHandler {
 										(data, created, device_id, device_data_id)
 										SELECT '${JSON.stringify(normalized)}', 
 										${normalized.time ?
-										`'${moment(normalized.time).format('YYYY-MM-DD HH:mm:ss')}'` :
-											moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'`
+										`'${moment(normalized.time).utc().format('YYYY-MM-DD HH:mm:ss')}'` :
+											moment.utc().unix(pData.time).isValid() ? `'${moment.utc().unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'`
 											: 'NOW()'},
 										Device.id as device_id, ${lastId} from Registry
 										INNER JOIN Device ON Registry.id = Device.reg_id
