@@ -20,10 +20,12 @@ router.post('/:version/devicetype/:id', async (req, res, next) => {
 						let query = `UPDATE \`Device_type\` 
 						SET 
 							name = ?,
-							structure = ?,
+							inbound = ?,
+							outbound = ?,
+							metadata = ?,
 							customer_id = ?
 						WHERE type_id = ?`
-						let values = [data.type_name, JSON.stringify(data.structure), data.customer_id, dtId]
+						let values = [data.type_name, JSON.stringify(data.inbound), JSON.stringify(data.outbound), JSON.stringify(data.metadata), data.customer_id, dtId]
 						mysqlConn.query(query, values)
 							.then((result) => {
 								res.status(200).json(true);
