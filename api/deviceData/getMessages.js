@@ -6,7 +6,7 @@ var mysqlConn = require('../../mysql/mysql_handler')
 const moment = require('moment')
 const engineAPI = require('../engine/engine')
 
-router.get('/:version/devicedata/', async (req, res, next) => {
+router.get('/:version/messages/', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	// let customerID = req.params.customerID
@@ -28,10 +28,10 @@ router.get('/:version/devicedata/', async (req, res, next) => {
 		res.send(`API/sigfox version: ${apiVersion} not supported`)
 	}
 })
-router.get('/:version/:customerID/devicedata/', async (req, res, next) => {
+router.get('/:version/messages/:cId', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
-	let customerID = req.params.customerID
+	let customerID = req.params.cId
 	// let deviceID = req.params.deviceID
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
