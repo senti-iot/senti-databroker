@@ -35,7 +35,7 @@ router.get('/:version/messages/:cId', async (req, res, next) => {
 	// let deviceID = req.params.deviceID
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT dd.id, \`data\`, dd.created, device_id FROM Device_data dd
+			let query = `SELECT dd.id, \`data\`, dd.created, dd.device_id, d.name as deviceName, r.name as registryName, c.name as customerName FROM Device_data dd
 			LEFT JOIN Device d on d.id = dd.device_id
 			LEFT JOIN Registry r on r.id = d.reg_id
 			INNER JOIN Customer c on c.id = r.customer_id
