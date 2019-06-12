@@ -11,7 +11,9 @@ router.get('/:version/:customerID/deviceType/:id', async (req, res, next) => {
 	let deviceTypeID = req.params.id
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT * from Device_type where id=? and deleted=0`
+			let query = `SELECT dt.id, dt.name, dt.description, dt.inbound, dt.outbound, dt.metadata, dt.deleted, c.name as customerName FROM Device_type dt
+			INNER JOIN Customer c on c.id = dt.customer_id
+			WHERE dt.id=? and dt.deleted=0;`
 			await mysqlConn.query(query, [deviceTypeID]).then(rs => {
 				if(rs[0][0])
 				{
@@ -32,7 +34,5 @@ router.get('/:version/:customerID/deviceType/:id', async (req, res, next) => {
 		res.send(`API/sigfox version: ${apiVersion} not supported`)
 	}
 })
-// router.get('/', async (req,res, netxt)=> {
-// 	res.json('API/MessageBroker GET Success!')
-// })
+
 module.exports = router
