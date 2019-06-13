@@ -56,11 +56,12 @@ class StoreMqttHandler extends MqttHandler {
 								console.log('EngineAPI Response:', rs.status, rs.data);
 								return rs.ok ? rs.data : null
 							})
+						console.log(moment.unix(normalized.time).format('YYYY-MM-DD HH:mm:ss'))
 						let normalizedQ = `INSERT INTO Device_data_clean
 										(data, created, device_id, device_data_id)
 										SELECT '${JSON.stringify(normalized)}', 
 										${normalized.time ?
-										`'${moment(normalized.time).format('YYYY-MM-DD HH:mm:ss')}'` :
+										`'${moment.unix(normalized.time).format('YYYY-MM-DD HH:mm:ss')}'` :
 											moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'`
 											: 'NOW()'},
 										Device.id as device_id, ${lastId} from Registry
