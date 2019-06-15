@@ -32,6 +32,7 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 					let data = rs[0]
 					if (chartType === 1) {
 						data = rs[0][0].avrg
+						data = parseFloat(parseFloat(data).toFixed(3))
 						if (nId > 0) {
 							let cData = await engineAPI.post('/', { nIds: [nId], data: data }).then((rss) => {
 								console.log('EngineAPI Status:', rss.status);
@@ -50,7 +51,8 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 							cleanData[moment(r.created).format('YYYY-MM-DD HH:mm:ss')] = r.avrg
 						})
 						if (nId > 0) {
-							let cData = await engineAPI.post('/', { nIds: [nId], data: data }).then((rss) => {
+							console.log(cleanData)
+							let cData = await engineAPI.post('/', { nIds: [nId], data: cleanData }).then((rss) => {
 								console.log('EngineAPI Status:', rss.status);
 								console.log('EngineAPI Response', rss.data)
 								return rss.ok ? rss.data : null
