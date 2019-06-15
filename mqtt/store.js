@@ -41,13 +41,9 @@ class StoreMqttHandler extends MqttHandler {
 			})
 			let [device, fields] = await mysqlConn.query(deviceQ)
 			console.log('Device\n', device[0])
-			// console.log(device[0])
 			if (device.length > 0) {
 				if (device[0].cloudfunctions)
 					if (device[0].cloudfunctions.length >= 1) {
-						// console.log(device[0])
-						let nData = JSON.parse(data)
-						// console.log('nData',nData)
 						let normalized = null
 						normalized = await engineAPI.post(
 							'/',
@@ -68,7 +64,7 @@ class StoreMqttHandler extends MqttHandler {
 										INNER JOIN Device ON Registry.id = Device.reg_id
 										INNER JOIN Customer ON Customer.id = Registry.customer_id
 										where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'`
-						await mysqlConn.query(normalizedQ).then().catch(e => {
+						await mysqlConn.query(normalizedQ).then(rs => { }).catch(e => {
 							console.log(e)
 						})
 					}
