@@ -19,14 +19,37 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			if (deviceID === 'all' && deviceTypeID) {
-				let q1 = `SELECT (sum(c.\`data\`->>'$.${type}')/count(c.\`data\`)) as avrg from Device_data_clean c
-				Inner join Device d on d.id = c.device_id
-				where d.type_id = ? and created >= ? AND created <= ? ORDER BY created and \`data\`->>'$.${type}' not like '%null%'`
-				let q2 = `SELECT created, AVG(\`data\`->>'$.${type}') as avrg from Device_data_clean
-				inner join Device d on d.id = device_id
-				where d.type_id = ? and \`data\`->>'$.${type}' not like '%null%' and created >= ? AND created <= ?
-				group by created
-				order by created asc`
+				let q1 = `SELECT AVG(ROUND(dd.\`data\`->'$.${type}' - ddd.\`data\`->'$.${type}', 3)) as avrg from Device_data_clean dd
+				left join Device_data_clean ddd 
+					on dd.device_id = ddd.device_id
+					and ddd.created = (
+						SELECT Max(created) 
+						from Device_data_clean 
+						where created < dd.created and device_id = dd.device_id)
+				INNER JOIN Device d on d.id = dd.device_id
+				INNER JOIN Device_type dt on dt.id = d.type_id
+				where dt.id=? and dd.created >= ? and dd.created <= ?
+				ORDER BY dd.created`
+				let q2 = `SELECT dd.created, AVG(ROUND(dd.\`data\`->'$.${type}' - ddd.\`data\`->'$.${type}', 3)) as avrg from Device_data_clean dd
+				left join Device_data_clean ddd 
+					on dd.device_id = ddd.device_id
+					and ddd.created = (
+						SELECT Max(created) 
+						from Device_data_clean 
+						where created < dd.created and device_id = dd.device_id)
+				INNER JOIN Device d on d.id = dd.device_id
+				INNER JOIN Device_type dt on dt.id = d.type_id
+				where dt.id=? and dd.created >= ? and dd.created <= ?
+				GROUP BY dd.created
+				ORDER BY dd.created`
+				// let q1 = `SELECT (sum(c.\`data\`->>'$.${type}')/count(c.\`data\`)) as avrg from Device_data_clean c
+				// Inner join Device d on d.id = c.device_id
+				// where d.type_id = ? and created >= ? AND created <= ? ORDER BY created and \`data\`->>'$.${type}' not like '%null%'`
+				// let q2 = `SELECT created, AVG(\`data\`->>'$.${type}') as avrg from Device_data_clean
+				// inner join Device d on d.id = device_id
+				// where d.type_id = ? and \`data\`->>'$.${type}' not like '%null%' and created >= ? AND created <= ?
+				// group by created
+				// order by created asc`
 				console.log(chartType)
 				await mysqlConn.query(chartType === 0 ? q2 : q1, [deviceTypeID, from, to]).then(async rs => {
 					let data = rs[0]
