@@ -86,37 +86,38 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 							res.status(200).json(cleanData)
 						}
 					}
-				}).catch(err => { 
+				}).catch(err => {
 					console.log(err)
 				})
 			}
-			else { 
+			else {
 
 				let query = `SELECT id, \`data\`, created, device_id
 				FROM Device_data_clean	
 				WHERE device_id=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
-				console.log(deviceID, from ,to, nId)
-			await mysqlConn.query(query, [deviceID, from, to]).then(async rs => {
-				let rawData = rs[0]
-				let cleanData = {}
-				rawData.forEach(r => {
-					cleanData[moment(r.created).format('YYYY-MM-DD HH:mm:ss')] = r.data[type]
-				})
-				console.log(rawData)
-				console.log(cleanData)
-				if(nId>0) {
-					let cData = await engineAPI.post('/', {nIds: [nId], data: cleanData}).then(rss => { 
-						console.log('EngineAPI Status:', rss.status); 
-						console.log('EngineAPI Response', rss.data)
-						return rss.ok ? rss.data : null 
+				console.log(deviceID, from, to, nId)
+				await mysqlConn.query(query, [deviceID, from, to]).then(async rs => {
+					let rawData = rs[0]
+					let cleanData = {}
+					rawData.forEach(r => {
+						if (r.data[type])
+							cleanData[moment(r.created).format('YYYY-MM-DD HH:mm:ss')] = r.data[type]
 					})
-					return res.status(200).json(cData)
-				}
-				res.status(200).json(cleanData)
-			}).catch(err => {
-				if (err) { res.status(500).json({ err, query }) }
-			})
-		}
+					console.log(rawData)
+					console.log(cleanData)
+					if (nId > 0) {
+						let cData = await engineAPI.post('/', { nIds: [nId], data: cleanData }).then(rss => {
+							console.log('EngineAPI Status:', rss.status);
+							console.log('EngineAPI Response', rss.data)
+							return rss.ok ? rss.data : null
+						})
+						return res.status(200).json(cData)
+					}
+					res.status(200).json(cleanData)
+				}).catch(err => {
+					if (err) { res.status(500).json({ err, query }) }
+				})
+			}
 		} else {
 			res.status(403).json('Unauthorized Access! 403')
 			console.log('Unauthorized Access!')

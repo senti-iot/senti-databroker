@@ -19,7 +19,7 @@ router.post('/:version/devicetype', async (req, res, next) => {
 					if (result[0].length !== 0) {
 						let query = `UPDATE \`Device_type\` 
 						SET 
-							name = ?,
+							 name = ?,
 							inbound = ?,
 							outbound = ?,
 							metadata = ?,
