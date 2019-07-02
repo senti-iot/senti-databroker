@@ -3,6 +3,7 @@ var mysqlConn = require('../mysql/mysql_handler')
 const engineAPI = require('../api/engine/engine')
 const logger = require('../server').logger
 const moment = require('moment')
+const SHA2 = require('sha2')
 
 class StoreMqttHandler extends MqttHandler {
 	init() {
@@ -21,6 +22,7 @@ class StoreMqttHandler extends MqttHandler {
 			console.log('STORING DATA')
 			console.log(deviceName, regName, customerID)
 			let pData = JSON.parse(data)
+			console.log(pData)
 			let deviceQ = `SELECT d.id, d.name, d.type_id, d.reg_id, dm.\`data\` as metadata, dm.inbound as cloudfunctions from Device d
 			INNER JOIN Registry r ON r.id = d.reg_id
 			INNER JOIN Customer c on c.id = r.customer_id
@@ -34,13 +36,29 @@ class StoreMqttHandler extends MqttHandler {
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
 			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
 			`
-			console.log(deviceQ)
+			let packageCheckQ = `SELECT signature from Device_data dd
+			INNER JOIN Device d on d.id = dd.device_id
+			WHERE dd.signature=? and d.uuid=?
+			`
+			let shaString = SHA2['SHA-256'](JSON.stringify(pData)).toString('hex')
+			let check = await mysqlConn.query(packageCheckQ,[shaString, deviceName]).then(([res, fi])=> {
+				console.log('\n')
+				console.log(SHA2['SHA-256'](JSON.stringify(pData)))
+				console.log(res, fi)
+				console.log('\n')
+				return res
+			})
+			if(check.length > 0) {
+				console.warn('DUPLICATE: Package already exists!')
+				return false
+			}
+			// console.log(deviceQ)
 			let lastId = null
 			await mysqlConn.query(query).then(([res, fi]) => {
 				lastId = res.insertId;
 			})
 			let [device, fields] = await mysqlConn.query(deviceQ)
-			console.log('Device\n', device[0])
+			// console.log('Device\n', device[0])
 			if (device.length > 0) {
 				if (device[0].cloudfunctions)
 					if (device[0].cloudfunctions.length >= 1) {
@@ -52,7 +70,7 @@ class StoreMqttHandler extends MqttHandler {
 								console.log('EngineAPI Response:', rs.status, rs.data);
 								return rs.ok ? rs.data : null
 							})
-						console.log(moment.unix(normalized.time).format('YYYY-MM-DD HH:mm:ss'))
+						// console.log(moment.unix(normalized.time).format('YYYY-MM-DD HH:mm:ss'))
 						let normalizedQ = `INSERT INTO Device_data_clean
 										(data, created, device_id, device_data_id)
 										SELECT '${JSON.stringify(normalized)}', 
