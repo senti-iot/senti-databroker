@@ -10,7 +10,7 @@ router.get('/:version/registry/:id', async (req, res, next) => {
 	let regID = req.params.id
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT r.*, c.name as customer_name from Registry r
+			let query = `SELECT r.*, c.name as customer_name, c.ODEUM_org_id as orgId from Registry r
 			INNER JOIN Customer c on c.id = r.customer_id
 			where r.id=? and r.deleted=0;`
 			await mysqlConn.query(query, [regID]).then(rs => {
@@ -40,9 +40,9 @@ router.get('/:version/:customerID/registry/:id', async (req, res, next) => {
 	let regID = req.params.id
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT r.*, c.name as customer_name from Registry r
+			let query = `SELECT r.*, c.name as customer_name, c.ODEUM_org_id as orgId from Registry r
 			INNER JOIN Customer c on c.id = r.customer_id
-			where r.id=? and r.deleted=0; and c.ODEUM_org_id=?`
+			where r.id=? and r.deleted=0 and c.ODEUM_org_id=?`
 			await mysqlConn.query(query, [regID, customerID]).then(rs => {
 				console.log(rs[0][0])
 				if (rs[0][0])

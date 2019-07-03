@@ -18,10 +18,9 @@ router.put('/:version/registry', async (req, res, next) => {
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			let query = `
-			INSERT INTO \`Registry\`(name,region,protocol,ca_certificate,description,customer_id, created, uuid) 
-			(SELECT ?,?,?,?,?, c.id, NOW(), CONCAT(?,'-',CAST(LEFT(UUID(),8) as CHAR(50))) from Customer c where c.ODEUM_org_id=?)`
-			console.log(query);
-			await mysqlConn.query(query, [
+			INSERT INTO \`Registry\`(name,region,protocol, ca_certificate, description, customer_id, created, uuid) 
+			(SELECT ?, ?, ?, ?, ?, c.id, NOW(), CONCAT(?,'-',CAST(LEFT(UUID(),8) as CHAR(50))) from Customer c where c.ODEUM_org_id=?)`
+			let result = await mysqlConn.query(query, [
 				data.name,
 				data.region,
 				data.protocol,
@@ -34,7 +33,6 @@ router.put('/:version/registry', async (req, res, next) => {
 			}).catch(err => {
 				res.status(500).json(err)
 			})
-
 			// res.json('API/sigfox POST Access Authenticated!')
 			// console.log('API/sigfox POST Access Authenticated!')
 			//Send the data to DataBroker
