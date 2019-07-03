@@ -20,6 +20,7 @@ class StoreMqttHandler extends MqttHandler {
 	async storeData(data, { deviceName, regName, customerID }) {
 		try {
 			console.log('STORING DATA')
+			logger.info('STORING DATA', {deviceName, regName, customerID})
 			console.log(deviceName, regName, customerID)
 			let pData = JSON.parse(data)
 			console.log(pData)

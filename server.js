@@ -9,15 +9,20 @@ const pino = require('pino')
 const fs = require('fs');
 const app = express()
 // module.exports.logger = console
-// module.exports.logger=pino(pino.destination(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}-others.json`))
-const logger=pino(pino.destination(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}.json`))
-module.exports.logger = pino(pino.extreme(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}-others.json`))
+module.exports.logger = pino(pino.destination(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}-others.json`))
+// const logger=pino(pino.destination(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}.json`))
+// module.exports.logger = pino(pino.extreme(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}-others.json`))
+// const expressPino = require('express-pino-logger')({
+// 	logger: logger
+// })
+const testing = require('./api/logging/logger')
+
+// const pino = require('pino')()
 const expressPino = require('express-pino-logger')({
-	logger: logger
+	logger: pino()
 })
-app.use(expressPino)
-
-
+app.use([expressPino])
+app.use('/', testing)
 //#region Device
 const getDevice = require('./api/device/getDevice')
 const getDevices = require('./api/device/getDevices')
@@ -50,6 +55,7 @@ const updateCustomer = require('./api/customer/updateCustomer')
 const createCustomer = require('./api/customer/createCustomer')
 const getCustomer = require('./api/customer/getCustomer')
 //#endregion
+
 const port = process.env.NODE_PORT
 
 app.use(helmet())
