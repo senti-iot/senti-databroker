@@ -18,15 +18,17 @@ router.post('/:version/registry', async (req, res, next) => {
 						return res.status(404).json(false)
 					}
 					if (result[0].length !== 0) {
-						let query = `UPDATE \`Registry\` 
-						SET 
-							name = ?,
-							region = ?,
-							protocol = ?,
-							ca_certificate = ?,
-							customer_id = ?
-						WHERE id = ?`
-						await mysqlConn.query(query, [data.name, data.region, data.protocol, data.ca_certificate, data.customer_id, regId])
+						let query = `UPDATE \`Registry\` r
+						INNER JOIN Customer c on c.ODEUM_org_id = ?
+							SET 
+								r.name = ?,
+								r.region = ?,
+								r.protocol = ?,
+								r.ca_certificate = ?,
+								r.customer_id = c.id
+						WHERE r.id = ?`
+						console.log(mysqlConn.format(query, [data.orgId, data.name, data.region, data.protocol, data.ca_certificate, regId]))
+						await mysqlConn.query(query, [data.orgId, data.name, data.region, data.protocol, data.ca_certificate, regId])
 							.then((result) => {
 								res.status(200).json(true)
 							}).catch(err => {
