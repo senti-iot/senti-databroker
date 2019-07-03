@@ -19,7 +19,7 @@ router.put('/:version/registry', async (req, res, next) => {
 		if (authenticate(authToken)) {
 			let query = `
 			INSERT INTO \`Registry\`(name,region,protocol,ca_certificate,description,customer_id, created, uuid) 
-			(SELECT ?,?,?,?, c.id, NOW(), CONCAT(?,'-',CAST(LEFT(UUID(),8) as CHAR(50))) from Customer c where c.ODEUM_org_id=?)`
+			(SELECT ?,?,?,?,?, c.id, NOW(), CONCAT(?,'-',CAST(LEFT(UUID(),8) as CHAR(50))) from Customer c where c.ODEUM_org_id=?)`
 			console.log(query);
 			await mysqlConn.query(query, [
 				data.name,
