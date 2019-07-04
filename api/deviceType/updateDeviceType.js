@@ -17,15 +17,17 @@ router.post('/:version/devicetype', async (req, res, next) => {
 				console.log(dtId)
 				await mysqlConn.query(findDevQ, dtId).then((result) => {
 					if (result[0].length !== 0) {
-						let query = `UPDATE \`Device_type\` 
+						let query = `UPDATE \`Device_type\` dt
+						INNER JOIN Customer c on c.ODEUM_org_id = ?
 						SET 
-							name = ?,
-							inbound = ?,
-							outbound = ?,
-							metadata = ?,
-							customer_id = ?
-						WHERE id = ?`
-						let values = [data.name, JSON.stringify(data.inbound), JSON.stringify(data.outbound), JSON.stringify(data.metadata), data.customer_id, dtId]
+							dt.name = ?,
+							dt.description = ?,
+							dt.inbound = ?,
+							dt.outbound = ?,
+							dt.metadata = ?,
+							dt.customer_id = c.id
+						WHERE dt.id = ?`
+						let values = [data.orgId, data.name, data.description, JSON.stringify(data.inbound), JSON.stringify(data.outbound), JSON.stringify(data.metadata), dtId]
 						mysqlConn.query(query, values)
 							.then((result) => {
 								res.status(200).json(dtId);
