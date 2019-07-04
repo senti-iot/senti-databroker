@@ -19,7 +19,7 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			if (deviceID === 'all' && deviceTypeID) {
-				let q1 = `SELECT AVG(ROUND(dd.\`data\`->'$.${type}' - ddd.\`data\`->'$.${type}', 3)) as avrg from Device_data_clean dd
+				let q1 = `SELECT AVG(ROUND(dd.\`data\`->'$.${type}' - ddd.\`data\`->'$.${type}', 3)) as avrg, SUM(dd.\`data\`->'$.${type}' - ddd.\`data\`->'$.${type}') as total from Device_data_clean dd
 				left join Device_data_clean ddd 
 					on dd.device_id = ddd.device_id
 					and ddd.created = (
@@ -30,7 +30,7 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 				INNER JOIN Device_type dt on dt.id = d.type_id
 				where dt.id=? and dd.created >= ? and dd.created <= ?
 				ORDER BY dd.created`
-				let q2 = `SELECT dd.created, AVG(ROUND(dd.\`data\`->'$.${type}' - ddd.\`data\`->'$.${type}', 3)) as avrg from Device_data_clean dd
+				let q2 = `SELECT dd.created, AVG(ROUND(dd.\`data\`->'$.${type}' - ddd.\`data\`->'$.${type}', 3)) as avrg, SUM(dd.\`data\`->'$.${type}' - ddd.\`data\`->'$.${type}') as total from Device_data_clean dd
 				left join Device_data_clean ddd 
 					on dd.device_id = ddd.device_id
 					and ddd.created = (
@@ -54,8 +54,9 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 				await mysqlConn.query(chartType === 0 ? q2 : q1, [deviceTypeID, from, to]).then(async rs => {
 					let data = rs[0]
 					if (chartType === 1) {
-						data = rs[0][0].avrg
-						data = parseFloat(parseFloat(data).toFixed(3))
+						data = rs[0][0]
+						data.avrg = parseFloat(parseFloat(data.avrg).toFixed(3))
+						data.total = parseFloat(parseFloat(data.total).toFixed(3))
 						if (nId > 0) {
 							let cData = await engineAPI.post('/', { nIds: [nId], data: data }).then((rss) => {
 								console.log('EngineAPI Status:', rss.status);
@@ -69,9 +70,13 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 						}
 					}
 					else {
-						let cleanData = {}
+						let cleanData = {
+							avrg: {},
+							total: {}
+						}
 						data.forEach(r => {
-							cleanData[moment(r.created).format('YYYY-MM-DD HH:mm:ss')] = r.avrg
+							cleanData.avrg[moment(r.created).format('YYYY-MM-DD HH:mm:ss')] = r.avrg
+							cleanData.total[moment(r.created).format('YYYY-MM-DD HH:mm:ss')] = r.total
 						})
 						if (nId > 0) {
 							console.log(cleanData)
