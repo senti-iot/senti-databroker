@@ -20,7 +20,7 @@ class StoreMqttHandler extends MqttHandler {
 	async storeData(data, { deviceName, regName, customerID }) {
 		try {
 			console.log('STORING DATA')
-			logger.info('STORING DATA', {deviceName, regName, customerID})
+			logger.info('STORING DATA', { deviceName, regName, customerID })
 			console.log(deviceName, regName, customerID)
 			let pData = JSON.parse(data)
 			console.log(pData)
@@ -42,14 +42,14 @@ class StoreMqttHandler extends MqttHandler {
 			WHERE dd.signature=? and d.uuid=?
 			`
 			let shaString = SHA2['SHA-256'](JSON.stringify(pData)).toString('hex')
-			let check = await mysqlConn.query(packageCheckQ,[shaString, deviceName]).then(([res, fi])=> {
+			let check = await mysqlConn.query(packageCheckQ, [shaString, deviceName]).then(([res, fi]) => {
 				console.log('\n')
 				console.log(SHA2['SHA-256'](JSON.stringify(pData)))
 				console.log(res, fi)
 				console.log('\n')
 				return res
 			})
-			if(check.length > 0) {
+			if (check.length > 0) {
 				console.warn('DUPLICATE: Package already exists!')
 				return false
 			}
@@ -76,9 +76,22 @@ class StoreMqttHandler extends MqttHandler {
 										(data, created, device_id, device_data_id)
 										SELECT '${JSON.stringify(normalized)}', 
 										${normalized.time ?
-										`'${moment.unix(normalized.time).format('YYYY-MM-DD HH:mm:ss')}'` :
-											moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'`
-											: 'NOW()'},
+								`'${moment.unix(normalized.time).format('YYYY-MM-DD HH:mm:ss')}'` :
+								moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'`
+									: 'NOW()'},
+										Device.id as device_id, ${lastId} from Registry
+										INNER JOIN Device ON Registry.id = Device.reg_id
+										INNER JOIN Customer ON Customer.id = Registry.customer_id
+										where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'`
+						await mysqlConn.query(normalizedQ).then(rs => { }).catch(e => {
+							console.log(e)
+						})
+					}
+					else {
+						let normalizedQ = `INSERT INTO Device_data_clean
+										(data, created, device_id, device_data_id)
+										SELECT '${JSON.stringify(pData)}', 
+										${moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'` : 'NOW()'},
 										Device.id as device_id, ${lastId} from Registry
 										INNER JOIN Device ON Registry.id = Device.reg_id
 										INNER JOIN Customer ON Customer.id = Registry.customer_id
