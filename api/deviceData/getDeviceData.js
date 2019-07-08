@@ -5,6 +5,49 @@ const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 const moment = require('moment')
 const engineAPI = require('../engine/engine')
+const tokenAPI = require('../engine/token')
+
+router.get('/:token/devicedata/:deviceID/:from/:to/:dataKey/:cfId/', async (req, res, next) => {
+	let token = req.params.token
+	let deviceID = req.params.deviceID
+	let to = req.params.to
+	let from = req.params.from
+	let cfId = req.params.cfId
+	let dataKey = req.params.dataKey
+	let isValid = await tokenAPI.get(`validateToken/${token}/${deviceID}`).then(rs => rs.data)
+	if (isValid) {
+		let query = `SELECT id, \`data\`, created, device_id
+		FROM Device_data_clean	
+		WHERE device_id=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
+		await mysqlConn.query(query, [deviceID, from, to]).then(async rs => {
+			let rawData = rs[0]
+			let cleanData = {}
+			// console.log('HERE', rawData)
+			rawData.forEach(r => {
+				console.log('bing', r.data, dataKey)
+				if (r.data[dataKey])
+					cleanData[moment(r.created).format('YYYY-MM-DD HH:mm:ss')] = r.data[dataKey]
+					console.log(cleanData[moment(r.created).format('YYYY-MM-DD HH:mm:ss')] )
+			})
+			console.log(rawData)
+			console.log(cleanData)
+			if (cfId > 0) {
+				let cData = await engineAPI.post('/', { nIds: [cfId], data: cleanData }).then(rss => {
+					console.log('EngineAPI Status:', rss.status);
+					console.log('EngineAPI Response', rss.data)
+					return rss.ok ? rss.data : null
+				})
+				return res.status(200).json(cData)
+			}
+			res.status(200).json(cleanData)
+		}).catch(err => {
+			if (err) { res.status(500).json({ err, query: mysqlConn.format(query, [deviceID, from, to]) }) }
+		})
+	}
+	else {
+		res.status(500).json({error: "Invalid Token"})
+	}
+})
 
 router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceType?/:chartType?', async (req, res, next) => {
 	let apiVersion = req.params.version
