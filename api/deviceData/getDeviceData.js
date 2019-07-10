@@ -7,7 +7,7 @@ const moment = require('moment')
 const engineAPI = require('../engine/engine')
 const tokenAPI = require('../engine/token')
 
-router.get('/:token/devicedata/:deviceID/:from/:to/:dataKey/:cfId/', async (req, res, next) => {
+router.get('/:token/devicedata/:deviceID/:from/:to/:dataKey/:cfId?', async (req, res, next) => {
 	let token = req.params.token
 	let deviceID = req.params.deviceID
 	let to = req.params.to
