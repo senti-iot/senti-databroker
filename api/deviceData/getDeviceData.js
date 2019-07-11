@@ -7,6 +7,29 @@ const moment = require('moment')
 const engineAPI = require('../engine/engine')
 const tokenAPI = require('../engine/token')
 
+router.get('/:token/devicedata/:deviceID/:from/:to/', async (req, res, next) => {
+	let token = req.params.token
+	let deviceID = req.params.deviceID
+	let to = req.params.to
+	let from = req.params.from
+	let selectDeviceIDQ = `SELECT id from Device where uuid=?`
+	deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceID]).then(rs => rs[0][0].id)
+	let isValid = await tokenAPI.get(`validateToken/${token}/${deviceID}`).then(rs => rs.data)
+	if (isValid) {
+		let query = `SELECT \`data\`
+		FROM Device_data_clean	
+		WHERE device_id=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
+		await mysqlConn.query(query, [deviceID, from, to]).then(async rs => {
+			let rawData = rs[0]
+			res.status(200).json(rawData)
+		}).catch(err => {
+			if (err) { res.status(500).json({ err, query: mysqlConn.format(query, [deviceID, from, to]) }) }
+		})
+	}
+	else {
+		res.status(500).json({error: "Invalid Token"})
+	}
+})
 router.get('/:token/devicedata/:deviceID/:from/:to/:dataKey/:cfId?', async (req, res, next) => {
 	let token = req.params.token
 	let deviceID = req.params.deviceID
@@ -14,6 +37,8 @@ router.get('/:token/devicedata/:deviceID/:from/:to/:dataKey/:cfId?', async (req,
 	let from = req.params.from
 	let cfId = req.params.cfId
 	let dataKey = req.params.dataKey
+	let selectDeviceIDQ = `SELECT id from Device where uuid=?`
+	deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceID]).then(rs => rs[0][0].id)
 	let isValid = await tokenAPI.get(`validateToken/${token}/${deviceID}`).then(rs => rs.data)
 	if (isValid) {
 		let query = `SELECT id, \`data\`, created, device_id
