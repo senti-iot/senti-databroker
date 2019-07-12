@@ -61,7 +61,7 @@ class StoreMqttHandler extends MqttHandler {
 			})
 			if (check.length > 0) {
 				console.warn('DUPLICATE: Package already exists!')
-				// return false
+				return false
 			}
 			// console.log(deviceQ)
 			let lastId = null
