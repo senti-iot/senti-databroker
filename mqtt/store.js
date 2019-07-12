@@ -5,6 +5,16 @@ const logger = require('../server').logger
 const moment = require('moment')
 const SHA2 = require('sha2')
 
+const format = 'YYYY-MM-DD HH:mm:ss'
+const dateFormatter = (date) => {
+	if(moment.unix(date).isValid()) {
+		return moment.unix(date).format(format)
+	}
+	if(moment(date).isValid()){
+		return moment(date).format(format)
+	}
+	return 'NOW()'
+}
 class StoreMqttHandler extends MqttHandler {
 	init() {
 		this.topic = 'v1/+/location/+/registries/+/devices/+/publish'
@@ -32,7 +42,7 @@ class StoreMqttHandler extends MqttHandler {
 			`
 			let query = `INSERT INTO Device_data
 			(data, topic, created, device_id, signature)
-			SELECT '${JSON.stringify(pData)}', '', ${moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'` : 'NOW()'}, Device.id as device_id, SHA2('${JSON.stringify(pData)}',256) from Registry
+			SELECT '${JSON.stringify(pData)}', '', '${dateFormatter(pData.time)}', Device.id as device_id, SHA2('${JSON.stringify(pData)}',256) from Registry
 			INNER JOIN Device ON Registry.id = Device.reg_id
 			INNER JOIN Customer ON Customer.id = Registry.customer_id
 			where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'
@@ -51,7 +61,7 @@ class StoreMqttHandler extends MqttHandler {
 			})
 			if (check.length > 0) {
 				console.warn('DUPLICATE: Package already exists!')
-				return false
+				// return false
 			}
 			// console.log(deviceQ)
 			let lastId = null
@@ -72,17 +82,17 @@ class StoreMqttHandler extends MqttHandler {
 								return rs.ok ? rs.data : null
 							})
 						// console.log(moment.unix(normalized.time).format('YYYY-MM-DD HH:mm:ss'))
+						console.log(normalized.time, moment.unix(pData.time).isValid())
 						let normalizedQ = `INSERT INTO Device_data_clean
 										(data, created, device_id, device_data_id)
 										SELECT '${JSON.stringify(normalized)}', 
-										${normalized.time ?
-								`'${moment.unix(normalized.time).format('YYYY-MM-DD HH:mm:ss')}'` :
-								moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'`
-									: 'NOW()'},
-										Device.id as device_id, ${lastId} from Registry
+										'${normalized.time ? dateFormatter(normalized.time) : dateFormatter(pData.time)}',
+										Device.id as device_id, 
+										${lastId} from Registry
 										INNER JOIN Device ON Registry.id = Device.reg_id
 										INNER JOIN Customer ON Customer.id = Registry.customer_id
 										where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'`
+						console.log(mysqlConn.format(normalizedQ))				
 						await mysqlConn.query(normalizedQ).then(rs => { }).catch(e => {
 							console.log(e)
 						})
@@ -91,7 +101,7 @@ class StoreMqttHandler extends MqttHandler {
 						let normalizedQ = `INSERT INTO Device_data_clean
 										(data, created, device_id, device_data_id)
 										SELECT '${JSON.stringify(pData)}', 
-										${moment.unix(pData.time).isValid() ? `'${moment.unix(pData.time).format('YYYY-MM-DD HH:mm:ss')}'` : 'NOW()'},
+										'${dateFormatter(pData.time)}',
 										Device.id as device_id, ${lastId} from Registry
 										INNER JOIN Device ON Registry.id = Device.reg_id
 										INNER JOIN Customer ON Customer.id = Registry.customer_id
