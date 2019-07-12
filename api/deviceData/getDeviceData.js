@@ -7,6 +7,34 @@ const moment = require('moment')
 const engineAPI = require('../engine/engine')
 const tokenAPI = require('../engine/token')
 
+
+router.get('/:token/registry/:regID/:from/:to/', async (req, res, next) => {
+	let token = req.params.token
+	let rID = req.params.regID
+	let to = req.params.to
+	let from = req.params.from
+
+	let selectRegistryIDQ = `SELECT id from Registry where uuid=?`
+	let regID = await mysqlConn.query(selectRegistryIDQ, [rID]).then(rs => rs[0][0].id)
+	console.log(regID);
+
+	let isValid = await tokenAPI.get(`validateToken/${token}/${regID}`).then(rs => rs.data)
+	if (isValid) {
+
+		let selectAllDevicesUnderReg = `SELECT d.*, \`data\` from Device d
+		INNER JOIN Device_data_clean dd on dd.device_id = d.id
+		WHERE d.reg_id=? 
+		AND \`data\` NOT LIKE '%null%' 
+		AND created >= ? AND created <= ? ORDER BY created `
+		let devices = await mysqlConn.query(selectAllDevicesUnderReg, [regID, from, to]).then(rs => rs[0])
+
+		res.json(devices).status(200)
+	}
+	else {
+		res.status(500).json({ error: "Invalid Token" })
+	}
+})
+
 router.get('/:token/devicedata/:deviceID/:from/:to/', async (req, res, next) => {
 	let token = req.params.token
 	let deviceID = req.params.deviceID
@@ -27,7 +55,7 @@ router.get('/:token/devicedata/:deviceID/:from/:to/', async (req, res, next) => 
 		})
 	}
 	else {
-		res.status(500).json({error: "Invalid Token"})
+		res.status(500).json({ error: "Invalid Token" })
 	}
 })
 router.get('/:token/devicedata/:deviceID/:from/:to/:dataKey/:cfId?', async (req, res, next) => {
@@ -52,7 +80,7 @@ router.get('/:token/devicedata/:deviceID/:from/:to/:dataKey/:cfId?', async (req,
 				console.log('bing', r.data, dataKey)
 				if (r.data[dataKey])
 					cleanData[moment(r.created).format('YYYY-MM-DD HH:mm:ss')] = r.data[dataKey]
-					console.log(cleanData[moment(r.created).format('YYYY-MM-DD HH:mm:ss')] )
+				console.log(cleanData[moment(r.created).format('YYYY-MM-DD HH:mm:ss')])
 			})
 			console.log(rawData)
 			console.log(cleanData)
@@ -70,7 +98,7 @@ router.get('/:token/devicedata/:deviceID/:from/:to/:dataKey/:cfId?', async (req,
 		})
 	}
 	else {
-		res.status(500).json({error: "Invalid Token"})
+		res.status(500).json({ error: "Invalid Token" })
 	}
 })
 
