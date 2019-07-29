@@ -1,47 +1,43 @@
 const mqtt = require('mqtt');
 
 class MqttHandler {
-  constructor() {
-    this.mqttClient = null;
-    this.host = 'mqtt://hive.senti.cloud';
-    // this.username = 'YOUR_USER'; // mqtt credentials if these are needed to connect
-	// this.password = 'YOUR_PASSWORD';
-	this.topic = ''
-  }
-  init() {}
-  connect() {
-    // Connect mqtt with credentials (in case of needed, otherwise we can omit 2nd param)
-    this.mqttClient = mqtt.connect(this.host/*,  { username: this.username, password: this.password } */);
-	this.init()
-    // Mqtt error calback
-    this.mqttClient.on('error', (err) => {
-      console.log(err);
-      this.mqttClient.end();
-    });
+	constructor() {
+		this.mqttClient = null;
+		this.host = 'mqtt://hive.senti.cloud';
+		this.topic = ''
+	}
+	init() { }
+	connect() {
 
-    // Connection callback
-    this.mqttClient.on('connect', () => {
-      console.log(`mqtt ${this.topic} client connected`);
-    });
+		this.mqttClient = mqtt.connect(this.host);
+		this.init();
 
-    // mqtt subscriptions
-	this.mqttClient.subscribe(this.topic, {qos: 1});
-	console.log(this.topic)
+		this.mqttClient.on('error', (err) => {
+			console.log(err);
+			this.mqttClient.end();
+		});
 
-    // When a message arrives, console.log it
-    this.mqttClient.on('message', function (topic, message) {
-      console.log(message);
-    });
+		this.mqttClient.on('connect', () => {
+			console.log(this.host);
+			this.mqttClient.subscribe(this.topic, { qos: 1 }, () => {
+				console.log(`mqtt ${this.topic} client connected`);
+			});
+		});
 
-    this.mqttClient.on('close', (err) => {
-      console.log(`mqtt client disconnected`, err);
-	});
-  }
+		this.mqttClient.on('message', function (topic, message) {
+			console.log(topic);
+			console.log(message);
+		});
 
-  // Sends a mqtt message to topic: mytopic
-  sendMessage(message) {
-    this.mqttClient.publish(this.topic, message);
-  }
+		this.mqttClient.on('close', (err) => {
+			console.log(`mqtt client disconnected`, err);
+		});
+	}
+
+	// Sends a mqtt message to topic: mytopic
+	sendMessage(message) {
+		this.mqttClient.publish(this.topic, message);
+	}
 }
 
 module.exports = MqttHandler;
