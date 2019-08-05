@@ -18,13 +18,13 @@ router.get('/:token/registry/:regID/:from/:to/', async (req, res, next) => {
 	let regID = await mysqlConn.query(selectRegistryIDQ, [rID]).then(rs => rs[0][0].id)
 	console.log(regID);
 
-	let isValid = await tokenAPI.get(`validateToken/${token}/${regID}`).then(rs => rs.data)
+	let isValid = await tokenAPI.get(`validateToken/${token}/registry/${regID}`).then(rs => rs.data)
 	if (isValid) {
 
 		let selectAllDevicesUnderReg = `SELECT d.*, \`data\` from Device d
 		INNER JOIN Device_data_clean dd on dd.device_id = d.id
-		WHERE d.reg_id=? 
-		AND \`data\` NOT LIKE '%null%' 
+		WHERE d.reg_id=?
+		AND \`data\` NOT LIKE '%null%'
 		AND created >= ? AND created <= ? ORDER BY created `
 		let devices = await mysqlConn.query(selectAllDevicesUnderReg, [regID, from, to]).then(rs => rs[0])
 
@@ -42,10 +42,10 @@ router.get('/:token/devicedata/:deviceID/:from/:to/', async (req, res, next) => 
 	let from = req.params.from
 	let selectDeviceIDQ = `SELECT id from Device where uuid=?`
 	deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceID]).then(rs => rs[0][0].id)
-	let isValid = await tokenAPI.get(`validateToken/${token}/${deviceID}`).then(rs => rs.data)
+	let isValid = await tokenAPI.get(`validateToken/${token}/device/${deviceID}`).then(rs => rs.data)
 	if (isValid) {
 		let query = `SELECT \`data\`
-		FROM Device_data_clean	
+		FROM Device_data_clean
 		WHERE device_id=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
 		await mysqlConn.query(query, [deviceID, from, to]).then(async rs => {
 			let rawData = rs[0]
@@ -70,7 +70,7 @@ router.get('/:token/devicedata/:deviceID/:from/:to/:dataKey/:cfId?', async (req,
 	let isValid = await tokenAPI.get(`validateToken/${token}/${deviceID}`).then(rs => rs.data)
 	if (isValid) {
 		let query = `SELECT id, \`data\`, created, device_id
-		FROM Device_data_clean	
+		FROM Device_data_clean
 		WHERE device_id=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
 		await mysqlConn.query(query, [deviceID, from, to]).then(async rs => {
 			let rawData = rs[0]
@@ -116,22 +116,22 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 		if (authenticate(authToken)) {
 			if (deviceID === 'all' && deviceTypeID) {
 				let q1 = `SELECT AVG(ROUND(dd.\`data\`->'$.${type}' - ddd.\`data\`->'$.${type}', 3)) as avrg, SUM(dd.\`data\`->'$.${type}' - ddd.\`data\`->'$.${type}') as total from Device_data_clean dd
-				left join Device_data_clean ddd 
+				left join Device_data_clean ddd
 					on dd.device_id = ddd.device_id
 					and ddd.created = (
-						SELECT Max(created) 
-						from Device_data_clean 
+						SELECT Max(created)
+						from Device_data_clean
 						where created < dd.created and device_id = dd.device_id)
 				INNER JOIN Device d on d.id = dd.device_id
 				INNER JOIN Device_type dt on dt.id = d.type_id
 				where dt.id=? and dd.created >= ? and dd.created <= ?
 				ORDER BY dd.created`
 				let q2 = `SELECT dd.created, AVG(ROUND(dd.\`data\`->'$.${type}' - ddd.\`data\`->'$.${type}', 3)) as avrg, SUM(dd.\`data\`->'$.${type}' - ddd.\`data\`->'$.${type}') as total from Device_data_clean dd
-				left join Device_data_clean ddd 
+				left join Device_data_clean ddd
 					on dd.device_id = ddd.device_id
 					and ddd.created = (
-						SELECT Max(created) 
-						from Device_data_clean 
+						SELECT Max(created)
+						from Device_data_clean
 						where created < dd.created and device_id = dd.device_id)
 				INNER JOIN Device d on d.id = dd.device_id
 				INNER JOIN Device_type dt on dt.id = d.type_id
@@ -194,7 +194,7 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 			else {
 
 				let query = `SELECT id, \`data\`, created, device_id
-				FROM Device_data_clean	
+				FROM Device_data_clean
 				WHERE device_id=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
 				console.log(deviceID, from, to, nId)
 				await mysqlConn.query(query, [deviceID, from, to]).then(async rs => {
@@ -237,7 +237,7 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 // 	if (verifyAPIVersion(apiVersion)) {
 // 		if (authenticate(authToken)) {
 // 			let query = `SELECT id, \`data\`, topic, created, device_id
-// 			FROM Device_data			
+// 			FROM Device_data
 // 			WHERE device_id=${deviceID}`
 // 			await mysqlConn.query(query).then(rs => {
 // 				res.status(200).json(rs[0])
