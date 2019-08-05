@@ -6,6 +6,30 @@ var mysqlConn = require('../../mysql/mysql_handler')
 const moment = require('moment')
 const engineAPI = require('../engine/engine')
 
+router.get('/:version/messages/device/:deviceID/:from/:to', async (req, res) => {
+	let apiVersion = req.params.version
+	let authToken = req.headers.auth
+	console.log('BING BING BING')
+	if (verifyAPIVersion(apiVersion)) {
+		if (authenticate(authToken)) {
+			let deviceId = req.params.deviceID
+			let from = req.params.from
+			let to = req.params.to
+			let selectDeviceMessages = `SELECT dd.id, \`data\`, dd.created, dd.device_id
+			from Device_data dd
+			WHERE device_id = ? and created >= ? and created <= ?
+			ORDER BY created DESC`
+			await mysqlConn.query(selectDeviceMessages, [deviceId, from, to]).then(rs => {
+				if (rs[0].length > 0)
+					res.status(200).json(rs[0])
+				else {
+					res.status(200).json([])
+				}
+			})
+		}
+	}
+})
+
 router.get('/:version/messages/', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth

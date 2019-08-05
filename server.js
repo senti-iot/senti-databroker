@@ -18,10 +18,10 @@ module.exports.logger = pino(pino.destination(`/var/log/nodejs/databroker/${new 
 const testing = require('./api/logging/logger')
 
 // const pino = require('pino')()
-const expressPino = require('express-pino-logger')({
-	logger: pino()
-})
-app.use([expressPino])
+// const expressPino = require('express-pino-logger')({
+// 	logger: pino()
+// })
+// app.use([expressPino])
 app.use('/', testing)
 //#region Device
 const getDevice = require('./api/device/getDevice')
@@ -64,14 +64,17 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
 
-app.use('/', [getDT, getDTs, createDT, updateDT])
+app.use('/', [getDT, getDTs, createDT, updateDT, getMessages])
 app.use('/', [getDevice, getDevices, createDevice, updateDevice])
 app.use('/', [getRegistry, getRegistryDevices, getRegistries, createReg, updateReg])
-app.use('/', [getDeviceData, getMessages])
 app.use('/', [createCustomer, getCustomer, updateCustomer])
+app.use('/', [getDeviceData])
+
+var allRoutes = require('./api/logging/routeLogging');
 
 const startAPIServer = () => {
 	console.clear()
+	allRoutes(app)
 	app.listen(port, () => {
 		console.log('Senti Message Broker server started on port:', port)
 	}).on('error', (err) => {
@@ -87,7 +90,7 @@ startAPIServer()
 
 //#endregion
 
-//#region MQTT 
+//#region MQTT
 
 var StoreMqttHandler = require('./mqtt/store')
 let mqttStoreClient = new StoreMqttHandler()
