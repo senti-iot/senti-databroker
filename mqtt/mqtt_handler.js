@@ -18,9 +18,12 @@ class MqttHandler {
 		});
 
 		this.mqttClient.on('connect', () => {
-			console.log(this.host);
+			// console.log(this.host);
+			// console.log('\n')
+			console.log('MQTT client connected'.green.bold)
 			this.mqttClient.subscribe(this.topic, { qos: 1 }, () => {
-				console.log(`mqtt ${this.topic} client connected`);
+				console.log('MQTT client subscribed to: ' + this.topic.yellow.bold);
+				// console.log('\n')
 			});
 		});
 

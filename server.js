@@ -74,9 +74,10 @@ var allRoutes = require('./api/logging/routeLogging');
 
 const startAPIServer = () => {
 	console.clear()
-	allRoutes(app)
+	console.log('Senti'.green.bold + ' - Data'.cyan.bold + ' Broker'.cyan.bold)
 	app.listen(port, () => {
-		console.log('Senti Message Broker server started on port:', port)
+		console.log('Server started on port: ' + port.yellow.bold)
+		// allRoutes(app)
 	}).on('error', (err) => {
 		if (err.errno === 'EADDRINUSE') {
 			console.log('Server not started, port ' + port + ' is busy')
