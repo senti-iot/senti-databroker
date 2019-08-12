@@ -37,6 +37,7 @@ const getRegistryDevices = require('./api/registry/getRegistryDevices')
 const getRegistry = require('./api/registry/getRegistry')
 const createReg = require('./api/registry/createRegistry')
 const updateReg = require('./api/registry/updateRegistry')
+const deleteReg = require('./api/registry/deleteRegistry')
 //#endregion
 
 //#region Device Types
@@ -69,7 +70,7 @@ app.use(cors())
 app.use([getMessages, getDeviceData,
 	getDT, getDTs, createDT, updateDT, deleteDT,
 	getDevice, getDevices, createDevice, updateDevice, deleteDevice,
-	getRegistry, getRegistryDevices, getRegistries, createReg, updateReg,
+	getRegistry, getRegistryDevices, getRegistries, createReg, updateReg, deleteReg,
 	createCustomer, getCustomer, updateCustomer])
 
 var allRoutes = require('./api/logging/routeLogging');
