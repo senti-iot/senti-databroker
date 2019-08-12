@@ -28,6 +28,7 @@ const getDevice = require('./api/device/getDevice')
 const getDevices = require('./api/device/getDevices')
 const updateDevice = require('./api/device/updateDevice')
 const createDevice = require('./api/device/createDevice')
+const deleteDevice = require('./api/device/deleteDevice')
 //#endregion
 
 //#region Registries
@@ -64,11 +65,11 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
 
-app.use('/', [getDT, getDTs, createDT, updateDT, getMessages])
-app.use('/', [getDevice, getDevices, createDevice, updateDevice])
-app.use('/', [getRegistry, getRegistryDevices, getRegistries, createReg, updateReg])
-app.use('/', [createCustomer, getCustomer, updateCustomer])
-app.use('/', [getDeviceData])
+app.use([getDT, getDTs, createDT, updateDT, getMessages])
+app.use([getDevice, getDevices, createDevice, updateDevice, deleteDevice])
+app.use([getRegistry, getRegistryDevices, getRegistries, createReg, updateReg])
+app.use([createCustomer, getCustomer, updateCustomer])
+app.use([getDeviceData])
 
 var allRoutes = require('./api/logging/routeLogging');
 
@@ -77,7 +78,7 @@ const startAPIServer = () => {
 	console.log('Senti'.green.bold + ' - Data'.cyan.bold + ' Broker'.cyan.bold)
 	app.listen(port, () => {
 		console.log('Server started on port: ' + port.yellow.bold)
-		// allRoutes(app)
+		allRoutes(app)
 	}).on('error', (err) => {
 		if (err.errno === 'EADDRINUSE') {
 			console.log('Server not started, port ' + port + ' is busy')
