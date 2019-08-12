@@ -44,6 +44,7 @@ const getDT = require('./api/deviceType/getDeviceType')
 const getDTs = require('./api/deviceType/getDeviceTypes')
 const updateDT = require('./api/deviceType/updateDeviceType')
 const createDT = require('./api/deviceType/createDeviceType')
+const deleteDT = require('./api/deviceType/deleteDeviceType')
 //#endregion
 
 //#region Device Data
@@ -65,11 +66,11 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
 
-app.use([getDT, getDTs, createDT, updateDT, getMessages])
-app.use([getDevice, getDevices, createDevice, updateDevice, deleteDevice])
-app.use([getRegistry, getRegistryDevices, getRegistries, createReg, updateReg])
-app.use([createCustomer, getCustomer, updateCustomer])
-app.use([getDeviceData])
+app.use([getMessages, getDeviceData,
+	getDT, getDTs, createDT, updateDT, deleteDT,
+	getDevice, getDevices, createDevice, updateDevice, deleteDevice,
+	getRegistry, getRegistryDevices, getRegistries, createReg, updateReg,
+	createCustomer, getCustomer, updateCustomer])
 
 var allRoutes = require('./api/logging/routeLogging');
 
