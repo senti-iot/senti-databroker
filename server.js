@@ -51,12 +51,14 @@ const deleteDT = require('./api/deviceType/deleteDeviceType')
 //#region Device Data
 const getDeviceData = require('./api/deviceData/getDeviceData')
 const getMessages = require('./api/deviceData/getMessages')
+const getDataExternal = require('./api/deviceData/getDataExternal')
 //#endregion
 
 //#region Customer
 const updateCustomer = require('./api/customer/updateCustomer')
 const createCustomer = require('./api/customer/createCustomer')
 const getCustomer = require('./api/customer/getCustomer')
+const deleteCustomer = require('./api/customer/deleteCustomer')
 //#endregion
 
 const port = process.env.NODE_PORT
@@ -67,11 +69,11 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
 
-app.use([getMessages, getDeviceData,
+app.use([getMessages, getDeviceData, getDataExternal,
 	getDT, getDTs, createDT, updateDT, deleteDT,
 	getDevice, getDevices, createDevice, updateDevice, deleteDevice,
 	getRegistry, getRegistryDevices, getRegistries, createReg, updateReg, deleteReg,
-	createCustomer, getCustomer, updateCustomer])
+	createCustomer, getCustomer, updateCustomer, deleteCustomer])
 
 var allRoutes = require('./api/logging/routeLogging');
 

@@ -13,8 +13,7 @@ router.get('/:version/customer/:odeumId', async (req, res, next) => {
 			let query = `SELECT * from Customer where ODEUM_org_id=? and deleted=0`
 			await mysqlConn.query(query, [customerID]).then(rs => {
 				// console.log(rs[0][0])
-				if (rs[0][0])
-				{
+				if (rs[0][0]) {
 					res.status(200).json(rs[0][0])
 				}
 				else {
@@ -37,11 +36,10 @@ router.get('/:version/customers', async (req, res, next) => {
 	let authToken = req.headers.auth
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT * from Customer`
+			let query = `SELECT * from Customer where deleted=0`
 			await mysqlConn.query(query).then(rs => {
 				// console.log(rs[0][0])
-				if (rs[0][0])
-				{
+				if (rs[0][0]) {
 					res.status(200).json(rs[0])
 				}
 				else {
