@@ -4,6 +4,18 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
+const findReqQuery = `SELECT * from Registry where id=?`
+
+const updateRegQuery = `UPDATE Registry r
+						INNER JOIN Customer c on c.ODEUM_org_id = ?
+							SET
+								r.name = ?,
+								r.region = ?,
+								r.protocol = ?,
+								r.ca_certificate = ?,
+								r.customer_id = c.id
+						WHERE r.id = ?`
+
 router.post('/:version/registry', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
@@ -12,23 +24,12 @@ router.post('/:version/registry', async (req, res, next) => {
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			if (regId !== null || regId !== undefined) {
-				let findDevQ = "SELECT * from `Registry` where id=?"
-				await mysqlConn.query(findDevQ, [regId]).then(async result => {
+				await mysqlConn.query(findReqQuery, [regId]).then(async result => {
 					if (result[0].length === 0) {
 						return res.status(404).json(false)
 					}
 					if (result[0].length !== 0) {
-						let query = `UPDATE \`Registry\` r
-						INNER JOIN Customer c on c.ODEUM_org_id = ?
-							SET 
-								r.name = ?,
-								r.region = ?,
-								r.protocol = ?,
-								r.ca_certificate = ?,
-								r.customer_id = c.id
-						WHERE r.id = ?`
-						console.log(mysqlConn.format(query, [data.orgId, data.name, data.region, data.protocol, data.ca_certificate, regId]))
-						await mysqlConn.query(query, [data.orgId, data.name, data.region, data.protocol, data.ca_certificate, regId])
+						await mysqlConn.query(updateRegQuery, [data.orgId, data.name, data.region, data.protocol, data.ca_certificate, regId])
 							.then((result) => {
 								res.status(200).json(true)
 							}).catch(err => {
