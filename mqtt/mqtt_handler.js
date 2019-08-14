@@ -9,7 +9,9 @@ class MqttHandler {
 	init() { }
 	connect() {
 
-		this.mqttClient = mqtt.connect(this.host);
+		this.mqttClient = mqtt.connect(this.host, {
+			clientId: 'dataBroker_' + Math.random().toString(16).substr(2, 8)
+		});
 		this.init();
 
 		this.mqttClient.on('error', (err) => {
@@ -36,8 +38,7 @@ class MqttHandler {
 			console.log(`mqtt client disconnected`, err);
 		});
 	}
-
-	// Sends a mqtt message to topic: mytopic
+	// Sends a mqtt message
 	sendMessage(message) {
 		this.mqttClient.publish(this.topic, message);
 	}

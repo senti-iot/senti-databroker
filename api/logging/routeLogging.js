@@ -19,8 +19,8 @@ const colorizeMethods = (type) => {
 module.exports = function (app) {
 	var Table = require('cli-table3');
 	var table = new Table();
-	console.log('\nAPI');
 	console.log('\n********************************************');
+	console.log('\n****************  API  *********************');
 
 	app._router.stack.forEach(function (middleware) {
 		if (middleware.route) { // routes registered directly on the app
