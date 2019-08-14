@@ -5,6 +5,10 @@ const moment = require('moment')
 const engineAPI = require('../engine/engine')
 const tokenAPI = require('../engine/token')
 
+const selectLatestCleanData = `SELECT data
+		FROM Device_data_clean
+		WHERE device_id=? AND data NOT LIKE '%null%' ORDER BY created DESC LIMIT 1`
+
 const selectCleanData = `SELECT data
 		FROM Device_data_clean
 		WHERE device_id=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
@@ -19,11 +23,20 @@ const selectAllDevicesUnderReg = `SELECT d.*, data from Device d
 		AND data NOT LIKE '%null%'
 		AND created >= ? AND created <= ? ORDER BY created`
 
-const selectLatestAllDevicesUnderReg = `SELECT d.uuid, d.name, MAX(dd.created) as 'time', dd.data
+const selectLatestAllDevicesUnderReg = `SELECT tt.uuid, tt.name, dd.created, dd.data 
+FROM (
+	SELECT max(dd.id) as did, t.uuid, t.name
+	FROM (
+		SELECT max(dd.created) as 'time', dd.device_id, d.uuid, d.name
 		FROM Device d
-			INNER JOIN Device_data_clean dd on dd.device_id = d.id
-		WHERE d.reg_id=?
-		GROUP BY dd.device_id`
+		INNER JOIN Device_data_clean dd on dd.device_id = d.id  AND dd.data NOT LIKE '%null%'
+		WHERE d.reg_id=16
+		group by dd.device_id
+	) t
+	INNER JOIN Device_data_clean dd ON t.time=dd.created AND t.device_id=dd.device_id
+	group by dd.device_id
+) tt
+LEFT JOIN Device_data_clean dd ON tt.did=dd.id`
 
 const selectRegistryIDQ = `SELECT id from Registry where uuid=?`
 const selectDeviceIDQ = `SELECT id from Device where uuid=?`
@@ -71,6 +84,27 @@ router.get('/:token/registry/:regID/latest', async (req, res, next) => {
 	if (isValid) {
 		let devices = await mysqlConn.query(selectLatestAllDevicesUnderReg, [regID]).then(rs => rs[0])
 		res.json(devices).status(200)
+	}
+	else {
+		res.status(500).json({ error: "Invalid Token" })
+	}
+})
+
+router.get('/:token/devicedata/:deviceID/latest', async (req, res, next) => {
+	let token = req.params.token
+	let deviceID = req.params.deviceID
+
+	deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceID]).then(rs => rs[0][0].id)
+	let isValid = await tokenAPI.get(`validateToken/${token}/device/${deviceID}`).then(rs => rs.data)
+
+	if (isValid) {
+
+		await mysqlConn.query(selectLatestCleanData, [deviceID]).then(async rs => {
+			let rawData = rs[0]
+			res.status(200).json(rawData)
+		}).catch(err => {
+			if (err) { res.status(500).json({ err, query: mysqlConn.format(selectLatestCleanData, [deviceID]) }) }
+		})
 	}
 	else {
 		res.status(500).json({ error: "Invalid Token" })
