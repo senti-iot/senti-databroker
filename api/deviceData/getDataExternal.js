@@ -19,6 +19,12 @@ const selectAllDevicesUnderReg = `SELECT d.*, data from Device d
 		AND data NOT LIKE '%null%'
 		AND created >= ? AND created <= ? ORDER BY created`
 
+const selectLatestAllDevicesUnderReg = `SELECT d.uuid, d.name, MAX(dd.created) as 'time', dd.data
+		FROM Device d
+			INNER JOIN Device_data_clean dd on dd.device_id = d.id
+		WHERE d.reg_id=?
+		GROUP BY dd.device_id`
+
 const selectRegistryIDQ = `SELECT id from Registry where uuid=?`
 const selectDeviceIDQ = `SELECT id from Device where uuid=?`
 
@@ -40,6 +46,30 @@ router.get('/:token/registry/:regID/:from/:to/', async (req, res, next) => {
 	console.log(isValid)
 	if (isValid) {
 		let devices = await mysqlConn.query(selectAllDevicesUnderReg, [regID, from, to]).then(rs => rs[0])
+		res.json(devices).status(200)
+	}
+	else {
+		res.status(500).json({ error: "Invalid Token" })
+	}
+})
+
+router.get('/:token/registry/:regID/latest', async (req, res, next) => {
+	let token = req.params.token
+	let rID = req.params.regID
+	console.log(token, rID)
+ 	let regID = await mysqlConn.query(selectRegistryIDQ, [rID]).then(rs => {
+		console.log(rs)
+		if (rs[0][0])
+			return rs[0][0].id
+		else
+			return null
+	})
+	console.log(regID)
+	let isValid = await tokenAPI.get(`validateToken/${token}/registry/${regID}`).then(rs => rs.data)
+	console.log(isValid)
+	
+	if (isValid) {
+		let devices = await mysqlConn.query(selectLatestAllDevicesUnderReg, [regID]).then(rs => rs[0])
 		res.json(devices).status(200)
 	}
 	else {
