@@ -15,6 +15,9 @@ module.exports.logger = pino(pino.destination(`/var/log/nodejs/databroker/${new 
 // const expressPino = require('express-pino-logger')({
 // 	logger: logger
 // })
+const logService = require('./mqtt/logService')
+const logServ = new logService()
+module.exports.logService = logServ
 const testing = require('./api/logging/logger')
 
 // const pino = require('pino')()

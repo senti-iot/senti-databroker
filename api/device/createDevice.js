@@ -3,6 +3,7 @@ const router = express.Router()
 const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
+const logService = require('../../server').logService
 function cleanUpSpecialChars(str) {
 	return str
 		.replace(/[øØ]/g, "ou")
@@ -38,6 +39,7 @@ router.put('/:version/device', async (req, res, next) => {
 
 				mysqlConn.query(createDeviceQuery, arr).then(rs => {
 					console.log('Device Created', rs[0].insertId)
+					logService.log(`Device Created with id: ${rs[0].insertId}`)
 					let mtd = data.metadata
 					console.log(mtd, createMetaDataQuery)
 					let mtdArr = [rs[0].insertId, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
