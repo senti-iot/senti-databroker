@@ -34,7 +34,7 @@ class StoreMqttHandler extends MqttHandler {
 			console.log(deviceName, regName, customerID)
 			let pData = JSON.parse(data)
 			console.log(pData)
-			let deviceQ = `SELECT d.id, d.name, d.type_id, d.reg_id, dm.\`data\` as metadata, dm.inbound as cloudfunctions from Device d
+			let deviceQ = `SELECT d.id, d.name, d.type_id, d.reg_id, dm.\`data\` as metadata, dm.inbound as cloudfunctions, d.communication from Device d
 			INNER JOIN Registry r ON r.id = d.reg_id
 			INNER JOIN Customer c on c.id = r.customer_id
 			LEFT JOIN Device_metadata dm on dm.device_id = d.id
@@ -63,12 +63,16 @@ class StoreMqttHandler extends MqttHandler {
 				console.warn('DUPLICATE: Package already exists!')
 				return false
 			}
-			// console.log(deviceQ)
+			//console.log(deviceQ)
+			let [device, fields] = await mysqlConn.query(deviceQ)
+			if (device.length > 0 && device[0].communication == 0) {
+				console.warn('COMMUNICATION: Not allowed!')
+				return false
+			}
 			let lastId = null
 			await mysqlConn.query(query).then(([res, fi]) => {
 				lastId = res.insertId;
 			})
-			let [device, fields] = await mysqlConn.query(deviceQ)
 			// console.log('Device\n', device[0])
 			if (device.length > 0) {
 				if (device[0].cloudfunctions)
