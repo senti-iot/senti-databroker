@@ -6,6 +6,40 @@ var mysqlConn = require('../../mysql/mysql_handler')
 const moment = require('moment')
 const engineAPI = require('../engine/engine')
 
+router.get('/:version/devicedata-clean/:deviceID/:from/:to/:nId', async (req, res, next) => {
+	let apiVersion = req.params.version
+	let authToken = req.headers.auth
+	let deviceID = req.params.deviceID
+	let from = req.params.from
+	let to = req.params.to
+	let nId = req.params.nId
+	if (verifyAPIVersion(apiVersion)) {
+		if (authenticate(authToken)) {
+			let query = `SELECT \`data\`, created
+			FROM Device_data_clean
+				WHERE device_id=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
+			console.log(deviceID, from, to, nId)
+			await mysqlConn.query(query, [deviceID, from, to]).then(async rs => {
+				let cleanData = rs[0]
+				console.log(cleanData)
+				if (nId > 0) {
+					let cData = await engineAPI.post('/', { nIds: [nId], data: cleanData }).then(rss => {
+						console.log('EngineAPI Status:', rss.status);
+						console.log('EngineAPI Response:', rss.data)
+						return rss.ok ? rss.data : null
+					})
+					return res.status(200).json(cData)
+				}
+				res.status(200).json(cleanData)
+			}).catch(err => {
+				if (err) {
+					console.log(err, query)
+					res.status(500).json({ err, query })
+				}
+			})
+		}
+	}
+})
 
 router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceType?/:chartType?', async (req, res, next) => {
 	let apiVersion = req.params.version
