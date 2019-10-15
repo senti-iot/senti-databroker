@@ -6,6 +6,53 @@ var mysqlConn = require('../../mysql/mysql_handler')
 const moment = require('moment')
 const engineAPI = require('../engine/engine')
 
+router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async (req, res, next) => {
+	let apiV = req.params.version
+	let authToken = req.headers.auth
+	let customerId = req.params.customerId
+	let from = req.params.from
+	let to = req.params.to
+	let nId = req.params.nId
+	console.log('deviceDataByCustomerID', customerId)
+	if (verifyAPIVersion(apiV)) {
+
+		if (authenticate(authToken)) {
+			/* SELECT `data`, dd.created
+	FROM Device_data_clean dd
+	INNER JOIN Device d on d.id = dd.device_id
+	INNER JOIN Registry r on r.id = d.reg_id
+	INNER JOIN Customer c on c.id = r.customer_id
+WHERE c.ODEUM_org_id = 138230100010117 and dd.created >= '2019-10-01' and dd.created <= '2019-10-10'
+ORDER BY dd.created */
+			let query = `SELECT \`data\`, dd.created
+						FROM Device_data_clean dd
+						INNER JOIN Device d on d.id = dd.device_id
+						INNER JOIN Registry r on r.id = d.reg_id
+						INNER JOIN Customer c on c.id = r.customer_id
+						WHERE c.ODEUM_org_id = ? and dd.created >= ? and dd.created <= ?
+						ORDER BY dd.created`
+			await mysqlConn.query(query, [customerId, from, to]).then(rs => {
+				console.log(rs[0])
+				let cleanData = rs[0]
+				// if (nId > 0 || nId.lenght > 0) {
+				// 	let cData = await engineAPI.post('/', { nIds: [nId], data: cleanData }).then(rss => {
+				// 		console.log('EngineAPI Status:', rss.status);
+				// 		console.log('EngineAPI Response:', rss.data)
+				// 		return rss.ok ? rss.data : null
+				// 	})
+				// 	return res.status(200).json(cData)
+				// }
+				return res.status(200).json(cleanData)
+			}).catch(err => {
+				console.log(err, query)
+				res.status(500).json({ err, query })
+			})
+		}
+		return res.status(500).json("Error: Invalid token")
+	}
+	return res.status(500).json("Error: Invalid Version")
+})
+
 router.get('/:version/devicedata-clean/:deviceID/:from/:to/:nId', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
