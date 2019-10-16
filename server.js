@@ -82,7 +82,7 @@ const startAPIServer = () => {
 	console.log('Senti'.green.bold + ' - Data'.cyan.bold + ' Broker'.cyan.bold)
 	app.listen(port, () => {
 		console.log('Server started on port: ' + port.toString().yellow.bold)
-		log('Senti DataBroker started on port ', port.toString(), 'info')
+		log('Senti DataBroker started on port ' + port.toString(), 'info')
 	}).on('error', (err) => {
 		if (err.errno === 'EADDRINUSE') {
 			console.log('Server not started, port ' + port + ' is busy')
