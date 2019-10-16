@@ -5,27 +5,23 @@ const dotenv = require('dotenv').load()
 const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
-const pino = require('pino')
-const fs = require('fs');
+// const pino = require('pino')
+// const fs = require('fs');
+const log = require('./api/logging/index').log
 const app = express()
-// module.exports.logger = console
-module.exports.logger = pino(pino.destination(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}-others.json`))
-// const logger=pino(pino.destination(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}.json`))
-// module.exports.logger = pino(pino.extreme(`/var/log/nodejs/databroker/${new Date().toLocaleDateString().replace(/\//g, '-')}-others.json`))
-// const expressPino = require('express-pino-logger')({
-// 	logger: logger
+module.exports.log = log
 // })
-const logService = require('./mqtt/logService')
-const logServ = new logService()
-module.exports.logService = logServ
-const testing = require('./api/logging/logger')
+// const logService = require('./mqtt/logService')
+// const logServ = new logService()
+// module.exports.logService = logServ
+// const testing = require('./api/logging/logger')
 
 // const pino = require('pino')()
 // const expressPino = require('express-pino-logger')({
 // 	logger: pino()
 // })
 // app.use([expressPino])
-app.use('/', testing)
+// app.use('/', testing)
 //#region Device
 const getDevice = require('./api/device/getDevice')
 const getDevices = require('./api/device/getDevices')
@@ -86,6 +82,7 @@ const startAPIServer = () => {
 	console.log('Senti'.green.bold + ' - Data'.cyan.bold + ' Broker'.cyan.bold)
 	app.listen(port, () => {
 		console.log('Server started on port: ' + port.toString().yellow.bold)
+		log('Senti DataBroker started on port ', port.toString(), 'info')
 	}).on('error', (err) => {
 		if (err.errno === 'EADDRINUSE') {
 			console.log('Server not started, port ' + port + ' is busy')
