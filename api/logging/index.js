@@ -6,7 +6,7 @@ if (env === 'localhost') {
 	host = 'http://localhost:3019'
 }
 else {
-	if (env === 'dev') {
+	if (env === 'development') {
 		host = 'https://dev.services.senti.cloud/logger'
 	}
 	else {
