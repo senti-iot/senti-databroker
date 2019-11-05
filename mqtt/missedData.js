@@ -1,7 +1,7 @@
 var MqttHandler = require('./mqtt_handler.js')
 var mysqlConn = require('../mysql/mysql_handler')
 const engineAPI = require('../api/engine/engine')
-const logger = require('../server').logger
+// const logger = require('../server').logger
 const moment = require('moment')
 
 class MDataStoreMqttHandler extends MqttHandler {
@@ -76,11 +76,11 @@ class MDataStoreMqttHandler extends MqttHandler {
 			}
 		}
 		catch (e) {
-				console.log("ERROR:", e.message)
-				return false
-			}
-			// console.log(pData.data)
+			console.log("ERROR:", e.message)
+			return false
 		}
+		// console.log(pData.data)
+	}
 
 }
 

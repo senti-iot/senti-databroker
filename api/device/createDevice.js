@@ -5,7 +5,8 @@ const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 const logService = require('../../server').logService
 function cleanUpSpecialChars(str) {
-	return str
+
+	return str.toString()
 		.replace(/[øØ]/g, "ou")
 		.replace(/[æÆ]/g, "ae")
 		.replace(/[åÅ]/g, "aa")
@@ -27,16 +28,16 @@ router.put('/:version/device', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let data = req.body
+
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			try {
 				console.log(data)
-				let uuid = cleanUpSpecialChars(data.name).toLowerCase()
+				let uuid = data.uuid ? data.uuid : cleanUpSpecialChars(data.name).toLowerCase()
 				let arr = [uuid, data.name, data.type_id, data.reg_id,
 					data.description,
 					data.lat, data.lng, data.address,
 					data.locType, data.communication]
-
 				mysqlConn.query(createDeviceQuery, arr).then(rs => {
 					console.log('Device Created', rs[0].insertId)
 					logService.log(`Device Created with id: ${rs[0].insertId}`)
@@ -47,7 +48,6 @@ router.put('/:version/device', async (req, res, next) => {
 						console.log('Created', r[0].insertId)
 						res.status(200).json(rs[0].insertId)
 					}).catch(err => {
-						console.log(err)
 						res.status(500).json(err)
 					})
 				}).catch(err => {
@@ -55,6 +55,7 @@ router.put('/:version/device', async (req, res, next) => {
 				})
 			}
 			catch (e) {
+				console.log(e)
 				res.status(500).json(e)
 			}
 		} else {
