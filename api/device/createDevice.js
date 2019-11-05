@@ -3,7 +3,7 @@ const router = express.Router()
 const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
-const logService = require('../../server').logService
+const log = require('../../server').log
 function cleanUpSpecialChars(str) {
 
 	return str.toString()
@@ -41,18 +41,33 @@ router.put('/:version/device', async (req, res, next) => {
 					data.locType, data.communication]
 				mysqlConn.query(createDeviceQuery, arr).then(rs => {
 					console.log('Device Created', rs[0].insertId)
-					logService.log(`Device Created with id: ${rs[0].insertId}`)
+					log({
+						msg: `Device [0] Created`,
+						deviceValues: arr
+					}, "info")
 					let mtd = data.metadata
 					console.log(mtd, createMetaDataQuery)
 					let mtdArr = [rs[0].insertId, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
 					mysqlConn.query(createMetaDataQuery, mtdArr).then(r => {
 						console.log('Created', r[0].insertId)
+						log({
+							msg: `Device [1] Metadata Created`,
+							deviceMtdValues: mtdArr
+						}, "info")
 						res.status(200).json(rs[0].insertId)
 					}).catch(err => {
 						res.status(500).json(err)
 					})
-				}).catch(err => {
-					res.status(500).json(err)
+				}).catch(async err => {
+					// if (err) {
+					console.log("error: ", err);
+					let uuid = await log({
+						msg: 'Error Creating Device',
+						error: err
+					},
+						"error")
+					res.status(500).json(uuid)
+					// }
 				})
 			}
 			catch (e) {
