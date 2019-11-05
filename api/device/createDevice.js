@@ -18,7 +18,7 @@ const createDeviceQuery = `INSERT INTO Device
 			lat, lng, address,
 			locType,
 			communication)
-			VALUES (CONCAT(?,'-',CAST(LEFT(UUID(),8) as CHAR(50))),?,?,?,?,?,?,?,?,?)`
+			VALUES (?,?,?,?,?,?,?,?,?,?)`
 
 const createMetaDataQuery = `INSERT INTO Device_metadata
 					(device_id, data, inbound, outbound)
@@ -34,6 +34,7 @@ router.put('/:version/device', async (req, res, next) => {
 			try {
 				console.log(data)
 				let uuid = data.uuid ? data.uuid : cleanUpSpecialChars(data.name).toLowerCase()
+				console.log(uuid)
 				let arr = [uuid, data.name, data.type_id, data.reg_id,
 					data.description,
 					data.lat, data.lng, data.address,
