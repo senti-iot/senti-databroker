@@ -23,6 +23,7 @@ class StoreMqttHandler extends MqttHandler {
 			// console.log(arr)
 			// console.log(arr[7], arr[5], arr[1])
 			// logService.log([message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] }])
+
 			this.storeData(message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] })
 			// logger.info({ MIX: { IN: true } })
 		})

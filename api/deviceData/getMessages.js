@@ -9,7 +9,6 @@ const engineAPI = require('../engine/engine')
 router.get('/:version/messages/device/:deviceID/:from/:to', async (req, res) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
-	console.log('BING BING BING')
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			let deviceId = req.params.deviceID

@@ -4,6 +4,7 @@ var mysqlConn = require('../../mysql/mysql_handler')
 const moment = require('moment')
 const engineAPI = require('../engine/engine')
 const tokenAPI = require('../engine/token')
+const log = require('../../server').log
 
 const selectLatestCleanData = `SELECT data
 		FROM Device_data_clean
@@ -23,7 +24,7 @@ const selectAllDevicesUnderReg = `SELECT d.*, data from Device d
 		AND data NOT LIKE '%null%'
 		AND created >= ? AND created <= ? ORDER BY created`
 
-const selectLatestAllDevicesUnderReg = `SELECT tt.uuid, tt.name, dd.created, dd.data 
+const selectLatestAllDevicesUnderReg = `SELECT tt.uuid, tt.name, dd.created, dd.data
 FROM (
 	SELECT max(dd.id) as did, t.uuid, t.name
 	FROM (
@@ -40,7 +41,9 @@ LEFT JOIN Device_data_clean dd ON tt.did=dd.id`
 
 const selectRegistryIDQ = `SELECT id from Registry where uuid=?`
 const selectDeviceIDQ = `SELECT id from Device where uuid=?`
-
+/**
+ * Get all the devices & their data under the regID and between from / to period
+ */
 router.get('/:token/registry/:regID/:from/:to/', async (req, res, next) => {
 	let token = req.params.token
 	let rID = req.params.regID
@@ -58,6 +61,11 @@ router.get('/:token/registry/:regID/:from/:to/', async (req, res, next) => {
 	let isValid = await tokenAPI.get(`validateToken/${token}/registry/${regID}`).then(rs => rs.data)
 	console.log(isValid)
 	if (isValid) {
+		log({
+			msg: " Latest Datarequested externally for Registry",
+			regId: rID,
+			internalId: regID
+		}, 'info')
 		let devices = await mysqlConn.query(selectAllDevicesUnderReg, [regID, from, to]).then(rs => rs[0])
 		res.json(devices).status(200)
 	}
@@ -65,12 +73,14 @@ router.get('/:token/registry/:regID/:from/:to/', async (req, res, next) => {
 		res.status(500).json({ error: "Invalid Token" })
 	}
 })
-
+/**
+ * Get the last set of data for Registry
+ */
 router.get('/:token/registry/:regID/latest', async (req, res, next) => {
 	let token = req.params.token
 	let rID = req.params.regID
 	console.log(token, rID)
- 	let regID = await mysqlConn.query(selectRegistryIDQ, [rID]).then(rs => {
+	let regID = await mysqlConn.query(selectRegistryIDQ, [rID]).then(rs => {
 		console.log(rs)
 		if (rs[0][0])
 			return rs[0][0].id
@@ -80,9 +90,14 @@ router.get('/:token/registry/:regID/latest', async (req, res, next) => {
 	console.log(regID)
 	let isValid = await tokenAPI.get(`validateToken/${token}/registry/${regID}`).then(rs => rs.data)
 	console.log(isValid)
-	
+
 	if (isValid) {
+		log({
+			msg: "Latest Data requested externally for Registries' device",
+			deviceId: deviceID
+		}, 'info')
 		let devices = await mysqlConn.query(selectLatestAllDevicesUnderReg, [regID]).then(rs => rs[0])
+
 		res.json(devices).status(200)
 	}
 	else {
@@ -90,6 +105,9 @@ router.get('/:token/registry/:regID/latest', async (req, res, next) => {
 	}
 })
 
+/**
+ * Get the last data set for a device
+ */
 router.get('/:token/devicedata/:deviceID/latest', async (req, res, next) => {
 	let token = req.params.token
 	let deviceID = req.params.deviceID
@@ -101,6 +119,10 @@ router.get('/:token/devicedata/:deviceID/latest', async (req, res, next) => {
 
 		await mysqlConn.query(selectLatestCleanData, [deviceID]).then(async rs => {
 			let rawData = rs[0]
+			log({
+				msg: "Latest Data requested externally for Device",
+				deviceId: deviceID
+			}, 'info')
 			res.status(200).json(rawData)
 		}).catch(err => {
 			if (err) { res.status(500).json({ err, query: mysqlConn.format(selectLatestCleanData, [deviceID]) }) }
@@ -124,6 +146,10 @@ router.get('/:token/devicedata/:deviceID/:from/:to/', async (req, res, next) => 
 
 		await mysqlConn.query(selectCleanData, [deviceID, from, to]).then(async rs => {
 			let rawData = rs[0]
+			log({
+				msg: "Data requested externally for Device",
+				deviceId: deviceID
+			}, 'info')
 			res.status(200).json(rawData)
 		}).catch(err => {
 			if (err) { res.status(500).json({ err, query: mysqlConn.format(selectCleanData, [deviceID, from, to]) }) }
@@ -167,6 +193,10 @@ router.get('/:token/devicedata/:deviceID/:from/:to/:dataKey/:cfId?', async (req,
 				})
 				return res.status(200).json(cData)
 			}
+			log({
+				msg: "Data requested externally for Device",
+				deviceId: deviceID
+			}, 'info')
 			res.status(200).json(cleanData)
 		}).catch(err => {
 			if (err) { res.status(500).json({ err, query: mysqlConn.format(selectCleanDataIdDevice, [deviceID, from, to]) }) }
