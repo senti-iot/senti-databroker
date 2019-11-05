@@ -12,7 +12,7 @@ router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async 
 	let customerId = req.params.customerId
 	let from = req.params.from
 	let to = req.params.to
-	let nId = req.params.nId
+	// let nId = req.params.nId
 	console.log('deviceDataByCustomerID', customerId)
 	if (verifyAPIVersion(apiV)) {
 
@@ -24,7 +24,7 @@ router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async 
 	INNER JOIN Customer c on c.id = r.customer_id
 WHERE c.ODEUM_org_id = 138230100010117 and dd.created >= '2019-10-01' and dd.created <= '2019-10-10'
 ORDER BY dd.created */
-			let query = `SELECT \`data\`, dd.created
+			let query = `SELECT \`data\`, dd.created, dd.device_id
 						FROM Device_data_clean dd
 						INNER JOIN Device d on d.id = dd.device_id
 						INNER JOIN Registry r on r.id = d.reg_id

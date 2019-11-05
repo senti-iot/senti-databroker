@@ -1,7 +1,7 @@
 var MqttHandler = require('./mqtt_handler.js')
 var mysqlConn = require('../mysql/mysql_handler')
 const engineAPI = require('../api/engine/engine')
-const logger = require('../server').logger
+const logService = require('../server').logService
 const moment = require('moment')
 const SHA2 = require('sha2')
 
@@ -22,7 +22,8 @@ class StoreMqttHandler extends MqttHandler {
 			let arr = topic.split('/')
 			// console.log(arr)
 			// console.log(arr[7], arr[5], arr[1])
-			// logger.info([message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] }])
+			// logService.log([message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] }])
+
 			this.storeData(message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] })
 			// logger.info({ MIX: { IN: true } })
 		})
@@ -30,7 +31,9 @@ class StoreMqttHandler extends MqttHandler {
 	async storeData(data, { deviceName, regName, customerID }) {
 		try {
 			console.log('STORING DATA')
-			// logger.info('STORING DATA', { deviceName, regName, customerID })
+
+			logService.log('STORING DATA', { deviceName, regName, customerID })
+
 			console.log(deviceName, regName, customerID)
 			let pData = JSON.parse(data)
 			console.log(pData)

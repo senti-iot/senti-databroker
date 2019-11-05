@@ -5,7 +5,8 @@ const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 const log = require('../../server').log
 function cleanUpSpecialChars(str) {
-	return str
+
+	return str.toString()
 		.replace(/[øØ]/g, "ou")
 		.replace(/[æÆ]/g, "ae")
 		.replace(/[åÅ]/g, "aa")
@@ -17,7 +18,7 @@ const createDeviceQuery = `INSERT INTO Device
 			lat, lng, address,
 			locType,
 			communication)
-			VALUES (CONCAT(?,'-',CAST(LEFT(UUID(),8) as CHAR(50))),?,?,?,?,?,?,?,?,?)`
+			VALUES (?,?,?,?,?,?,?,?,?,?)`
 
 const createMetaDataQuery = `INSERT INTO Device_metadata
 					(device_id, data, inbound, outbound)
@@ -27,16 +28,17 @@ router.put('/:version/device', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let data = req.body
+
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			try {
 				console.log(data)
-				let uuid = cleanUpSpecialChars(data.name).toLowerCase()
+				let uuid = data.uuid ? data.uuid : cleanUpSpecialChars(data.name).toLowerCase()
+				console.log(uuid)
 				let arr = [uuid, data.name, data.type_id, data.reg_id,
 					data.description,
 					data.lat, data.lng, data.address,
 					data.locType, data.communication]
-
 				mysqlConn.query(createDeviceQuery, arr).then(rs => {
 					console.log('Device Created', rs[0].insertId)
 					log({
@@ -54,7 +56,6 @@ router.put('/:version/device', async (req, res, next) => {
 						}, "info")
 						res.status(200).json(rs[0].insertId)
 					}).catch(err => {
-						console.log(err)
 						res.status(500).json(err)
 					})
 				}).catch(async err => {
@@ -70,6 +71,7 @@ router.put('/:version/device', async (req, res, next) => {
 				})
 			}
 			catch (e) {
+				console.log(e)
 				res.status(500).json(e)
 			}
 		} else {

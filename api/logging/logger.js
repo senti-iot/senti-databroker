@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const fileLogger = require('../../server').logger
+// const fileLogger = require('../../server').logger
 
 router.all('*', (req, res, next) => {
 	// fileLogger.info(req)
