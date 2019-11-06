@@ -100,7 +100,7 @@ class StoreMqttHandler extends MqttHandler {
 										INNER JOIN Device ON Registry.id = Device.reg_id
 										INNER JOIN Customer ON Customer.id = Registry.customer_id
 										where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'`
-							console.log(mysqlConn.format(normalizedQ))
+							// console.log(mysqlConn.format(normalizedQ))
 							await mysqlConn.query(normalizedQ).then(rs => { }).catch(e => {
 								console.log(e)
 							})
