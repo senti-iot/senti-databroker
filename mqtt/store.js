@@ -53,14 +53,16 @@ class StoreMqttHandler extends MqttHandler {
 			WHERE dd.signature=? and d.uuid=?
 			`
 			let shaString = SHA2['SHA-256'](JSON.stringify(pData)).toString('hex')
+
 			let check = await mysqlConn.query(packageCheckQ, [shaString, deviceName]).then(([res, fi]) => {
 				console.log('\n')
-				console.log(SHA2['SHA-256'](JSON.stringify(pData)))
-				console.log(res, fi)
+				console.log(SHA2['SHA-256'](JSON.stringify(pData)).toString('hex'))
+				// console.log(res[0], fi)
 				console.log('\n')
 				return res
 			})
 			if (check.length > 0) {
+				console.warn(pData)
 				console.warn('DUPLICATE: Package already exists!')
 				return false
 			}
