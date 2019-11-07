@@ -17,20 +17,24 @@ router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async 
 	if (verifyAPIVersion(apiV)) {
 
 		if (authenticate(authToken)) {
-			/* SELECT `data`, dd.created
-	FROM Device_data_clean dd
-	INNER JOIN Device d on d.id = dd.device_id
-	INNER JOIN Registry r on r.id = d.reg_id
-	INNER JOIN Customer c on c.id = r.customer_id
-WHERE c.ODEUM_org_id = 138230100010117 and dd.created >= '2019-10-01' and dd.created <= '2019-10-10'
-ORDER BY dd.created */
-			let query = `SELECT \`data\`, dd.created, dd.device_id
-						FROM Device_data_clean dd
-						INNER JOIN Device d on d.id = dd.device_id
-						INNER JOIN Registry r on r.id = d.reg_id
-						INNER JOIN Customer c on c.id = r.customer_id
-						WHERE c.ODEUM_org_id = ? and dd.created >= ? and dd.created <= ?
-						ORDER BY dd.created`
+			let query = `SELECT dd.data, dd.created, dd.device_id
+						 FROM (
+    						SELECT d.id
+    						FROM Customer c
+    						INNER JOIN Registry r on c.id = r.customer_id
+    						INNER JOIN Device d  on r.id = d.reg_id
+    						WHERE c.ODEUM_org_id = ?
+						) t
+						INNER JOIN Device_data_clean dd  FORCE INDEX (index4) ON t.id = dd.device_id
+						WHERE dd.created >= ? and dd.created <= ?
+						ORDER BY dd.created;`
+			// let query = `SELECT \`data\`, dd.created, dd.device_id
+			// 			FROM Device_data_clean dd
+			// 			INNER JOIN Device d on d.id = dd.device_id
+			// 			INNER JOIN Registry r on r.id = d.reg_id
+			// 			INNER JOIN Customer c on c.id = r.customer_id
+			// 			WHERE c.ODEUM_org_id = ? and dd.created >= ? and dd.created <= ?
+			// 			ORDER BY dd.created`
 			await mysqlConn.query(query, [customerId, from, to]).then(rs => {
 				console.log(rs[0])
 				let cleanData = rs[0]
