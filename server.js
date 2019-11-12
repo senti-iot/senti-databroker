@@ -14,14 +14,14 @@ module.exports.log = log
 // const logService = require('./mqtt/logService')
 // const logServ = new logService()
 // module.exports.logService = logServ
-// const testing = require('./api/logging/logger')
+const testing = require('./api/logging/logger')
 
 // const pino = require('pino')()
 // const expressPino = require('express-pino-logger')({
 // 	logger: pino()
 // })
 // app.use([expressPino])
-// app.use('/', testing)
+app.use('/', testing)
 //#region Device
 const getDevice = require('./api/device/getDevice')
 const getDevices = require('./api/device/getDevices')
