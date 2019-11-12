@@ -6,7 +6,7 @@ router.all('*', (req, res, next) => {
 	// fileLogger.info(req)
 	// req.log.child = {}
 	// res.log.info(req)
-	res.set('Cache-Control', 'max-age=86400')
+	res.set('Cache-Control', 'public, max-age=86400')
 	next()
 });
 
