@@ -94,7 +94,7 @@ router.get('/:token/registry/:regID/latest', async (req, res, next) => {
 	if (isValid) {
 		log({
 			msg: "Latest Data requested externally for Registries' device",
-			deviceId: deviceID
+			regId: rID
 		}, 'info')
 		let devices = await mysqlConn.query(selectLatestAllDevicesUnderReg, [regID]).then(rs => rs[0])
 

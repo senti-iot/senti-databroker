@@ -31,9 +31,7 @@ class StoreMqttHandler extends MqttHandler {
 	async storeData(data, { deviceName, regName, customerID }) {
 		try {
 			console.log('STORING DATA')
-
-			logService.log('STORING DATA', { deviceName, regName, customerID })
-
+			// logService.log('STORING DATA', { deviceName, regName, customerID })
 			console.log(deviceName, regName, customerID)
 			let pData = JSON.parse(data)
 			console.log(pData)
@@ -55,14 +53,16 @@ class StoreMqttHandler extends MqttHandler {
 			WHERE dd.signature=? and d.uuid=?
 			`
 			let shaString = SHA2['SHA-256'](JSON.stringify(pData)).toString('hex')
+
 			let check = await mysqlConn.query(packageCheckQ, [shaString, deviceName]).then(([res, fi]) => {
 				console.log('\n')
-				console.log(SHA2['SHA-256'](JSON.stringify(pData)))
-				console.log(res, fi)
+				console.log(SHA2['SHA-256'](JSON.stringify(pData)).toString('hex'))
+				// console.log(res[0], fi)
 				console.log('\n')
 				return res
 			})
 			if (check.length > 0) {
+				console.warn(pData)
 				console.warn('DUPLICATE: Package already exists!')
 				return false
 			}
@@ -100,7 +100,7 @@ class StoreMqttHandler extends MqttHandler {
 										INNER JOIN Device ON Registry.id = Device.reg_id
 										INNER JOIN Customer ON Customer.id = Registry.customer_id
 										where Customer.uuid='${customerID}' AND Device.uuid='${deviceName}' AND Registry.uuid='${regName}'`
-							console.log(mysqlConn.format(normalizedQ))
+							// console.log(mysqlConn.format(normalizedQ))
 							await mysqlConn.query(normalizedQ).then(rs => { }).catch(e => {
 								console.log(e)
 							})
