@@ -60,6 +60,10 @@ const getCustomer = require('./api/customer/getCustomer')
 const deleteCustomer = require('./api/customer/deleteCustomer')
 //#endregion
 
+//#region Org Metadata
+const getOrg = require('./api/org/getOrgMetadata')
+
+//#endregion
 const port = process.env.NODE_PORT
 
 app.use(helmet())
@@ -72,7 +76,8 @@ app.use([getMessages, getDeviceData, getDataExternal,
 	getDT, getDTs, createDT, updateDT, deleteDT,
 	getDevice, getDevices, createDevice, updateDevice, deleteDevice,
 	getRegistry, getRegistryDevices, getRegistries, createReg, updateReg, deleteReg,
-	createCustomer, getCustomer, updateCustomer, deleteCustomer])
+	createCustomer, getCustomer, updateCustomer, deleteCustomer,
+	getOrg])
 
 var allRoutes = require('./api/logging/routeLogging');
 
