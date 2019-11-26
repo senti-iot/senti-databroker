@@ -7,14 +7,14 @@ const tokenAPI = require('../engine/token')
 const log = require('../../server').log
 
 
-const getOrgMetadata = `SELECT * FROM OrgMetadata where orgId = ?`
+const getOrgMetadata = `SELECT * FROM OrgMetaData where orgId = ?`
 
 router.get('/:token/:version/orgMetadata/:orgId', async (req, res, next) => {
 	let orgId = req.params.orgId
 	console.log(req)
 	mysqlConn.query(getOrgMetadata, [orgId]).then(rs => {
 		if (rs[0][0]) {
-			res.json(rs[0][0])
+			res.json({ ...rs[0][0], theme: JSON.parse(rs[0][0].theme) })
 		}
 	})
 
