@@ -16,7 +16,7 @@ router.get('/:token/:version/orgMetadata/:orgId', async (req, res, next) => {
 		mysqlConn.query(getOrgMetadata, [orgId]).then(rs => {
 			if (rs[0][0]) {
 				console.log(rs[0][0])
-				res.json({ ...rs[0][0], theme: JSON.parse(rs[0][0].theme) }).status(200)
+				res.json({ ...rs[0][0] }).status(200)
 			}
 		})
 	}
