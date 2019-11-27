@@ -11,7 +11,6 @@ const getOrgMetadata = `SELECT * FROM OrgMetaData where orgId = ?`
 
 router.get('/:token/:version/orgMetadata/:orgId', async (req, res, next) => {
 	let orgId = req.params.orgId
-	console.log(req)
 	try {
 
 		mysqlConn.query(getOrgMetadata, [orgId]).then(rs => {
