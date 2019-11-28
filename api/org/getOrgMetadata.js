@@ -38,6 +38,9 @@ router.get('/orgMetadata/:hostname', async (req, res, next) => {
 					console.log(rs[0][0])
 					res.json({ ...rs[0][0] }).status(200)
 				}
+				else {
+					res.json(false).status(200)
+				}
 			})
 		}
 		else {
