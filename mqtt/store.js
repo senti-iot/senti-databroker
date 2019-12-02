@@ -94,7 +94,7 @@ class StoreMqttHandler extends MqttHandler {
 							let normalizedQ = `INSERT INTO Device_data_clean
 										(data, created, device_id, device_data_id)
 										SELECT '${JSON.stringify(normalized)}',
-										'${normalized.time ? dateFormatter(normalized.time) : dateFormatter(pData.time)}',
+										'${dateFormatter(pData.time)}',
 										Device.id as device_id,
 										${lastId} from Registry
 										INNER JOIN Device ON Registry.id = Device.reg_id
