@@ -17,17 +17,34 @@ router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async 
 	if (verifyAPIVersion(apiV)) {
 
 		if (authenticate(authToken)) {
-			let query = `SELECT dd.data, dd.created, dd.device_id
-						 FROM (
-    						SELECT d.id
-    						FROM Customer c
-    						INNER JOIN Registry r on c.id = r.customer_id
-    						INNER JOIN Device d  on r.id = d.reg_id
-    						WHERE c.ODEUM_org_id = ?
-						) t
-						INNER JOIN Device_data_clean dd  FORCE INDEX (index4) ON t.id = dd.device_id
-						WHERE dd.created >= ? and dd.created <= ?
-						ORDER BY dd.created;`
+			let query = `SELECT
+							dd.data->'$.value' as value,
+							dd.data->'$.maxFlow' as maxFlow,
+							dd.data->'$.minFlow' as minFlow,
+							dd.data->'$.minATemp' as minATemp,
+							dd.data->'$.minWTemp' as minWTemp,
+							dd.data->'$.time' as time,
+							dd.created,
+							dd.device_id
+						FROM
+							(
+							SELECT
+								d.id
+							FROM
+								Customer c
+							INNER JOIN Registry r on
+								c.id = r.customer_id
+							INNER JOIN Device d on
+								r.id = d.reg_id
+							WHERE
+								c.ODEUM_org_id = ? ) t
+						INNER JOIN Device_data_clean dd FORCE INDEX (index4) ON
+							t.id = dd.device_id
+						WHERE
+							dd.data->'$.time' >= ?
+							and dd.data->'$.time' <= ?
+						ORDER BY
+							dd.created;`
 			// let query = `SELECT \`data\`, dd.created, dd.device_id
 			// 			FROM Device_data_clean dd
 			// 			INNER JOIN Device d on d.id = dd.device_id
@@ -36,16 +53,7 @@ router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async 
 			// 			WHERE c.ODEUM_org_id = ? and dd.created >= ? and dd.created <= ?
 			// 			ORDER BY dd.created`
 			await mysqlConn.query(query, [customerId, from, to]).then(rs => {
-				console.log(rs[0])
 				let cleanData = rs[0]
-				// if (nId > 0 || nId.lenght > 0) {
-				// 	let cData = await engineAPI.post('/', { nIds: [nId], data: cleanData }).then(rss => {
-				// 		console.log('EngineAPI Status:', rss.status);
-				// 		console.log('EngineAPI Response:', rss.data)
-				// 		return rss.ok ? rss.data : null
-				// 	})
-				// 	return res.status(200).json(cData)
-				// }
 				return res.status(200).json(cleanData)
 			}).catch(err => {
 				console.log(err, query)
