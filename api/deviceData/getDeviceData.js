@@ -23,6 +23,7 @@ router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async 
 							dd.data->'$.minFlow' as minFlow,
 							dd.data->'$.minATemp' as minATemp,
 							dd.data->'$.minWTemp' as minWTemp,
+							dd.data->'$.time' as time,
 							dd.created,
 							dd.device_id
 						FROM
