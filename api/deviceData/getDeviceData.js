@@ -41,8 +41,8 @@ router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async 
 						INNER JOIN Device_data_clean dd FORCE INDEX (index4) ON
 							t.id = dd.device_id
 						WHERE
-							dd.created >= ?
-							and dd.created <= ?
+							dd.data->'$.time' >= ?
+							and dd.data->'$.time' <= ?
 						ORDER BY
 							dd.created;`
 			// let query = `SELECT \`data\`, dd.created, dd.device_id
