@@ -6,6 +6,56 @@ var mysqlConn = require('../../mysql/mysql_handler')
 const moment = require('moment')
 const engineAPI = require('../engine/engine')
 
+router.get('/:version/deviceDataByCustomerID/:customerId/:field/:from/:to/:nId', async (req, res, next) => {
+	let apiV = req.params.version
+	let authToken = req.headers.auth
+	let customerId = req.params.customerId
+	let from = req.params.from
+	let to = req.params.to
+	let field = req.params.field
+	// let nId = req.params.nId
+	console.log('Request data for field', field)
+	if (verifyAPIVersion(apiV)) {
+
+		if (authenticate(authToken)) {
+			let query = `SELECT
+							dd.data->? as ?,
+							dd.data->'$.time' as time,
+							dd.created,
+							dd.device_id
+						FROM
+							(
+							SELECT
+								d.id
+							FROM
+								Customer c
+							INNER JOIN Registry r on
+								c.id = r.customer_id
+							INNER JOIN Device d on
+								r.id = d.reg_id
+							WHERE
+								c.ODEUM_org_id = ? ) t
+						INNER JOIN Device_data_clean dd FORCE INDEX (index4) ON
+							t.id = dd.device_id
+						WHERE
+							dd.data->'$.time' >= ?
+							and dd.data->'$.time' <= ?
+						ORDER BY
+							dd.created;`
+			console.log(mysqlConn.format(query, ['$.' + field, field, customerId, from, to]))
+			await mysqlConn.query(query, ['$.' + field, field, customerId, from, to]).then(rs => {
+				let cleanData = rs[0]
+				return res.status(200).json(cleanData)
+			}).catch(err => {
+				console.log(err, query)
+				res.status(500).json({ err, query })
+			})
+		}
+		return res.status(500).json("Error: Invalid token")
+	}
+	return res.status(500).json("Error: Invalid Version")
+})
+
 router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async (req, res, next) => {
 	let apiV = req.params.version
 	let authToken = req.headers.auth
