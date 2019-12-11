@@ -4,6 +4,7 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 const log = require('../../server').log
+
 function cleanUpSpecialChars(str) {
 
 	return str.toString()
@@ -24,7 +25,7 @@ const createMetaDataQuery = `INSERT INTO Device_metadata
 					(device_id, data, inbound, outbound)
 					VALUES(?, ?, ?, ?);`
 
-router.put('/:version/device', async (req, res, next) => {
+router.put('/:version/device', async (req, res) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let data = req.body
@@ -64,8 +65,7 @@ router.put('/:version/device', async (req, res, next) => {
 					let uuid = await log({
 						msg: 'Error Creating Device',
 						error: err
-					},
-						"error")
+					}, "error")
 					res.status(500).json(uuid)
 					// }
 				})
