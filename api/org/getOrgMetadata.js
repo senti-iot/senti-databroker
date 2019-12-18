@@ -1,17 +1,17 @@
 const express = require('express')
 const router = express.Router()
 var mysqlConn = require('../../mysql/mysql_handler')
-const moment = require('moment')
-const engineAPI = require('../engine/engine')
-const tokenAPI = require('../engine/token')
-const log = require('../../server').log
+// const moment = require('moment')
+// const engineAPI = require('../engine/engine')
+// const tokenAPI = require('../engine/token')
+// const log = require('../../server').log
 const { authenticate } = require('senti-apicore')
 
 
 const getOrgMetadataByOrgId = `SELECT * FROM OrgMetaData WHERE orgId = ?`
 const getOrgMetadataByHostname = `SELECT * FROM OrgMetaData WHERE host = ?`
 
-router.get('/:token/:version/orgMetadata/:orgId', async (req, res, next) => {
+router.get('/:token/:version/orgMetadata/:orgId', async (req, res) => {
 	let orgId = req.params.orgId
 	try {
 
@@ -28,7 +28,7 @@ router.get('/:token/:version/orgMetadata/:orgId', async (req, res, next) => {
 
 })
 
-router.get('/orgMetadata/:hostname', async (req, res, next) => {
+router.get('/orgMetadata/:hostname', async (req, res) => {
 	try {
 		let hostname = req.params.hostname
 		let authToken = req.headers.auth

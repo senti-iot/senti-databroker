@@ -4,7 +4,8 @@ class MqttHandler {
 	constructor() {
 		this.mqttClient = null;
 		this.host = 'mqtt://hive.senti.cloud';
-		this.topic = ''
+		this.topic = '';
+		this.topics = [];
 	}
 	init() { }
 	connect() {
@@ -23,10 +24,12 @@ class MqttHandler {
 			// console.log(this.host);
 			// console.log('\n')
 			console.log('MQTT client connected'.green.bold)
-			this.mqttClient.subscribe(this.topic, { qos: 1 }, () => {
-				console.log('MQTT client subscribed to: ' + this.topic.yellow.bold);
-				// console.log('\n')
-			});
+			this.topics.forEach(topic => {
+				this.mqttClient.subscribe(topic, { qos: 1 }, () => {
+					console.log('MQTT client subscribed to: ' + topic.yellow.bold);
+					// console.log('\n')
+				});
+			})
 		});
 
 		this.mqttClient.on('message', function (topic, message) {
