@@ -6,7 +6,7 @@ var mysqlConn = require('../../mysql/mysql_handler')
 const moment = require('moment')
 const engineAPI = require('../engine/engine')
 
-router.get('/:version/deviceDataByCustomerID/:customerId/:field/:from/:to/:nId', async (req, res, next) => {
+router.get('/:version/deviceDataByCustomerID/:customerId/:field/:from/:to/:nId', async (req, res) => {
 	let apiV = req.params.version
 	let authToken = req.headers.auth
 	let customerId = req.params.customerId
@@ -56,7 +56,7 @@ router.get('/:version/deviceDataByCustomerID/:customerId/:field/:from/:to/:nId',
 	return res.status(500).json("Error: Invalid Version")
 })
 
-router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async (req, res, next) => {
+router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async (req, res) => {
 	let apiV = req.params.version
 	let authToken = req.headers.auth
 	let customerId = req.params.customerId
@@ -115,7 +115,7 @@ router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async 
 	return res.status(500).json("Error: Invalid Version")
 })
 
-router.get('/:version/devicedata-clean/:deviceID/:from/:to/:nId', async (req, res, next) => {
+router.get('/:version/devicedata-clean/:deviceID/:from/:to/:nId', async (req, res) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let deviceID = req.params.deviceID
@@ -150,7 +150,7 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:nId', async (req, re
 	}
 })
 
-router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceType?/:chartType?', async (req, res, next) => {
+router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceType?/:chartType?', async (req, res) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let deviceID = req.params.deviceID
@@ -238,6 +238,7 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 				FROM Device_data_clean
 				WHERE device_id=? AND NOT ISNULL(\`data\`) AND created >= ? AND created <= ? ORDER BY created`
 				console.log(deviceID, from, to, nId)
+				console.log(await mysqlConn.format(query, [deviceID, from, to]))
 				await mysqlConn.query(query, [deviceID, from, to]).then(async rs => {
 					let rawData = rs[0]
 					let cleanData = {}
