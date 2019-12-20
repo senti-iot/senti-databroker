@@ -244,7 +244,7 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 					let cleanData = {}
 					rawData.forEach(r => {
 						console.log(type, r.data[type], r.data[type] !== undefined, r.data[type] !== null, (r.data[type] !== undefined || r.data[type] !== null))
-						if (r.data[type] !== undefined || r.data[type] !== null) {
+						if (r.data[type] !== undefined && r.data[type] !== null) {
 							cleanData[moment(r.created).format('YYYY-MM-DD HH:mm:ss')] = r.data[type]
 						}
 					})
