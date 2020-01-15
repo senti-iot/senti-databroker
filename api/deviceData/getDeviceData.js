@@ -115,7 +115,7 @@ router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async 
 	return res.status(500).json("Error: Invalid Version")
 })
 
-router.get('/:version/devicedata-clean/:deviceID/:from/:to/:nId', async (req, res, next) => {
+router.get('/:version/devicedata-clean/:deviceID/:from/:to/:nId', async (req, res) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let deviceID = req.params.deviceID
@@ -150,7 +150,7 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:nId', async (req, re
 	}
 })
 
-router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceType?/:chartType?', async (req, res, next) => {
+router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceType?/:chartType?', async (req, res) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let deviceID = req.params.deviceID

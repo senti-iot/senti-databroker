@@ -133,7 +133,7 @@ class StoreMqttHandler extends MqttHandler {
 					/**
 					 * Delete device id from package and stringify the package
 					 */
-					delete pData[registry[0].config.deviceId]
+					// delete pData[registry[0].config.deviceId]
 					let sData = JSON.stringify(pData)
 
 					/**
