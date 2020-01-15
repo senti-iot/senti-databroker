@@ -1,7 +1,11 @@
 #!/usr/bin/env nodejs
+process.title = "dev_senti_databroker"
 
 //#region Express
 const dotenv = require('dotenv').load()
+if (dotenv.error) {
+	console.warn(dotenv.error)
+}
 const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
