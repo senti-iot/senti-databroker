@@ -1,6 +1,7 @@
 var MqttHandler = require('./mqtt_handler.js')
 var mysqlConn = require('../mysql/mysql_handler')
 const engineAPI = require('../api/engine/engine')
+const asyncForEach = require('../utils/asyncForEach')
 // const logService = require('../server').logService
 const moment = require('moment')
 const SHA2 = require('sha2')
@@ -81,7 +82,7 @@ class StoreMqttHandler extends MqttHandler {
 	async createDevice(data, regId, deviceTypeId) {
 		let uuid = data.uuid ? data.uuid : cleanUpSpecialChars(data.name).toLowerCase()
 		let arr = [uuid, data.name, deviceTypeId, regId, '', data.lat, data.lng, data.address, data.locType, data.communication]
-		mysqlConn.query(createDeviceQuery, arr).then(async rs => {
+		return await mysqlConn.query(createDeviceQuery, arr).then(async rs => {
 			console.log('Device Created', rs[0].insertId)
 			console.log(data, regId, deviceTypeId)
 			let [deviceType] = await mysqlConn.query(selectDeviceType, [deviceTypeId])
@@ -94,96 +95,124 @@ class StoreMqttHandler extends MqttHandler {
 				console.log("error: ", err);
 
 			})
+			return rs[0].insertId
 		}).catch(async err => {
 			// if (err) {
 			console.log("error: ", err);
 		})
 	}
+	async getDevice(customerID, deviceName, regName) {
+		let [device] = await mysqlConn.query(deviceQuery, [customerID, deviceName, regName])
+		return device[0]
+	}
+	async storeDeviceData(pData, registry, customerID, regName) {
+		/**
+		 * Get the key name
+		 */
+		let deviceName = pData[registry[0].config.deviceId]
+		console.log(deviceName)
+		/**
+		 *  Check if the device exists
+		 * */
+		let device = await this.getDevice(customerID, deviceName, regName)
+
+		/**
+		 * If the device doesn't exist create it
+		 */
+		if (!device) {
+			let deviceTypeId = registry[0].config.deviceTypeId
+			console.log(`DEVICE ${deviceName} DOES NOT EXIST`)
+			await this.createDevice({ name: deviceName, communication: 1, ...pData }, registry[0].id, deviceTypeId)
+			device = await this.getDevice(customerID, deviceName, regName)
+			console.log(device)
+		}
+		/**
+		* Check if device accepts communication
+		*/
+		if (device && device.communication == 0) {
+			console.warn('COMMUNICATION: Not allowed!')
+			return false
+		}
+		if (device) {
+			/**
+			 * Delete device id from package and stringify the package
+			 */
+			// delete pData[registry[0].config.deviceId]
+			let sData = JSON.stringify(pData)
+
+			/**
+			 * Check if the package isn't a duplicate
+			 */
+
+			let shaString = SHA2['SHA-256'](sData).toString('hex')
+
+			let check = await mysqlConn.query(packageCheckQ, [shaString, deviceName]).then(([res]) => {
+				console.log('\n')
+				console.log(SHA2['SHA-256'](sData).toString('hex'))
+				console.log('\n')
+				return res
+			})
+			if (check.length > 0) {
+				console.log(pData)
+				console.log('DUPLICATE: Package already exists!')
+				return false
+			}
+			/**
+			 * Insert data into DeviceData table
+			 */
+			let lastId = null
+			await mysqlConn.query(insDeviceDataQuery, [sData, dateFormatter(pData.time), sData, customerID, deviceName, regName]).then(([res]) => {
+				lastId = res.insertId;
+			})
+			/**
+			 * Device Data Clean Table insertion and CloudFunctions process
+			 */
+			if (lastId) {
+				if (device.cloudfunctions.length >= 1) {
+					let normalized = null
+					normalized = await engineAPI.post(
+						'/',
+						{ nIds: device.cloudfunctions.map(n => n.nId), data: { ...pData, ...device.metadata } })
+						.then(rs => {
+							console.log('EngineAPI Response:', rs.status, rs.data);
+							return rs.ok ? rs.data : null
+						})
+
+					let sNormalized = JSON.stringify(normalized)
+					await mysqlConn.query(insDataClean, [sNormalized, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
+						console.log(e)
+					})
+				}
+				else {
+					await mysqlConn.query(insDataClean, [sData, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
+						console.log(e)
+					})
+				}
+			}
+		}
+	}
+
 	async storeDataByRegistry(data, { regName, customerID }) {
 		try {
 			console.log('STORING DATA BY REGISTRY')
 			console.log(regName, customerID)
 			let pData = JSON.parse(data)
 			console.log(pData)
+
 			/**
 			 * Get the registry
 			 */
 			let [registry] = await mysqlConn.query(getRegistry, [regName])
 			if (registry[0]) {
-				let deviceName = pData[registry[0].config.deviceId]
-				console.log(deviceName)
-				/**
-				 *  Check if the device exists
-				 * */
-				let [device] = await mysqlConn.query(deviceQuery, [customerID, deviceName, regName])
-				/**
-				 * Check if device accepts communication
-				 */
-				if (!device[0]) {
-					let deviceTypeId = registry[0].config.deviceTypeId
-					console.log(`DEVICE ${deviceName} DOES NOT EXIST`)
-					await this.createDevice({ name: deviceName, communication: 1, ...pData }, registry[0].id, deviceTypeId)
+				if (!Array.isArray(pData)) {
+					await this.storeDeviceData(pData, registry, customerID, regName)
 				}
-				if (device[0] && device[0].communication == 0) {
-					console.warn('COMMUNICATION: Not allowed!')
-					return false
-				}
-				if (device[0]) {
-
-					/**
-					 * Delete device id from package and stringify the package
-					 */
-					// delete pData[registry[0].config.deviceId]
-					let sData = JSON.stringify(pData)
-
-					/**
-					 * Check if the package isn't a duplicate
-					 */
-
-					let shaString = SHA2['SHA-256'](sData).toString('hex')
-
-					let check = await mysqlConn.query(packageCheckQ, [shaString, deviceName]).then(([res]) => {
-						console.log('\n')
-						console.log(SHA2['SHA-256'](sData).toString('hex'))
-						console.log('\n')
-						return res
-					})
-					if (check.length > 0) {
-						console.log(pData)
-						console.log('DUPLICATE: Package already exists!')
-						return false
-					}
-					/**
-					 * Insert data into DeviceData table
-					 */
-					let lastId = null
-					await mysqlConn.query(insDeviceDataQuery, [sData, dateFormatter(pData.time), sData, customerID, deviceName, regName]).then(([res]) => {
-						lastId = res.insertId;
-					})
-					/**
-					 * Device Data Clean Table insertion and CloudFunctions process
-					 */
-					if (lastId) {
-						if (device[0].cloudfunctions.length >= 1) {
-							let normalized = null
-							normalized = await engineAPI.post(
-								'/',
-								{ nIds: device[0].cloudfunctions.map(n => n.nId), data: { ...pData, ...device[0].metadata } })
-								.then(rs => {
-									console.log('EngineAPI Response:', rs.status, rs.data);
-									return rs.ok ? rs.data : null
-								})
-
-							let sNormalized = JSON.stringify(normalized)
-							await mysqlConn.query(insDataClean, [sNormalized, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
-								console.log(e)
-							})
-						}
-						else {
-							await mysqlConn.query(insDataClean, [sData, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
-								console.log(e)
-							})
-						}
+				else {
+					if (Array.isArray(pData)) {
+						asyncForEach(pData, async (d) => {
+							console.log(d)
+							await this.storeDeviceData(d, registry, customerID, regName)
+						})
 					}
 				}
 			}

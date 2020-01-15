@@ -6,7 +6,7 @@ var mysqlConn = require('../../mysql/mysql_handler')
 const moment = require('moment')
 const engineAPI = require('../engine/engine')
 
-router.get('/:version/deviceDataByCustomerID/:customerId/:field/:from/:to/:nId', async (req, res, next) => {
+router.get('/:version/deviceDataByCustomerID/:customerId/:field/:from/:to/:nId', async (req, res) => {
 	let apiV = req.params.version
 	let authToken = req.headers.auth
 	let customerId = req.params.customerId
@@ -56,7 +56,7 @@ router.get('/:version/deviceDataByCustomerID/:customerId/:field/:from/:to/:nId',
 	return res.status(500).json("Error: Invalid Version")
 })
 
-router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async (req, res, next) => {
+router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async (req, res) => {
 	let apiV = req.params.version
 	let authToken = req.headers.auth
 	let customerId = req.params.customerId
@@ -236,21 +236,25 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 
 				let query = `SELECT id, \`data\`, created, device_id
 				FROM Device_data_clean
-				WHERE device_id=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
+				WHERE device_id=? AND NOT ISNULL(\`data\`) AND created >= ? AND created <= ? ORDER BY created`
 				console.log(deviceID, from, to, nId)
+				console.log(await mysqlConn.format(query, [deviceID, from, to]))
 				await mysqlConn.query(query, [deviceID, from, to]).then(async rs => {
 					let rawData = rs[0]
 					let cleanData = {}
 					rawData.forEach(r => {
-						if (r.data[type] !== undefined || r.data[type] !== null)
+						console.log(type, r.data[type], r.data[type] !== undefined, r.data[type] !== null, (r.data[type] !== undefined || r.data[type] !== null))
+						if (r.data[type] !== undefined && r.data[type] !== null) {
 							cleanData[moment(r.created).format('YYYY-MM-DD HH:mm:ss')] = r.data[type]
+						}
 					})
-					console.log(rawData)
-					console.log(cleanData)
+					console.log(rawData[0])
+					console.log(cleanData[0])
 					if (nId > 0) {
 						let cData = await engineAPI.post('/', { nIds: [nId], data: cleanData }).then(rss => {
 							console.log('EngineAPI Status:', rss.status);
 							console.log('EngineAPI Response:', rss.data)
+
 							return rss.ok ? rss.data : null
 						})
 						return res.status(200).json(cData)
