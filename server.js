@@ -1,5 +1,5 @@
 #!/usr/bin/env nodejs
-process.title = "dev_senti_databroker"
+process.title = "senti_databroker"
 
 //#region Express
 const dotenv = require('dotenv').load()
