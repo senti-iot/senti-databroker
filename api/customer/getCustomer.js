@@ -4,7 +4,7 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-router.get('/:version/customer/:odeumId', async (req, res, next) => {
+router.get('/:version/customer/:odeumId', async (req, res) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let customerID = req.params.odeumId

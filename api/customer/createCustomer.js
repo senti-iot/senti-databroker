@@ -3,20 +3,28 @@ const router = express.Router()
 const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
+const uuidv4 = require('uuid/v4');
+const md5 = require('md5')
 
-router.post('/:version/customer', async (req, res, next) => {
+const query = `INSERT INTO customer
+			(name, uuname, uuid, ODEUM_org_id, uuURL)
+			VALUES (?, ?, ?, ?, ?)`
+
+router.post('/:version/customer', async (req, res) => {
 	console.log('CREATE CUSTOMER')
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `INSERT INTO Customer
-			(name, uuid, ODEUM_org_id) 
-			VALUES (?, CONCAT(?, '-', CAST(LEFT(UUID(),8) as CHAR(50))), ?)`
 
-			let arr = [data.name, data.name.replace(/\s+/g, '-').toLowerCase(), data.org_id]
-			mysqlConn.query(query, arr).then(r => {
+			let uuid = uuidv4()
+			let shortUUID = md5(uuid).substr(0, 8)
+			console.log(shortUUID)
+			let formattedName = data.name.replace(/\s+/g, '-').toLowerCase()
+			let arr = [data.name, formattedName + '-' + shortUUID, uuid, data.org_id, formattedName + '-' + shortUUID]
+			console.log(mysqlConn.format(query, arr))
+			await mysqlConn.query(query, arr).then(r => {
 				console.log('CUSTOMER CREATED', r);
 				res.status(200).json(true)
 			}).catch(err => {

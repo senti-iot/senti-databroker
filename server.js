@@ -83,6 +83,11 @@ app.use([getMessages, getDeviceData, getDataExternal,
 	createCustomer, getCustomer, updateCustomer, deleteCustomer,
 	getOrg])
 
+//DEV DO NOT UNCOMMENT
+const HotMess = require('./api/DONOTRUN/SERIOUSLYDONT')
+
+app.use([HotMess])
+
 var allRoutes = require('./api/logging/routeLogging');
 
 const startAPIServer = () => {
@@ -91,7 +96,7 @@ const startAPIServer = () => {
 	console.log('Senti'.green.bold + ' - Data'.cyan.bold + ' Broker'.cyan.bold)
 	app.listen(port, () => {
 		console.log('Server started on port: ' + port.toString().yellow.bold)
-		log('Senti DataBroker started on port ' + port.toString(), 'info')
+		// log('Senti DataBroker started on port ' + port.toString(), 'info')
 	}).on('error', (err) => {
 		if (err.errno === 'EADDRINUSE') {
 			console.log('Server not started, port ' + port + ' is busy')
@@ -109,7 +114,7 @@ startAPIServer()
 
 var StoreMqttHandler = require('./mqtt/store')
 let mqttStoreClient = new StoreMqttHandler()
-mqttStoreClient.connect()
+// mqttStoreClient.connect()
 
 // var MDataStoreMqttHandler = require('./mqtt/missedData')
 // let mqttmDataStoreClient = new MDataStoreMqttHandler()
