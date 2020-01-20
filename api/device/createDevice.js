@@ -4,26 +4,23 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 const log = require('../../server').log
+const uuidv4 = require('uuid').v4
+const shortHashGen = require('../../utils/shortHashGen')
+const cleanUpSpecialChars = require('../../utils/cleanUpSpecialChars')
 
-function cleanUpSpecialChars(str) {
 
-	return str.toString()
-		.replace(/[øØ]/g, "ou")
-		.replace(/[æÆ]/g, "ae")
-		.replace(/[åÅ]/g, "aa")
-		.replace(/[^a-z0-9]/gi, '-'); // final clean up
-}
-const createDeviceQuery = `INSERT INTO Device
-			(uuid,name, type_id, reg_id,
+const createDeviceQuery = `INSERT INTO device
+			(uuname,name, type_id, reg_id,
 			description,
 			lat, lng, address,
 			locType,
-			communication)
-			VALUES (?,?,?,?,?,?,?,?,?,?)`
+			communication, uuid, shortHash)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
 
-const createMetaDataQuery = `INSERT INTO Device_metadata
+const createMetaDataQuery = `INSERT INTO deviceMetadata
 					(device_id, data, inbound, outbound)
 					VALUES(?, ?, ?, ?);`
+
 
 router.put('/:version/device', async (req, res) => {
 	let apiVersion = req.params.version
@@ -33,13 +30,17 @@ router.put('/:version/device', async (req, res) => {
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			try {
-				console.log(data)
-				let uuid = data.uuid ? data.uuid : cleanUpSpecialChars(data.name).toLowerCase()
-				console.log(uuid)
-				let arr = [uuid, data.name, data.type_id, data.reg_id,
+				let uuid = uuidv4()
+				let shortHash = shortHashGen(uuid)
+				let uuname = data.uuname ? data.uuname + '-' + shortHash : cleanUpSpecialChars(data.name).toLowerCase() + '-' + shortHash
+
+				console.log(uuid, shortHash)
+				let arr = [uuname, data.name, data.type_id, data.reg_id,
 					data.description,
 					data.lat, data.lng, data.address,
-					data.locType, data.communication]
+					data.locType, data.communication,
+					uuid, shortHash]
+				console.log(mysqlConn.format(createDeviceQuery, arr))
 				mysqlConn.query(createDeviceQuery, arr).then(rs => {
 					console.log('Device Created', rs[0].insertId)
 					log({

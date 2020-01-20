@@ -4,16 +4,16 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-const getDevicesCIDQuery = `SELECT d.id, d.name, d.uuid, type_id, reg_id, d.description, lat, lng, address,
-							locType, communication, tags, r.name as reg_name, r.uuid as reg_uuid
-						FROM Device d
-						LEFT JOIN device_metadata dm ON d.id = dm.device_id
+const getDevicesCIDQuery = `SELECT d.id, d.name, d.shortHash, type_id, reg_id, d.description, lat, lng, address,
+							locType, communication, tags, r.name as reg_name, r.shortHash as regShortHash
+						FROM device d
+						LEFT JOIN deviceMetadata dm ON d.id = dm.device_id
 						INNER JOIN registry r on r.id = d.reg_id
 						INNER JOIN customer c on c.id = r.customer_id
 			WHERE d.deleted=0 AND ODEUM_org_id=?`
 
-const getDevicesQuery = `SELECT d.name, d.uuid, type_id, reg_id, d.description, lat, lng, address,
-							locType, communication, tags, r.name as reg_name, r.uuid as reg_uuid
+const getDevicesQuery = `SELECT d.name, d.shortHash, type_id, reg_id, d.description, lat, lng, address,
+							locType, communication, tags, r.name as reg_name, r.shortHash as regShortHash
 						FROM device d
 						LEFT JOIN deviceMetadata dm ON d.id = dm.device_id
 						INNER JOIN registry r on r.id = d.reg_id

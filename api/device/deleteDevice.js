@@ -5,16 +5,16 @@ const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 const log = require('../../server').log
 
-const deleteSensorQuery = `UPDATE Device
+const deleteSensorQuery = `UPDATE device
 SET deleted=1
-WHERE id=?;`
+WHERE shortHash=?;`
 
-router.post('/:version/delete-device/:id', async (req, res) => {
+router.post('/:version/delete-device/:shortHash', async (req, res) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let deviceID = req.params.id
+			let deviceID = req.params.shortHash
 			mysqlConn.query(deleteSensorQuery, [deviceID]).then(rs => {
 				// console.log(rs)
 				if (rs[0].affectedRows > 0) {

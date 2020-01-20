@@ -4,67 +4,85 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 const log = require('../../server').log
+const cleanUpSpecialChars = require('../../utils/cleanUpSpecialChars')
 
+const updateDeviceQuery = `
+UPDATE device
+SET
+uuname=?,
+name=?,
+type_id=?,
+reg_id=?,
+description=?,
+lat=?,
+lng=?,
+address=?,
+locType=?,
+communication=?,
+tags=?,
+deleted=0
+WHERE shortHash=?;
+`
+const updateDeviceMetadataQuery = `
+UPDATE deviceMetadata
+SET
+\`data\`=?,
+inbound=?,
+outbound=?
+WHERE shortHash=?;
+`
+
+const CreateDeviceMetadataQuery = `INSERT INTO deviceMetadata(\`data\`,inbound,outbound,device_id) VALUES (?,?,?,?)`
+
+const findDeviceMetadataQuery = `SELECT * from deviceMetadata where device_id=?`
+
+const findDeviceQuery = "SELECT * from device where shortHash=?"
+
+const findDeviceUniqueUuname = `SELECT * from device where uuname=?`
 router.post('/:version/device', async (req, res, next) => {
 	let apiVersion = req.params.version
-	let deviceID = req.body.id
+	let deviceID = req.body.shortHash
 	let authToken = req.headers.auth
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			if (deviceID) {
 				console.log('Searching for Device in DB')
-				let findDevQ = "SELECT * from `Device` where id=?"
-				mysqlConn.query(findDevQ, deviceID).then(result => {
+				mysqlConn.query(findDeviceQuery, deviceID).then(result => {
 					console.log("Searched:", result[0].length)
 					if (result[0].length > 0) {
-						let query = `UPDATE Device
-						SET
-						name=?,
-						type_id=?,
-						reg_id=?,
-						description=?,
-						lat=?,
-						lng=?,
-						address=?,
-						locType=?,
-						communication=?,
-						tags=?,
-						deleted=0
-						WHERE id=?;
-						`
-						let queryDM = `
-						UPDATE Device_metadata
-						SET
-						\`data\`=?,
-						inbound=?,
-						outbound=?
-						WHERE device_id=?;
-						`
-						let queryCreateDM = `
-						INSERT INTO Device_metadata(\`data\`,inbound,outbound,device_id) VALUES (?,?,?,?)
-						`
-						let queryFindDM = `SELECT * from Device_metadata where device_id=?`
+						let device = result[0]
+						let uuname = ''
+						if (data.uuname) {
+							let [uniqueUuname] = mysqlConn.query(findDeviceUniqueUuname, [data.uuname])
+							if (uniqueUuname.length > 0) {
+								res.status(400).json('Uuname is not unique')
+							}
+							else {
+								uuname = data.uuname
+							}
+						} else {
+							uuname = cleanUpSpecialChars(data.name).toLowerCase() + '-' + shortHash
+						}
+						let arr = [uuname, data.name, data.type_id,
+							data.reg_id, data.description,
+							data.lat, data.lng, data.address, data.locType,
+							data.communication, data.tags.join(','), deviceID]
 
-						let arr = [data.name, data.type_id,
-						data.reg_id, data.description,
-						data.lat, data.lng, data.address, data.locType,
-						data.communication, data.tags.join(','), deviceID]
+						let arrDM = [JSON.stringify(data.metadata.metadata), JSON.stringify(data.metadata.inbound), JSON.stringify(data.metadata.outbound), device.id]
 
-						let arrDM = [JSON.stringify(data.metadata.metadata), JSON.stringify(data.metadata.inbound), JSON.stringify(data.metadata.outbound), deviceID]
-
-						mysqlConn.query(query, arr).then((result) => {
+						mysqlConn.query(updateDeviceQuery, arr).then((result) => {
 							console.log('Updated Device\n', result[0])
-							log({
-								msg: "Updated Device",
-								device: result[0]
-							},
-								"info")
+							// log({
+							// 	msg: "Updated Device",
+							// 	device: result[0]
+							// },
+							// 	"info")
 							if (result[0].affectedRows > 0) {
-								mysqlConn.query(queryFindDM, [deviceID]).then(rs => {
+								mysqlConn.query(findDeviceMetadataQuery, [deviceID]).then(rs => {
 									if (rs[0].length > 0) {
 										console.log('Updating Metadata\n')
-										mysqlConn.query(queryDM, arrDM).then(rs => {
+										mysqlConn.query(updateDeviceMetadataQuery, arrDM).then(rs => {
 											if (rs) {
 												log({
 													msg: "Updated Device Metadata",
@@ -78,7 +96,7 @@ router.post('/:version/device', async (req, res, next) => {
 									}
 									else {
 										console.log('Creating Device Metadata\n')
-										mysqlConn.query(queryCreateDM, [...arrDM, deviceID]).then(rs => {
+										mysqlConn.query(CreateDeviceMetadataQuery, [...arrDM, deviceID]).then(rs => {
 											if (rs) {
 												console.log('Created Device metadata\n');
 												log({
