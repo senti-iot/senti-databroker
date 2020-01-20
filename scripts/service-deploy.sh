@@ -6,6 +6,7 @@ if [[ "$1" == "master" ]]; then
 	rsync -r --quiet $2/ deploy@rey.webhouse.net:/srv/nodejs/senti/services/databroker/production
 	echo
 	echo Restarting Senti Data Broker service: $1 ...
+	echo $3
 	ssh deploy@rey.webhouse.net "sudo /srv/nodejs/senti/services/databroker/production/scripts/service-restart.sh master $3"
 	echo
 	echo Deployment to Senti Data Broker $1 and restart done!
