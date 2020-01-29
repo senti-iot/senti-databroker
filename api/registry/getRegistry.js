@@ -5,7 +5,7 @@ const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
 const getQuery = `SELECT r.*, c.name as customerName, c.ODEUM_org_id as orgId from registry r
-				  INNER JOIN Customer c on c.uuid = r.custHash
+				  INNER JOIN customer c on c.uuid = r.custHash
 				  where r.shortHash=? and r.deleted=0;`
 const getCQuery = `SELECT r.*, c.name as customerName, c.ODEUM_org_id as orgId from registry r
 				   INNER JOIN customer c on c.uuid = r.custHash
