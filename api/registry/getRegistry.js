@@ -4,18 +4,29 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
+const getQuery = `SELECT r.*, c.name as customerName, c.ODEUM_org_id as orgId from registry r where r.shortHash=? and r.deleted=0;`
+const getCQuery = `SELECT r.*, c.name as customerName, c.ODEUM_org_id as orgId from registry r
+				   INNER JOIN customer c on c.uuid = r.custHash
+				   WHERE r.uuid=? and r.deleted = 0 and c.ODEUM_org_id =?`
+
+/* 		let query = `SELECT r.*, c.name as customer_name, c.ODEUM_org_id as orgId from Registry r
+			INNER JOIN Customer c on c.id = r.customer_id
+			where r.id=? and r.deleted=0;`
+			let query = `SELECT r.*, c.name as customer_name, c.ODEUM_org_id as orgId from Registry r
+			INNER JOIN Customer c on c.id = r.customer_id
+			where r.id=? and r.deleted=0 and c.ODEUM_org_id=?`
+
+			*/
+
 router.get('/:version/registry/:id', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let regID = req.params.id
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT r.*, c.name as customer_name, c.ODEUM_org_id as orgId from Registry r
-			INNER JOIN Customer c on c.id = r.customer_id
-			where r.id=? and r.deleted=0;`
-			await mysqlConn.query(query, [regID]).then(rs => {
-				if (rs[0][0])
-				{
+
+			await mysqlConn.query(getQuery, [regID]).then(rs => {
+				if (rs[0][0]) {
 					res.status(200).json(rs[0][0])
 				}
 				else {
@@ -40,13 +51,9 @@ router.get('/:version/:customerID/registry/:id', async (req, res, next) => {
 	let regID = req.params.id
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT r.*, c.name as customer_name, c.ODEUM_org_id as orgId from Registry r
-			INNER JOIN Customer c on c.id = r.customer_id
-			where r.id=? and r.deleted=0 and c.ODEUM_org_id=?`
-			await mysqlConn.query(query, [regID, customerID]).then(rs => {
+			await mysqlConn.query(getCQuery, [regID, customerID]).then(rs => {
 				console.log(rs[0][0])
-				if (rs[0][0])
-				{
+				if (rs[0][0]) {
 					res.status(200).json(rs[0][0])
 				}
 				else {
