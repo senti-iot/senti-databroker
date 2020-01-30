@@ -54,7 +54,6 @@ router.get('/:version/:customerID/registry/:id', async (req, res, next) => {
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			await mysqlConn.query(getCQuery, [regID, customerID]).then(rs => {
-				console.log(rs[0][0])
 				if (rs[0][0]) {
 					res.status(200).json(rs[0][0])
 				}

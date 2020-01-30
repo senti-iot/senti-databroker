@@ -4,16 +4,16 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-const deleteRegistryQuery = `UPDATE Registry
+const deleteRegistryQuery = `UPDATE registry
 SET deleted=1
-WHERE id=?;`
+WHERE uuid=?;`
 
-router.post('/:version/delete-registry/:id', async (req, res) => {
+router.post('/:version/delete-registry/:uuid', async (req, res) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let regID = req.params.id
+			let regID = req.params.uuid
 			mysqlConn.query(deleteRegistryQuery, [regID]).then(rs => {
 				if (rs[0].affectedRows > 0) {
 					res.status(200).json(true)
