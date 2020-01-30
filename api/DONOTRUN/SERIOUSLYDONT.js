@@ -53,15 +53,15 @@ router.get('/hotmess/do/not/run/:pass/:table', async (req, res) => {
 		let createHashQuery;
 		let selectDevicesQuery;
 		let updateShortHash;
-
+		let errors = []
 		createHashQuery = createShortHash.replace('#', table)
 		selectDevicesQuery = selectObjects.replace('#', table)
 		updateShortHash = updateShortHashQuery.replace('#', table)
 		try {
 			await mysqlConn.query(createHashQuery)
 		}
-		catch{
-
+		catch (e) {
+			errors.push(e)
 		}
 		try {
 
@@ -72,11 +72,14 @@ router.get('/hotmess/do/not/run/:pass/:table', async (req, res) => {
 				await mysqlConn.query(updateShortHash, [sh, d.id])
 			})
 		}
-		catch{ }
+		catch{
+			errors.push(e)
+		}
 		res.status(200).json({
 			"createHashQuery": mysqlConn.format(createHashQuery),
 			"selectDevicesQuery": mysqlConn.format(selectDevicesQuery),
-			"updateShortHash": mysqlConn.format(updateShortHash)
+			"updateShortHash": mysqlConn.format(updateShortHash),
+			"errors": errors
 		})
 
 		// mysqlConn.query(createShortHash, [table]).then(rs => res.json(rs))
