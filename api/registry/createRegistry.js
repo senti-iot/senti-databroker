@@ -41,7 +41,7 @@ router.put('/:version/registry', async (req, res, next) => {
 			]).then(async (result) => {
 				if (result[0].insertId > 0) {
 					let [registry] = await mysqlConn.query(getReg, [shortHash])
-					res.status(200).json(registry)
+					res.status(200).json(registry[0])
 
 				}
 			}).catch(err => {
