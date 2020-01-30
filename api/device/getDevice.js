@@ -4,23 +4,23 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-let getDeviceQuery = `SELECT d.name, d.shortHash, d.uuname, type_id, reg_id, d.description, lat, lng, address,
+let getDeviceQuery = `SELECT d.uuid, d.name, d.shortHash, d.uuname, typeHash, regHash, d.description, lat, lng, address,
 			locType, communication, tags, \`data\` as metadata, dm.outbound as dataKeys, dm.inbound,
 			r.name as regName, r.shortHash as regShortHash, r.protocol as protocol,
 			c.name as customer_name, c.shortHash as cShortHash
 			FROM device d
-			LEFT JOIN registry r on r.id = d.reg_id
-			INNER JOIN customer c on c.id = r.customer_id
-			LEFT JOIN deviceMetadata dm ON d.id = dm.device_id
-			WHERE d.shortHash=? and d.deleted=0`
+			LEFT JOIN registry r on r.uuid = d.regHash
+			INNER JOIN customer c on c.uuid = r.custHash
+			LEFT JOIN deviceMetadata dm ON d.uuid = dm.deviceHash
+			WHERE (d.shortHash=? OR d.uuid=?) and d.deleted=0`
 
-let getDeviceByCustomerQuery = `SELECT d.id, d.name, d.shortHash, type_id, reg_id, d.description, lat, lng, address,
+let getDeviceByCustomerQuery = `SELECT d.uuid, d.name, d.shortHash, type_id, regHash, d.description, lat, lng, address,
 			locType, communication, tags, \`data\` as metadata, dm.outbound as dataKeys, dm.inbound, r.name as regName,
 			r.shortHash as regShortHash, r.protocol as protocol, r.id as regId
 			FROM Device d
-			LEFT JOIN Registry r on r.id = d.reg_id
-			INNER JOIN Customer c on c.id = r.customer_id
-			LEFT JOIN Device_metadata dm ON d.id = dm.device_id
+			LEFT JOIN Registry r on r.uuid = d.regHash
+			INNER JOIN Customer c on c.uuid = r.custHash
+			LEFT JOIN Device_metadata dm ON d.id = dm.deviceHash
 			WHERE c.ODEUM_org_id=? and d.shortHash=? and d.deleted=0`
 
 router.get('/:version/device/:shortHash', async (req, res) => {
@@ -29,7 +29,7 @@ router.get('/:version/device/:shortHash', async (req, res) => {
 	let deviceID = req.params.shortHash
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let [device] = await mysqlConn.query(getDeviceQuery, [deviceID]).catch(err => {
+			let [device] = await mysqlConn.query(getDeviceQuery, [deviceID, deviceID]).catch(err => {
 				if (err) { res.status(500).json(err) }
 			})
 			if (device[0]) {

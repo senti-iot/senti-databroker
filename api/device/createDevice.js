@@ -17,6 +17,15 @@ const createMetaDataQuery = `INSERT INTO deviceMetadata
 					(deviceHash, data, inbound, outbound, uuid)
 					VALUES(?, ?, ?, ?, ?);`
 
+const getDeviceQuery = `SELECT d.uuid, d.name, d.shortHash, d.uuname, d.description, lat, lng, address,
+			locType, communication, tags, \`data\` as metadata, dm.outbound as dataKeys, dm.inbound,
+			r.name as regName, r.shortHash as regShortHash, r.protocol as protocol,
+			c.name as customerName, c.shortHash as cShortHash
+			FROM device d
+			LEFT JOIN registry r on r.uuid = d.regHash
+			INNER JOIN customer c on c.uuid = r.custHash
+			LEFT JOIN deviceMetadata dm ON d.uuid = dm.deviceHash
+			WHERE d.uuid=? and d.deleted=0`
 
 router.put('/:version/device', async (req, res) => {
 	let apiVersion = req.params.version
@@ -45,25 +54,27 @@ router.put('/:version/device', async (req, res) => {
 					}, "info")
 					let mtd = data.metadata
 					console.log(mtd, createMetaDataQuery)
-					let mtdArr = [rs[0].insertId, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
-					mysqlConn.query(createMetaDataQuery, mtdArr).then(r => {
+					let mtdUUID = uuidv4()
+					let mtdArr = [uuid, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound), mtdUUID]
+					mysqlConn.query(createMetaDataQuery, mtdArr).then(async r => {
 						console.log('Created', r[0].insertId)
-						log({
-							msg: `Device [1] Metadata Created`,
-							deviceMtdValues: mtdArr
-						}, "info")
-						res.status(200).json(rs[0].insertId)
+						// log({
+						// 	msg: `Device [1] Metadata Created`,
+						// 	deviceMtdValues: mtdArr
+						// }, "info")
+						let [device] = await mysqlConn.query(getDeviceQuery, [uuid])
+						res.status(200).json(device[0])
 					}).catch(err => {
 						res.status(500).json(err)
 					})
 				}).catch(async err => {
 					// if (err) {
 					console.log("error: ", err);
-					let uuid = await log({
-						msg: 'Error Creating Device',
-						error: err
-					}, "error")
-					res.status(500).json(uuid)
+					// let uuid = await log({
+					// 	msg: 'Error Creating Device',
+					// 	error: err
+					// }, "error")
+					res.status(500).json(err)
 					// }
 				})
 			}

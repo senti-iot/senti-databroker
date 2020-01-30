@@ -7,14 +7,14 @@ const log = require('../../server').log
 
 const deleteSensorQuery = `UPDATE device
 SET deleted=1
-WHERE shortHash=?;`
+WHERE uuid=?;`
 
-router.post('/:version/delete-device/:shortHash', async (req, res) => {
+router.post('/:version/delete-device/:uuid', async (req, res) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let deviceID = req.params.shortHash
+			let deviceID = req.params.uuid
 			mysqlConn.query(deleteSensorQuery, [deviceID]).then(rs => {
 				// console.log(rs)
 				if (rs[0].affectedRows > 0) {

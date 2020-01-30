@@ -14,7 +14,7 @@ const getRegistriesCIDQuery = `SELECT r.name, r.uuid, r.region, r.protocol, r.cu
 								r.created, r.description, c.name AS customerName, c.ODEUM_org_id as orgId
 							FROM registry r
 							INNER JOIN customer c ON c.uuid = r.custHash
-							WHERE c.ODEUM_org_id=? AND r.deleted=0`
+							WHERE c.uuid=? AND r.deleted=0`
 
 router.get('/:version/registries', async (req, res, next) => {
 	let apiVersion = req.params.version

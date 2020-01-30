@@ -4,37 +4,59 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-router.post('/:version/devicetype', async (req, res, next) => {
-	let apiVersion = req.params.version
-	let authToken = req.headers.auth
-	let dtId = req.body.id
-	let data = req.body
-	if (verifyAPIVersion(apiVersion)) {
-		if (authenticate(authToken)) {
-			if (dtId) {
-				let findDevQ = "SELECT * from `Device_type` where id=?"
-				// let registry = []
-				console.log(dtId)
-				await mysqlConn.query(findDevQ, dtId).then((result) => {
-					if (result[0].length !== 0) {
-						let query = `UPDATE \`Device_type\` dt
-						INNER JOIN Customer c on c.ODEUM_org_id = ?
-						SET 
+const queryUpdateDT = `UPDATE deviceType dt
+						INNER JOIN customer c on c.uuid = ?
+						SET
 							dt.name = ?,
 							dt.description = ?,
 							dt.inbound = ?,
 							dt.outbound = ?,
-							dt.metadata = ?,
-							dt.customer_id = c.id
-						WHERE dt.id = ?`
-						let values = [data.orgId, data.name, data.description, JSON.stringify(data.inbound), JSON.stringify(data.outbound), JSON.stringify(data.metadata), dtId]
-						mysqlConn.query(query, values)
-							.then((result) => {
-								res.status(200).json(dtId);
+							dt.metadata = ?
+						WHERE dt.uuid = ?`
+
+const findDevQ = `SELECT dt.uuid,
+dt.shortHash,
+	dt.name,
+	dt.description,
+	dt.inbound,
+	dt.outbound,
+	dt.metadata,
+	c.name as customerName,
+	dt.custHash,
+	c.shortHash as custShortHash,
+	c.ODEUM_org_id as orgId
+FROM deviceType dt
+INNER JOIN customer c on c.uuid = dt.custHash
+WHERE dt.uuid =? and dt.deleted = 0;`
+
+router.post('/:version/devicetype', async (req, res, next) => {
+	let apiVersion = req.params.version
+	let authToken = req.headers.auth
+	let dtId = req.body.uuid
+	let data = req.body
+	if (verifyAPIVersion(apiVersion)) {
+		if (authenticate(authToken)) {
+			if (dtId) {
+				// let registry = []
+				console.log(dtId)
+				await mysqlConn.query(findDevQ, dtId).then((DTQ) => {
+					if (DTQ[0].length !== 0) {
+
+						let values = [data.custHash,
+						data.name, data.description, JSON.stringify(data.inbound),
+						JSON.stringify(data.outbound), JSON.stringify(data.metadata), dtId]
+
+						mysqlConn.query(queryUpdateDT, values)
+							.then(async (result) => {
+								let [newDtq] = await mysqlConn.query(findDevQ, dtId)
+								res.status(200).json(newDtq[0]);
 							})
 							.catch(err => {
 								console.log("error: ", err);
-								res.status(404).json(err)
+								res.status(404).json({
+									err: err,
+									// sql: mysqlConn.format(queryUpdateDT, values)
+								})
 							})
 					}
 					else {

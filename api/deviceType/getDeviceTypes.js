@@ -6,7 +6,7 @@ var mysqlConn = require('../../mysql/mysql_handler')
 
 const getDeviceTypesCID = `SELECT t.uuid, t.shortHash, t.name, t.inbound, t.outbound, t.custHash, c.name AS customerName FROM deviceType t
 			INNER JOIN customer c on c.uuid = t.custHash
-			WHERE c.ODEUM_org_id=? and t.deleted=0`
+			WHERE c.uuid=? and t.deleted=0`
 
 const getDeviceTypes = `SELECT t.uuid, t.name, t.inbound, t.outbound, t.custHash, c.name AS customerName FROM deviceType t
 			INNER JOIN customer c on c.uuid = t.custHash

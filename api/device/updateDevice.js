@@ -11,8 +11,8 @@ UPDATE device
 SET
 uuname=?,
 name=?,
-type_id=?,
-reg_id=?,
+typeHash=?,
+regHash=?,
 description=?,
 lat=?,
 lng=?,
@@ -21,7 +21,7 @@ locType=?,
 communication=?,
 tags=?,
 deleted=0
-WHERE shortHash=?;
+WHERE uuid=?;
 `
 const updateDeviceMetadataQuery = `
 UPDATE deviceMetadata
@@ -29,34 +29,35 @@ SET
 \`data\`=?,
 inbound=?,
 outbound=?
-WHERE shortHash=?;
+WHERE uuid=?;
 `
 
-const CreateDeviceMetadataQuery = `INSERT INTO deviceMetadata(\`data\`,inbound,outbound,device_id) VALUES (?,?,?,?)`
+const CreateDeviceMetadataQuery = `INSERT INTO deviceMetadata(\`data\`, inbound, outbound, deviceHash) VALUES (?,?,?,?)`
 
-const findDeviceMetadataQuery = `SELECT * from deviceMetadata where device_id=?`
+const findDeviceMetadataQuery = `SELECT * from deviceMetadata where deviceHash=?`
 
-const findDeviceQuery = "SELECT * from device where shortHash=?"
+const findDeviceQuery = "SELECT * from device where uuid=?"
 
 const findDeviceUniqueUuname = `SELECT * from device where uuname=?`
+
 router.post('/:version/device', async (req, res, next) => {
 	let apiVersion = req.params.version
-	let deviceID = req.body.shortHash
+	let deviceID = req.body.uuid
 	let authToken = req.headers.auth
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			if (deviceID) {
 				console.log('Searching for Device in DB')
-				mysqlConn.query(findDeviceQuery, deviceID).then(result => {
+				await mysqlConn.query(findDeviceQuery, [deviceID]).then(async result => {
 					console.log("Searched:", result[0].length)
 					if (result[0].length > 0) {
 						let device = result[0]
 						let uuname = ''
 						if (data.uuname) {
-							let [uniqueUuname] = mysqlConn.query(findDeviceUniqueUuname, [data.uuname])
+							let [uniqueUuname] = await mysqlConn.query(findDeviceUniqueUuname, [data.uuname])
 							if (uniqueUuname.length > 0) {
-								res.status(400).json('Uuname is not unique')
+								res.status(400).json({ "Error": "Uuname is not unique" })
 							}
 							else {
 								uuname = data.uuname
@@ -64,12 +65,12 @@ router.post('/:version/device', async (req, res, next) => {
 						} else {
 							uuname = cleanUpSpecialChars(data.name).toLowerCase() + '-' + shortHash
 						}
-						let arr = [uuname, data.name, data.type_id,
-							data.reg_id, data.description,
+						let arr = [uuname, data.name, data.typeHash,
+							data.regHash, data.description,
 							data.lat, data.lng, data.address, data.locType,
 							data.communication, data.tags.join(','), deviceID]
 
-						let arrDM = [JSON.stringify(data.metadata.metadata), JSON.stringify(data.metadata.inbound), JSON.stringify(data.metadata.outbound), device.id]
+						let arrDM = [JSON.stringify(data.metadata.metadata), JSON.stringify(data.metadata.inbound), JSON.stringify(data.metadata.outbound), device.uuid]
 
 						mysqlConn.query(updateDeviceQuery, arr).then((result) => {
 							console.log('Updated Device\n', result[0])
@@ -84,11 +85,11 @@ router.post('/:version/device', async (req, res, next) => {
 										console.log('Updating Metadata\n')
 										mysqlConn.query(updateDeviceMetadataQuery, arrDM).then(rs => {
 											if (rs) {
-												log({
-													msg: "Updated Device Metadata",
-													device: rs[0]
-												},
-													"info")
+												// log({
+												// 	msg: "Updated Device Metadata",
+												// 	device: rs[0]
+												// },
+												// 	"info")
 												console.log('Updated Metadata\n')
 												res.status(200).json(deviceID);
 											}
@@ -99,10 +100,10 @@ router.post('/:version/device', async (req, res, next) => {
 										mysqlConn.query(CreateDeviceMetadataQuery, [...arrDM, deviceID]).then(rs => {
 											if (rs) {
 												console.log('Created Device metadata\n');
-												log({
-													msg: "Created Device Metadata"
-												},
-													"info")
+												// log({
+												// 	msg: "Created Device Metadata"
+												// },
+												// 	"info")
 												res.status(200).json(deviceID);
 											}
 										})
@@ -114,21 +115,16 @@ router.post('/:version/device', async (req, res, next) => {
 						}).catch(async err => {
 							// if (err) {
 							console.log("error: ", err);
-							let uuid = await log({
-								msg: 'Error Updating Device',
-								error: err
-							},
-								"error")
-							res.status(500).json(uuid)
+							res.status(500).json(err)
 							// }
 						})
 					}
 				}).catch(async err => {
-					let uuid = await log({
-						msg: 'Error Updating Device',
-						error: err
-					},
-						"error")
+					// let uuid = await log({
+					// 	msg: 'Error Updating Device',
+					// 	error: err
+					// },
+					// 	"error")
 					res.status(500).json(err)
 				})
 			}
