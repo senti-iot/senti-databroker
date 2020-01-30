@@ -4,6 +4,8 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
+
+//TODO: You lazy bastard, change r.*, to the actual fields and do not expose registry ID
 const getQuery = `SELECT r.*, c.name as customerName, c.ODEUM_org_id as orgId from registry r
 				  INNER JOIN customer c on c.uuid = r.custHash
 				  where r.shortHash=? and r.deleted=0;`
