@@ -8,8 +8,8 @@ var mysqlConn = require('../../mysql/mysql_handler')
 const { authenticate } = require('senti-apicore')
 
 
-const getOrgMetadataByOrgId = `SELECT * FROM OrgMetaData WHERE orgId = ?`
-const getOrgMetadataByHostname = `SELECT * FROM OrgMetaData WHERE host = ?`
+const getOrgMetadataByOrgId = `SELECT * FROM orgMetaData WHERE orgId = ?`
+const getOrgMetadataByHostname = `SELECT * FROM orgMetaData WHERE host = ?`
 
 router.get('/:token/:version/orgMetadata/:orgId', async (req, res) => {
 	let orgId = req.params.orgId
