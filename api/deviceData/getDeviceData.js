@@ -5,6 +5,61 @@ const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 const moment = require('moment')
 const engineAPI = require('../engine/engine')
+const getDataQuery = `SELECT
+							dd.data->? as ?,
+							dd.data->'$.time' as time,
+							dd.created,
+							dd.deviceHash
+						FROM
+							(
+							SELECT
+								d.uuid
+							FROM
+								customer c
+							INNER JOIN registry r on
+								c.uuid = r.customerHash
+							INNER JOIN device d on
+								r.uuid = d.regHash
+							WHERE
+								c.uuid = ? ) t
+						INNER JOIN deviceDataClean dd ON
+							t.uuid = dd.deviceHash
+						WHERE
+							dd.data->'$.time' >= ?
+							and dd.data->'$.time' <= ?
+						ORDER BY
+							dd.created;`
+const waterWorksQuery = `SELECT
+							dd.data->'$.value' as value,
+							dd.data->'$.maxFlow' as maxFlow,
+							dd.data->'$.minFlow' as minFlow,
+							dd.data->'$.minATemp' as minATemp,
+							dd.data->'$.minWTemp' as minWTemp,
+							dd.data->'$.time' as time,
+							dd.created,
+							dd.device_id
+						FROM
+							(
+							SELECT
+								d.uuid
+							FROM
+								customer c
+							INNER JOIN registry r on
+								c.uuid = r.customerHash
+							INNER JOIN device d on
+								r.uuid = d.regHash
+							WHERE
+								c.uuid = ? ) t
+						INNER JOIN deviceDataClean dd ON
+							t.uuid = dd.deviceHash
+						WHERE
+							dd.data->'$.time' >= ?
+							and dd.data->'$.time' <= ?
+						ORDER BY
+							dd.created;`
+const getDeviceDataQuery = `SELECT \`data\`, created
+							FROM deviceDataClean
+							WHERE deviceHash=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
 
 router.get('/:version/deviceDataByCustomerID/:customerId/:field/:from/:to/:nId', async (req, res) => {
 	let apiV = req.params.version
@@ -18,32 +73,9 @@ router.get('/:version/deviceDataByCustomerID/:customerId/:field/:from/:to/:nId',
 	if (verifyAPIVersion(apiV)) {
 
 		if (authenticate(authToken)) {
-			let query = `SELECT
-							dd.data->? as ?,
-							dd.data->'$.time' as time,
-							dd.created,
-							dd.device_id
-						FROM
-							(
-							SELECT
-								d.id
-							FROM
-								Customer c
-							INNER JOIN Registry r on
-								c.id = r.customer_id
-							INNER JOIN Device d on
-								r.id = d.reg_id
-							WHERE
-								c.ODEUM_org_id = ? ) t
-						INNER JOIN Device_data_clean dd FORCE INDEX (index4) ON
-							t.id = dd.device_id
-						WHERE
-							dd.data->'$.time' >= ?
-							and dd.data->'$.time' <= ?
-						ORDER BY
-							dd.created;`
-			console.log(mysqlConn.format(query, ['$.' + field, field, customerId, from, to]))
-			await mysqlConn.query(query, ['$.' + field, field, customerId, from, to]).then(rs => {
+
+			console.log(mysqlConn.format(getDataQuery, ['$.' + field, field, customerId, from, to]))
+			await mysqlConn.query(getDataQuery, ['$.' + field, field, customerId, from, to]).then(rs => {
 				let cleanData = rs[0]
 				return res.status(200).json(cleanData)
 			}).catch(err => {
@@ -56,6 +88,8 @@ router.get('/:version/deviceDataByCustomerID/:customerId/:field/:from/:to/:nId',
 	return res.status(500).json("Error: Invalid Version")
 })
 
+
+//MEGA TODO HERE
 router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async (req, res) => {
 	let apiV = req.params.version
 	let authToken = req.headers.auth
@@ -67,42 +101,8 @@ router.get('/:version/deviceDataByCustomerID/:customerId/:from/:to/:nId', async 
 	if (verifyAPIVersion(apiV)) {
 
 		if (authenticate(authToken)) {
-			let query = `SELECT
-							dd.data->'$.value' as value,
-							dd.data->'$.maxFlow' as maxFlow,
-							dd.data->'$.minFlow' as minFlow,
-							dd.data->'$.minATemp' as minATemp,
-							dd.data->'$.minWTemp' as minWTemp,
-							dd.data->'$.time' as time,
-							dd.created,
-							dd.device_id
-						FROM
-							(
-							SELECT
-								d.id
-							FROM
-								Customer c
-							INNER JOIN Registry r on
-								c.id = r.customer_id
-							INNER JOIN Device d on
-								r.id = d.reg_id
-							WHERE
-								c.ODEUM_org_id = ? ) t
-						INNER JOIN Device_data_clean dd FORCE INDEX (index4) ON
-							t.id = dd.device_id
-						WHERE
-							dd.data->'$.time' >= ?
-							and dd.data->'$.time' <= ?
-						ORDER BY
-							dd.created;`
-			// let query = `SELECT \`data\`, dd.created, dd.device_id
-			// 			FROM Device_data_clean dd
-			// 			INNER JOIN Device d on d.id = dd.device_id
-			// 			INNER JOIN Registry r on r.id = d.reg_id
-			// 			INNER JOIN Customer c on c.id = r.customer_id
-			// 			WHERE c.ODEUM_org_id = ? and dd.created >= ? and dd.created <= ?
-			// 			ORDER BY dd.created`
-			await mysqlConn.query(query, [customerId, from, to]).then(rs => {
+
+			await mysqlConn.query(waterWorksQuery, [customerId, from, to]).then(rs => {
 				let cleanData = rs[0]
 				return res.status(200).json(cleanData)
 			}).catch(err => {
@@ -124,11 +124,9 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:nId', async (req, re
 	let nId = req.params.nId
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let query = `SELECT \`data\`, created
-			FROM Device_data_clean
-				WHERE device_id=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
+
 			console.log(deviceID, from, to, nId)
-			await mysqlConn.query(query, [deviceID, from, to]).then(async rs => {
+			await mysqlConn.query(getDeviceDataQuery, [deviceID, from, to]).then(async rs => {
 				let cleanData = rs[0]
 				console.log(cleanData)
 				if (nId > 0) {
