@@ -183,6 +183,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 						console.log(e)
 					})
 					// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
+					console.log(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sNormalized)
 					this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sNormalized)
 				}
 				else {
@@ -190,6 +191,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 						console.log(e)
 					})
 					// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
+					console.log(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sNormalized)
 					this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sData)
 				}
 			}
@@ -278,6 +280,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 								console.log(e)
 							})
 							// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
+							console.log(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sNormalized)
 							this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sNormalized)
 						}
 						else {
@@ -287,6 +290,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 								console.log(e)
 							})
 							// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
+							console.log(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sNormalized)
 							this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sData)
 						}
 				return true
