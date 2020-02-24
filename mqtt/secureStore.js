@@ -182,11 +182,15 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 					await mysqlConn.query(insDataClean, [sNormalized, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
 						console.log(e)
 					})
+					// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
+					this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sNormalized)
 				}
 				else {
 					await mysqlConn.query(insDataClean, [sData, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
 						console.log(e)
 					})
+					// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
+					this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sData)
 				}
 			}
 		}
@@ -273,6 +277,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 							}).catch(e => {
 								console.log(e)
 							})
+							// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
+							this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sNormalized)
 						}
 						else {
 							await mysqlConn.query(insDataClean, [sData, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => {
@@ -280,6 +286,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 							}).catch(e => {
 								console.log(e)
 							})
+							// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
+							this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sData)
 						}
 				return true
 			}
