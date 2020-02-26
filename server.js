@@ -112,9 +112,13 @@ startAPIServer()
 
 //#region MQTT
 
-var StoreMqttHandler = require('./mqtt/store')
-let mqttStoreClient = new StoreMqttHandler()
+// var StoreMqttHandler = require('./mqtt/store')
+// let mqttStoreClient = new StoreMqttHandler()
 // mqttStoreClient.connect()
+
+const SecureStoreMqttHandler = require('./mqtt/secureStore')
+const secureMqttClient = new SecureStoreMqttHandler(process.env.MQTT_HOST, process.env.MQTT_USER, process.env.MQTT_PASS, 'dataBroker')
+secureMqttClient.connect()
 
 // var MDataStoreMqttHandler = require('./mqtt/missedData')
 // let mqttmDataStoreClient = new MDataStoreMqttHandler()

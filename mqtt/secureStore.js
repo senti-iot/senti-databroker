@@ -5,6 +5,7 @@ const asyncForEach = require('../utils/asyncForEach')
 // const logService = require('../server').logService
 const moment = require('moment')
 const SHA2 = require('sha2')
+const uuidv4 = require('uuid/v4');
 
 const format = 'YYYY-MM-DD HH:mm:ss'
 const dateFormatter = (date) => {
@@ -16,45 +17,44 @@ const dateFormatter = (date) => {
 	}
 	return 'NOW()'
 }
-const deviceQuery = `SELECT d.id, d.name, d.type_id, d.reg_id, dm.\`data\` as metadata, dm.inbound as cloudfunctions, d.communication from Device d
-			INNER JOIN Registry r ON r.id = d.reg_id
-			INNER JOIN Customer c on c.id = r.customer_id
-			LEFT JOIN Device_metadata dm on dm.device_id = d.id
-			where c.uuid=? AND d.uuid=? AND r.uuid=? AND d.deleted = 0;
+const deviceQuery = `SELECT d.id, d.name, d.type_id, d.reg_id, dm.\`data\` as metadata, dm.inbound as cloudfunctions, d.communication from device d
+			INNER JOIN registry r ON r.id = d.reg_id
+			INNER JOIN customer c on c.id = r.customer_id
+			LEFT JOIN deviceMetadata dm on dm.device_id = d.id
+			where c.uuname=? AND d.uuname=? AND r.uuname=? AND d.deleted = 0;
 			`
-const insDeviceDataQuery = `INSERT INTO Device_data
-			(data, topic, created, device_id, signature)
-			SELECT ?, '', ?, Device.id as device_id, SHA2(?,256) from Registry
-			INNER JOIN Device ON Registry.id = Device.reg_id
-			INNER JOIN Customer ON Customer.id = Registry.customer_id
-			where Customer.uuid=? AND Device.uuid=? AND Registry.uuid=?
+const insDeviceDataQuery = `INSERT INTO deviceData
+			(data, created, device_id, signature)
+			SELECT ?, ?, device.id as device_id, SHA2(?,256) from registry
+			INNER JOIN device ON registry.id = device.reg_id
+			INNER JOIN customer ON customer.id = registry.customer_id
+			where customer.uuname=? AND device.uuname=? AND registry.uuname=?
 			`
-const packageCheckQ = `SELECT signature from Device_data dd
-			INNER JOIN Device d on d.id = dd.device_id
-			WHERE dd.signature=? and d.uuid=?
+const packageCheckQ = `SELECT signature from deviceData dd
+			INNER JOIN device d on d.id = dd.device_id
+			WHERE dd.signature=? and d.uuname=?
 			`
-const insDataClean = `INSERT INTO Device_data_clean
+const insDataClean = `INSERT INTO deviceDataClean
 			(data, created, device_id, device_data_id)
-			SELECT ?, ?, Device.id as device_id, ? from Registry
-			INNER JOIN Device ON Registry.id = Device.reg_id
-			INNER JOIN Customer ON Customer.id = Registry.customer_id
-			where Customer.uuid=? AND Device.uuid=? AND Registry.uuid=?`
-
-const getRegistry = `SELECT * from Registry r
-			WHERE r.uuid=?`
-const createDeviceQuery = `INSERT INTO Device
-			(uuid,name, type_id, reg_id,
+			SELECT ?, ?, device.id as device_id, ? from registry
+			INNER JOIN device ON registry.id = device.reg_id
+			INNER JOIN customer ON customer.id = registry.customer_id
+			where customer.uuname=? AND device.uuname=? AND registry.uuname=?`
+const getRegistry = `SELECT * from registry r
+			WHERE r.uuname=?`
+const createDeviceQuery = `INSERT INTO device
+			(uuname, name, type_id, reg_id,
 			description,
 			lat, lng, address,
 			locType,
-			communication)
-			VALUES (?,?,?,?,?,?,?,?,?,?)`
+			communication, uuid)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?)`
 
-const createMetaDataQuery = `INSERT INTO Device_metadata
+const createMetaDataQuery = `INSERT INTO deviceMetadata
 			(device_id, data, inbound, outbound)
 			VALUES(?, ?, ?, ?);`
 
-const selectDeviceType = `SELECT * from Device_type where id=?`
+const selectDeviceType = `SELECT * from deviceType where id=?`
 
 function cleanUpSpecialChars(str) {
 
@@ -80,8 +80,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		})
 	}
 	async createDevice(data, regId, deviceTypeId) {
-		let uuid = data.uuid ? data.uuid : cleanUpSpecialChars(data.name).toLowerCase()
-		let arr = [uuid, data.name, deviceTypeId, regId, '', data.lat, data.lng, data.address, data.locType, data.communication]
+		let uuname = data.uuname ? data.uuname : cleanUpSpecialChars(data.name).toLowerCase()
+		let arr = [uuname, data.name, deviceTypeId, regId, '', data.lat, data.lng, data.address, data.locType, data.communication, uuidv4()]
 		return await mysqlConn.query(createDeviceQuery, arr).then(async rs => {
 			console.log('Device Created', rs[0].insertId)
 			console.log(data, regId, deviceTypeId)
@@ -89,7 +89,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			console.log(deviceType[0])
 			let mtd = deviceType[0]
 			let mtdArr = [rs[0].insertId, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
-			mysqlConn.query(createMetaDataQuery, mtdArr).then(r => {
+			await mysqlConn.query(createMetaDataQuery, mtdArr).then(r => {
 				console.log('Device Metadata Created', r[0].insertId)
 			}).catch(err => {
 				console.log("error: ", err);
@@ -115,7 +115,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		 *  Check if the device exists
 		 * */
 		let device = await this.getDevice(customerID, deviceName, regName)
-
+		console.log(device)
 		/**
 		 * If the device doesn't exist create it
 		 */
@@ -182,11 +182,15 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 					await mysqlConn.query(insDataClean, [sNormalized, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
 						console.log(e)
 					})
+					// SEND MESSAGE TO EVENT BROKER device.type_id, device.reg_id, device.id
+					this.sendMessage(`v1/event/data/${device.type_id}/${device.reg_id}/${device.id}`, sNormalized)
 				}
 				else {
 					await mysqlConn.query(insDataClean, [sData, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
 						console.log(e)
 					})
+					// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
+					this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sData)
 				}
 			}
 		}
@@ -203,6 +207,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			 * Get the registry
 			 */
 			let [registry] = await mysqlConn.query(getRegistry, [regName])
+			console.log(registry)
 			if (registry[0]) {
 				if (!Array.isArray(pData)) {
 					await this.storeDeviceData(pData, registry, customerID, regName)
@@ -269,7 +274,9 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 							let sNormalized = JSON.stringify(normalized)
 							await mysqlConn.query(insDataClean, [sNormalized, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => {
 								console.log('INSERTED CLEAN DATA', sNormalized)
-
+								// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
+								this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sNormalized)
+								console.log(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`)
 							}).catch(e => {
 								console.log(e)
 							})
@@ -280,6 +287,9 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 							}).catch(e => {
 								console.log(e)
 							})
+							// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
+							this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sData)
+
 						}
 				return true
 			}
