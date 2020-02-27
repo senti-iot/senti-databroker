@@ -180,6 +180,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 						})
 
 					let sNormalized = JSON.stringify(normalized)
+					console.log('sNormalized:', sNormalized.time, sNormalized.time ? dateFormatter(sNormalized.time) : dateFormatter(pData.time))
 					await mysqlConn.query(insDataClean, [sNormalized, sNormalized.time ? dateFormatter(sNormalized.time) : dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
 						console.log(e)
 					})
