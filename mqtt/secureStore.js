@@ -180,8 +180,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 						})
 
 					let sNormalized = JSON.stringify(normalized)
-					console.log('sNormalized:', sNormalized.time, sNormalized.time ? dateFormatter(sNormalized.time) : dateFormatter(pData.time))
-					await mysqlConn.query(insDataClean, [sNormalized, sNormalized.time ? dateFormatter(sNormalized.time) : dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
+					await mysqlConn.query(insDataClean, [sNormalized, normalized.time ? dateFormatter(normalized.time) : dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
 						console.log(e)
 					})
 					// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
@@ -273,8 +272,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 
 							// console.log(mysqlConn.format(normalizedQ))
 							let sNormalized = JSON.stringify(normalized)
-							console.log('sNormalized:', sNormalized.time, sNormalized.time ? dateFormatter(sNormalized.time) : dateFormatter(pData.time))
-							await mysqlConn.query(insDataClean, [sNormalized, sNormalized.time ? dateFormatter(sNormalized.time) : dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => {
+							await mysqlConn.query(insDataClean, [sNormalized, normalized.time ? dateFormatter(normalized.time) : dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => {
 								console.log('INSERTED CLEAN DATA', sNormalized)
 
 							}).catch(e => {
