@@ -25,6 +25,11 @@ const testing = require('./api/logging/logger')
 // 	logger: pino()
 // })
 // app.use([expressPino])
+
+const sentiAuthClient = require('senti-apicore').sentiAuthClient
+const authClient = new sentiAuthClient(process.env.AUTHCLIENTURL, process.env.PASSWORDSALT)
+module.exports.authClient = authClient
+
 app.use('/', testing)
 //#region Device
 const getDevice = require('./api/device/getDevice')

@@ -4,6 +4,11 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
+const authClient = require('../../server').authClient
+
+const sentiDeviceService = require('../../lib/device/sentiDeviceService')
+const deviceService = new sentiDeviceService(mysqlConn)
+
 let getDeviceQuery = `SELECT d.uuid, d.name, d.shortHash, d.uuname, typeHash, regHash, d.description, lat, lng, address,
 			locType, communication, tags, \`data\` as metadata, dm.outbound as dataKeys, dm.inbound,
 			r.name as regName, r.shortHash as regShortHash, r.protocol as protocol,
@@ -22,6 +27,17 @@ let getDeviceByCustomerQuery = `SELECT d.uuid, d.name, d.shortHash, type_id, reg
 			INNER JOIN Customer c on c.uuid = r.custHash
 			LEFT JOIN Device_metadata dm ON d.id = dm.deviceHash
 			WHERE c.ODEUM_org_id=? and d.shortHash=? and d.deleted=0`
+
+router.get('/v2/device/:uuid', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	console.log(lease)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	
+	res.status(200).json(lease)
+})
 
 router.get('/:version/device/:shortHash', async (req, res) => {
 	let apiVersion = req.params.version

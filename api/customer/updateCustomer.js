@@ -25,11 +25,11 @@ router.put('/:version/customer', async (req, res, next) => {
 		if (authenticate(authToken)) {
 			if (OrgID) {
 				
-				let findDevQ = "SELECT * from Customer where ODEUM_org_id=?"
+				let findDevQ = "SELECT * from customer where ODEUM_org_id=?"
 				mysqlConn.query(findDevQ, OrgID).then(result => {
 
 					if (result.length !== 0) {
-						let query = `UPDATE Customer 
+						let query = `UPDATE customer 
 						SET 
 							name=?
 						WHERE ODEUM_org_id = ?

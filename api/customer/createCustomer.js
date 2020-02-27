@@ -7,8 +7,8 @@ const uuidv4 = require('uuid/v4');
 const md5 = require('md5')
 
 const query = `INSERT INTO customer
-			(name, uuname, uuid, ODEUM_org_id, uuURL)
-			VALUES (?, ?, ?, ?, ?)`
+			(name, uuname, uuid, ODEUM_org_id)
+			VALUES (?, ?, ?, ?)`
 
 router.post('/:version/customer', async (req, res) => {
 	console.log('CREATE CUSTOMER')
@@ -22,7 +22,7 @@ router.post('/:version/customer', async (req, res) => {
 			let shortUUID = md5(uuid).substr(0, 8)
 			console.log(shortUUID)
 			let formattedName = data.name.replace(/\s+/g, '-').toLowerCase()
-			let arr = [data.name, formattedName + '-' + shortUUID, uuid, data.org_id, formattedName + '-' + shortUUID]
+			let arr = [data.name, formattedName + '-' + shortUUID, uuid, data.org_id]
 			console.log(mysqlConn.format(query, arr))
 			await mysqlConn.query(query, arr).then(r => {
 				console.log('CUSTOMER CREATED', r);
