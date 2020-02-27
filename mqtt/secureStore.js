@@ -80,7 +80,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		})
 	}
 	async createDevice(data, regId, deviceTypeId) {
-		let uuid = data.uuid ? data.uuid : cleanUpSpecialChars(data.name).toLowerCase()
+		// let uuid = data.uuid ? data.uuid : cleanUpSpecialChars(data.name).toLowerCase()
+		let uuid = data.uuid ? data.uuid : data.name
 		let arr = [uuid, data.name, deviceTypeId, regId, '', data.lat, data.lng, data.address, data.locType, data.communication]
 		return await mysqlConn.query(createDeviceQuery, arr).then(async rs => {
 			console.log('Device Created', rs[0].insertId)
@@ -89,7 +90,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			console.log(deviceType[0])
 			let mtd = deviceType[0]
 			let mtdArr = [rs[0].insertId, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
-			mysqlConn.query(createMetaDataQuery, mtdArr).then(r => {
+			await mysqlConn.query(createMetaDataQuery, mtdArr).then(r => {
 				console.log('Device Metadata Created', r[0].insertId)
 			}).catch(err => {
 				console.log("error: ", err);
