@@ -62,7 +62,7 @@ function cleanUpSpecialChars(str) {
 		.replace(/[øØ]/g, "ou")
 		.replace(/[æÆ]/g, "ae")
 		.replace(/[åÅ]/g, "aa")
-		.replace(/[^a-z0-9]/gi, '-'); // final clean up
+		.replace(/[^a-z0-9]/gi, '-') // final clean up
 }
 
 class SecureStoreMqttHandler extends SecureMqttHandler {
@@ -93,13 +93,13 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			await mysqlConn.query(createMetaDataQuery, mtdArr).then(r => {
 				console.log('Device Metadata Created', r[0].insertId)
 			}).catch(err => {
-				console.log("error: ", err);
+				console.log("error: ", err)
 
 			})
 			return rs[0].insertId
 		}).catch(async err => {
 			// if (err) {
-			console.log("error: ", err);
+			console.log("error: ", err)
 		})
 	}
 	async getDevice(customerID, deviceName, regName) {
@@ -163,7 +163,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			 */
 			let lastId = null
 			await mysqlConn.query(insDeviceDataQuery, [sData, dateFormatter(pData.time), sData, customerID, deviceName, regName]).then(([res]) => {
-				lastId = res.insertId;
+				lastId = res.insertId
 			})
 			/**
 			 * Device Data Clean Table insertion and CloudFunctions process
@@ -175,12 +175,12 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 						'/',
 						{ nIds: device.cloudfunctions.map(n => n.nId), data: { ...pData, ...device.metadata } })
 						.then(rs => {
-							console.log('EngineAPI Response:', rs.status, rs.data);
+							console.log('EngineAPI Response:', rs.status, rs.data)
 							return rs.ok ? rs.data : null
 						})
 
 					let sNormalized = JSON.stringify(normalized)
-					await mysqlConn.query(insDataClean, [sNormalized, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
+					await mysqlConn.query(insDataClean, [sNormalized, sNormalized.time ? dateFormatter(sNormalized.time) : dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
 						console.log(e)
 					})
 					// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
@@ -255,7 +255,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			}
 			let lastId = null
 			await mysqlConn.query(insDeviceDataQuery, [sData, dateFormatter(pData.time), sData, customerID, deviceName, regName]).then(([res]) => {
-				lastId = res.insertId;
+				lastId = res.insertId
 			})
 			if (device.length > 0) {
 				if (device[0].communication)
@@ -265,7 +265,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 							normalized = await engineAPI.post('/',
 								{ nIds: device[0].cloudfunctions.map(n => n.nId), data: { ...pData, ...device[0].metadata } })
 								.then(rs => {
-									console.log('EngineAPI Response:', rs.status, rs.data);
+									console.log('EngineAPI Response:', rs.status, rs.data)
 									return rs.ok ? rs.data : null
 								})
 							console.log(normalized.time, moment.unix(pData.time).isValid())
