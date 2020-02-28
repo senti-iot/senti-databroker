@@ -56,14 +56,14 @@ const createMetaDataQuery = `INSERT INTO deviceMetadata
 
 const selectDeviceType = `SELECT * from deviceType where id=?`
 
-function cleanUpSpecialChars(str) {
+// function cleanUpSpecialChars(str) {
 
-	return str.toString()
-		.replace(/[øØ]/g, "ou")
-		.replace(/[æÆ]/g, "ae")
-		.replace(/[åÅ]/g, "aa")
-		.replace(/[^a-z0-9]/gi, '-'); // final clean up
-}
+// 	return str.toString()
+// 		.replace(/[øØ]/g, "ou")
+// 		.replace(/[æÆ]/g, "ae")
+// 		.replace(/[åÅ]/g, "aa")
+// 		.replace(/[^a-z0-9]/gi, '-'); // final clean up
+//}
 
 class SecureStoreMqttHandler extends SecureMqttHandler {
 	init() {
@@ -80,7 +80,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		})
 	}
 	async createDevice(data, regId, deviceTypeId) {
-		let uuname = data.uuname ? data.uuname : cleanUpSpecialChars(data.name).toLowerCase()
+		let uuname = data.uuname ? data.uuname : data.name
 		let arr = [uuname, data.name, deviceTypeId, regId, '', data.lat, data.lng, data.address, data.locType, data.communication, uuidv4()]
 		return await mysqlConn.query(createDeviceQuery, arr).then(async rs => {
 			console.log('Device Created', rs[0].insertId)
@@ -179,7 +179,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 						})
 
 					let sNormalized = JSON.stringify(normalized)
-					await mysqlConn.query(insDataClean, [sNormalized, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
+					await mysqlConn.query(insDataClean, [sNormalized, normalized.time ? dateFormatter(normalized.time) : dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
 						console.log(e)
 					})
 					// SEND MESSAGE TO EVENT BROKER device.type_id, device.reg_id, device.id
@@ -272,7 +272,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 
 							// console.log(mysqlConn.format(normalizedQ))
 							let sNormalized = JSON.stringify(normalized)
-							await mysqlConn.query(insDataClean, [sNormalized, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => {
+							await mysqlConn.query(insDataClean, [sNormalized, normalized.time ? dateFormatter(normalized.time) : dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => {
 								console.log('INSERTED CLEAN DATA', sNormalized)
 								// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
 								this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sNormalized)
