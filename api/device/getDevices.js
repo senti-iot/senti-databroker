@@ -4,16 +4,16 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-const getDevicesCIDQuery = `SELECT d.id, d.name, d.shortHash, typeHash, regHash, d.description, lat, lng, address,
-							locType, communication, tags, r.name as reg_name, r.shortHash as regShortHash
+const getDevicesCIDQuery = `SELECT d.id, d.name, d.description, lat, lng, address,
+							locType, communication, tags, r.name as reg_name
 						FROM device d
 						LEFT JOIN deviceMetadata dm ON d.uuid = dm.deviceHash
 						INNER JOIN registry r on r.uuid = d.regHash
 						INNER JOIN customer c on c.uuid = r.custHash
 			WHERE d.deleted=0 AND ODEUM_org_id=?`
 
-const getDevicesQuery = `SELECT d.name, d.shortHash, typeHash, regHash, d.description, lat, lng, address,
-							locType, communication, tags, r.name as reg_name, r.shortHash as regShortHash
+const getDevicesQuery = `SELECT d.name, d.description, lat, lng, address,
+							locType, communication, tags, r.name as reg_name
 						FROM device d
 						LEFT JOIN deviceMetadata dm ON d.uuid = dm.deviceHash
 						INNER JOIN registry r on r.uuid = d.regHash
@@ -21,7 +21,7 @@ const getDevicesQuery = `SELECT d.name, d.shortHash, typeHash, regHash, d.descri
 			WHERE d.deleted=0`
 
 router.get('/:version/devices', async (req, res) => {
-	console.log('GETTING ALL DEVICES AS SU');
+	console.log('GETTING ALL DEVICES AS SU')
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	if (verifyAPIVersion(apiVersion)) {
