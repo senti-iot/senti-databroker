@@ -74,7 +74,7 @@ router.get('/v2/internal/fixaclreg', async (req, res) => {
 router.get('/v2/internal/fixacldevice', async (req, res) => {
 	let select = `SELECT D.id, D.uuid as devuuid, D.name, R.uuid as reguuid
 	FROM device D
-		INNER JOIN Registry R ON R.id = D.reg_id`
+		INNER JOIN registry R ON R.id = D.reg_id`
 	let rs = await mysqlConn.query(select, [])
 	if (rs[0].length === 0) {
 		res.status(404).json()
@@ -83,8 +83,8 @@ router.get('/v2/internal/fixacldevice', async (req, res) => {
 	let result = []
 	rs[0].forEach(async row => {
 		console.log(row)
-		// await aclClient.registerResource(row.devuuid, 11)
-		// await aclClient.addResourceToParent(row.devuuid, row.reguuid)
+		await aclClient.registerResource(row.devuuid, 11)
+		await aclClient.addResourceToParent(row.devuuid, row.reguuid)
 		result.push(row)
 	})
 	res.status(200).json(result)
