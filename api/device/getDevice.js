@@ -4,45 +4,47 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-const authClient = require('../../server').authClient
+// const authClient = require('../../server').authClient
+// const aclClient = require('../../server').aclClient
 
-const sentiDeviceService = require('../../lib/device/sentiDeviceService')
-const deviceService = new sentiDeviceService(mysqlConn)
+// const sentiDeviceService = require('../../lib/device/sentiDeviceService')
+// const deviceService = new sentiDeviceService(mysqlConn)
 
 let getDeviceQuery = `SELECT d.uuid, d.name, d.uuname, d.description, lat, lng, address,
-			locType, communication, tags, \`data\` as metadata, dm.outbound as dataKeys, dm.inbound,
-			r.name as regName, r.protocol as protocol,
-			c.name as customer_name
-			FROM device d
-			LEFT JOIN registry r on r.uuid = d.regHash
-			INNER JOIN customer c on c.uuid = r.custHash
-			LEFT JOIN deviceMetadata dm ON d.uuid = dm.deviceHash
-			WHERE d.uuid=? and d.deleted=0`
+						locType, communication, tags, \`data\` as metadata, dm.outbound as dataKeys, dm.inbound,
+						r.name as regName, r.protocol as protocol,
+						c.name as customer_name
+						FROM device d
+						LEFT JOIN registry r on r.id = d.reg_id
+						INNER JOIN customer c on c.id = r.customer_id
+						LEFT JOIN deviceMetadata dm ON d.id = dm.id
+						WHERE (d.id=? OR d.uuid=?) and d.deleted=0`
 
 let getDeviceByCustomerQuery = `SELECT d.uuid, d.name, type_id, d.description, lat, lng, address,
-			locType, communication, tags, \`data\` as metadata, dm.outbound as dataKeys, dm.inbound, r.name as regName,
-		 r.protocol as protocol, r.id as regId
-			FROM Device d
-			LEFT JOIN Registry r on r.uuid = d.regHash
-			INNER JOIN Customer c on c.uuid = r.custHash
-			LEFT JOIN Device_metadata dm ON d.id = dm.deviceHash
-			WHERE c.ODEUM_org_id=? and d.uuid=? and d.deleted=0`
+						locType, communication, tags, \`data\` as metadata, dm.outbound as dataKeys, dm.inbound, r.name as regName,
+						r.protocol as protocol, r.id as regId
+						FROM device d
+						LEFT JOIN registry r on r.id = d.reg_id
+						INNER JOIN customer c on c.id = r.customer_id
+						LEFT JOIN deviceMetadata dm ON d.id = dm.id
+						WHERE c.ODEUM_org_id=? and d.id=? and d.deleted=0`
 
-router.get('/v2/device/:uuid', async (req, res) => {
-	let lease = await authClient.getLease(req)
-	console.log(lease)
-	if (lease === false) {
-		res.status(401).json()
-		return
-	}
+// router.get('/v2/device/:uuid', async (req, res) => {
+// 	let lease = await authClient.getLease(req)
+// 	console.log(lease)
+// 	if (lease === false) {
+// 		res.status(401).json()
+// 		return
+// 	}
+// 	let resources = await aclClient.findResources(lease.uuid, '00000000-0000-0000-0000-000000000000', 2, 'org.read')
 
-	res.status(200).json(lease)
-})
+// 	res.status(200).json([lease, resources])
+// })
 
-router.get('/:version/device/:uuid', async (req, res) => {
+router.get('/:version/device/:id', async (req, res) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
-	let deviceID = req.params.uuid
+	let deviceID = req.params.id
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			let [device] = await mysqlConn.query(getDeviceQuery, [deviceID, deviceID]).catch(err => {
@@ -63,11 +65,11 @@ router.get('/:version/device/:uuid', async (req, res) => {
 		res.send(`API/sigfox version: ${apiVersion} not supported`)
 	}
 })
-router.get('/:version/:customerID/device/:uuid', async (req, res, next) => {
+router.get('/:version/:customerID/device/:id', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let customerID = req.params.customerID
-	let deviceID = req.params.uuid
+	let deviceID = req.params.id
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 
