@@ -38,10 +38,10 @@ router.get('/v2/device/:uuid', async (req, res) => {
 		return
 	}
 	let access = await aclClient.testPrivileges(lease.uuid, req.params.uuid, [sentiAclPriviledge.device.read])
-	// if (access.allowed === false) {
-	// 	res.status(403).json()
-	// 	return
-	// }
+	if (access.allowed === false) {
+		res.status(403).json()
+		return
+	}
 	let device = await deviceService.getDeviceByUUID(req.params.uuid)
 	if (device === false) {
 		res.status(404).json()
