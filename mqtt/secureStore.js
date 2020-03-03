@@ -57,7 +57,6 @@ const createMetaDataQuery = `INSERT INTO deviceMetadata
 const selectDeviceType = `SELECT * from deviceType where id=?`
 
 // function cleanUpSpecialChars(str) {
-
 // 	return str.toString()
 // 		.replace(/[øØ]/g, "ou")
 // 		.replace(/[æÆ]/g, "ae")

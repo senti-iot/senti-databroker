@@ -30,6 +30,14 @@ const sentiAuthClient = require('senti-apicore').sentiAuthClient
 const authClient = new sentiAuthClient(process.env.AUTHCLIENTURL, process.env.PASSWORDSALT)
 module.exports.authClient = authClient
 
+const sentiAclBackend = require('senti-apicore').sentiAclBackend
+const sentiAclClient = require('senti-apicore').sentiAclClient
+
+const aclBackend = new sentiAclBackend(process.env.ACLBACKENDTURL)
+const aclClient = new sentiAclClient(aclBackend)
+module.exports.aclClient = aclClient
+
+
 app.use('/', testing)
 //#region Device
 const getDevice = require('./api/device/getDevice')
