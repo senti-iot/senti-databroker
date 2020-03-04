@@ -81,14 +81,14 @@ router.get('/v2/internal/fixacldevice', async (req, res) => {
 		return
 	}
 	let result = []
-
-	await Promise.all(rs[0].map(async ([, row]) => {
+	
+	await rs[0].reduce(async (promise, row) => {
+		await promise;
+		console.log(row)
 		await aclClient.registerResource(row.devuuid, 11)
 		await aclClient.addResourceToParent(row.devuuid, row.reguuid)
-		console.log(row)
-		result.push(row)
-	}))
-	res.status(200).json(result)
+	}, Promise.resolve());
+	res.status(200).json()
 })
 
 router.get('/:version/device/:id', async (req, res) => {
