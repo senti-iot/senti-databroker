@@ -68,6 +68,8 @@ const deleteDT = require('./api/deviceType/deleteDeviceType')
 const getDeviceData = require('./api/deviceData/getDeviceData')
 const getMessages = require('./api/deviceData/getMessages')
 const getDataExternal = require('./api/deviceData/getDataExternal')
+
+const getWaterworks = require('./api/deviceData/waterworks')
 //#endregion
 
 //#region Customer
@@ -94,7 +96,7 @@ app.use([getMessages, getDeviceData, getDataExternal,
 	getDevice, getDevices, createDevice, updateDevice, deleteDevice,
 	getRegistry, getRegistryDevices, getRegistries, createReg, updateReg, deleteReg,
 	createCustomer, getCustomer, updateCustomer, deleteCustomer,
-	getOrg])
+	getOrg, getWaterworks])
 
 //DEV DO NOT UNCOMMENT
 const HotMess = require('./api/DONOTRUN/SERIOUSLYDONT')
@@ -125,20 +127,6 @@ startAPIServer()
 
 //#region MQTT
 
-// var StoreMqttHandler = require('./mqtt/store')
-// let mqttStoreClient = new StoreMqttHandler()
-// mqttStoreClient.connect()
-
-const SecureStoreMqttHandler = require('./mqtt/secureStore')
-const secureMqttClient = new SecureStoreMqttHandler(process.env.MQTT_HOST, process.env.MQTT_USER, process.env.MQTT_PASS, 'dataBroker')
-secureMqttClient.connect()
-
-// var MDataStoreMqttHandler = require('./mqtt/missedData')
-// let mqttmDataStoreClient = new MDataStoreMqttHandler()
-// mqttmDataStoreClient.connect()
-
-// var StateMqttHandler = require('./mqtt/state')
-// let mqttStateClient = new StateMqttHandler()
-// mqttStateClient.connect()
-//#endregion
-// console.log(logger)
+// const SecureStoreMqttHandler = require('./mqtt/secureStore')
+// const secureMqttClient = new SecureStoreMqttHandler(process.env.MQTT_HOST, process.env.MQTT_USER, process.env.MQTT_PASS, 'dataBroker')
+// secureMqttClient.connect()
