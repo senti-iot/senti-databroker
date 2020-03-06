@@ -127,6 +127,6 @@ startAPIServer()
 
 //#region MQTT
 
-const SecureStoreMqttHandler = require('./mqtt/secureStore')
-const secureMqttClient = new SecureStoreMqttHandler(process.env.MQTT_HOST, process.env.MQTT_USER, process.env.MQTT_PASS, 'dataBroker')
-secureMqttClient.connect()
+// const SecureStoreMqttHandler = require('./mqtt/secureStore')
+// const secureMqttClient = new SecureStoreMqttHandler(process.env.MQTT_HOST, process.env.MQTT_USER, process.env.MQTT_PASS, 'dataBroker')
+// secureMqttClient.connect()
