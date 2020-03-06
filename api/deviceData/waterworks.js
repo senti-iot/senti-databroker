@@ -156,7 +156,7 @@ router.get('/v2/waterworks/organisation/:orguuid/device/:uuname', async (req, re
 	// 	return
 	// }
 
-	let device = await deviceService.getDeviceByUUID(req.params.orguuid, req.params.uuname)
+	let device = await deviceService.getOrganisationDeviceByUUName(req.params.orguuid, req.params.uuname)
 	if (device === false) {
 		res.status(404).json()
 		return
