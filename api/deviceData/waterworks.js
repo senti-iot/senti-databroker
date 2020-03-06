@@ -238,7 +238,23 @@ router.get('/v2/waterworks/data/usage/:from/:to', async (req, res) => {
 })
 
 router.get('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
-
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	let resources = await aclClient.findResources(lease.uuid, '00000000-0000-0000-0000-000000000000', sentiAclResourceType.device, sentiAclPriviledge.device.read)
+	let queryUUIDs = (resources.length > 0) ? resources.map(item => { return item.uuid }) : []
+	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
+	let select = `SELECT dd.created AS t, dd.data->? as val, d.uuid AS uuid
+					FROM device d 
+						INNER JOIN deviceDataClean dd 
+							ON dd.device_id = d.id 
+								AND dd.created >= ?
+								AND dd.created <= ?
+					WHERE 1 ${clause}`
+	let rs = await mysqlConn.query(select, ['$.'+req.params.field, req.params.from, req.params.to, ...queryUUIDs])
+	res.status(200).json(rs[0])
 })
 
 router.get('/v2/waterworks/data/benchmark/:orguuid/:from/:to', async (req, res) => {
