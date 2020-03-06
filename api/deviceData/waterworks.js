@@ -262,7 +262,7 @@ router.get('/v2/waterworks/data/benchmark/:orguuid/:from/:to', async (req, res) 
 								FROM (
 									SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
 									FROM (
-										SELECT dd.created AS t, dd.data->'$.value' as val, dd.device_id AS did
+										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
 										FROM organisation o
 										INNER JOIN registry r on o.id = r.orgId
 										INNER JOIN device d on r.id = d.reg_id
@@ -283,7 +283,7 @@ router.get('/v2/waterworks/data/benchmark/:orguuid/:from/:to', async (req, res) 
 								FROM (
 									SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
 									FROM (
-										SELECT dd.created AS t, dd.data->'$.value' as val, dd.device_id AS did
+										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
 										FROM organisation o
 										INNER JOIN registry r on o.id = r.orgId
 										INNER JOIN device d on r.id = d.reg_id
