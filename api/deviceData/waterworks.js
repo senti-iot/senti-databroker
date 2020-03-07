@@ -169,13 +169,12 @@ router.post('/v2/waterworks/adddevice/:deviceuuid/touser/:useruuid', async (req,
 		res.status(401).json()
 		return
 	}
-	let access = await aclClient.testPrivileges(lease.uuid, req.params.useruuid, [sentiAclPriviledge.device.read])
-	console.log(access)
+	let access = await aclClient.testPrivileges(lease.uuid, req.params.deviceuuid, [sentiAclPriviledge.device.modify])
 	if (access.allowed === false) {
 		res.status(403).json()
 		return
 	}
-	await aclClient.addPrivileges()
+	await aclClient.addPrivileges(req.params.useruuid, req.params.deviceuuid, [sentiAclPriviledge.device.read])
 	res.status(200).json()
 })
 
