@@ -350,8 +350,8 @@ router.get('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 							ON dd.device_id = d.id 
 								AND dd.created >= ?
 								AND dd.created <= ?
-					WHERE 1 ${clause}`
-	let rs = await mysqlConn.query(select, ['$.'+req.params.field, req.params.from, req.params.to, ...queryUUIDs])
+					WHERE NOT ISNULL(dd.data->?) ${clause}`
+	let rs = await mysqlConn.query(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs])
 	res.status(200).json(rs[0])
 })
 
