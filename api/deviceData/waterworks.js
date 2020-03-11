@@ -195,7 +195,7 @@ router.get('/v2/waterworks/data/totalbyday/:orguuid/:field/:from/:to', async (re
 		res.status(401).json()
 		return
 	}
-	let select = `SELECT t.d, sum(t.val) 
+	let select = `SELECT t.d, sum(t.val) as total
 					FROM (
 						SELECT date(dd.created) AS d, max(dd.data->?) as val, dd.device_id
 						FROM  organisation o
