@@ -160,6 +160,7 @@ router.get('/v2/waterworks/data/usagebyday/:from/:to', async (req, res) => {
 							) ddd ON 1
 						) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
 					) kiddingme;`
+	console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs, req.params.from, req.params.to, ...queryUUIDs]))
 	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, ...queryUUIDs, req.params.from, req.params.to, ...queryUUIDs])
 	res.status(200).json(rs[0])
 })
@@ -184,10 +185,35 @@ router.get('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 								AND dd.created >= ?
 								AND dd.created <= ?
 					WHERE NOT ISNULL(dd.data->?) ${clause}`
+	// console.log(mysqlConn.format(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs]))
 	let rs = await mysqlConn.query(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs])
 	res.status(200).json(rs[0])
 })
-
+router.get('/v2/waterworks/data/totalbyday/:orguuid/:field/:from/:to', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	let select = `SELECT t.d, sum(t.val) 
+					FROM (
+						SELECT date(dd.created) AS d, max(dd.data->?) as val, dd.device_id
+						FROM  organisation o
+							INNER JOIN registry r on o.id = r.orgId
+							INNER JOIN device d on r.id = d.reg_id
+							INNER JOIN deviceDataClean dd 
+								ON dd.device_id = d.id 
+								AND dd.created >= ?
+								AND dd.created <= ?
+						WHERE NOT ISNULL(dd.data->?) 
+							AND o.uuid = ?
+						GROUP BY dd.device_id, date(dd.created)
+					) t
+					GROUP BY t.d`
+	// console.log(mysqlConn.format(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, req.params.orguuid]))
+	let rs = await mysqlConn.query(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, req.params.orguuid])
+	res.status(200).json(rs[0])
+})
 router.get('/v2/waterworks/data/benchmark/:orguuid/:from/:to', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
