@@ -45,6 +45,13 @@ const getDevices = require('./api/device/getDevices')
 const updateDevice = require('./api/device/updateDevice')
 const createDevice = require('./api/device/createDevice')
 const deleteDevice = require('./api/device/deleteDevice')
+// V2
+// const getDeviceV2 = require('./api/v2/device/getDevice')
+// const getDevicesV2 = require('./api/v2/device/getDevices')
+// const createDeviceV2 = require('./api/v2/device/createDevice')
+
+const getWaterworksV2 = require('./api/v2/waterworks/waterworks')
+
 //#endregion
 
 //#region Registries
@@ -54,6 +61,9 @@ const getRegistry = require('./api/registry/getRegistry')
 const createReg = require('./api/registry/createRegistry')
 const updateReg = require('./api/registry/updateRegistry')
 const deleteReg = require('./api/registry/deleteRegistry')
+// V2
+// const getRegistryV2 = require('./api/v2/registry/getRegistry')
+
 //#endregion
 
 //#region Device Types
@@ -68,8 +78,6 @@ const deleteDT = require('./api/deviceType/deleteDeviceType')
 const getDeviceData = require('./api/deviceData/getDeviceData')
 const getMessages = require('./api/deviceData/getMessages')
 const getDataExternal = require('./api/deviceData/getDataExternal')
-
-const getWaterworks = require('./api/deviceData/waterworks')
 //#endregion
 
 //#region Customer
@@ -91,12 +99,18 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
 
+// V2 USE
+// app.use([getDeviceV2, getDevicesV2, createDeviceV2])
+// app.use([getRegistryV2])
+app.use([getWaterworksV2])
+
+// V1 USE
 app.use([getMessages, getDeviceData, getDataExternal,
 	getDT, getDTs, createDT, updateDT, deleteDT,
 	getDevice, getDevices, createDevice, updateDevice, deleteDevice,
 	getRegistry, getRegistryDevices, getRegistries, createReg, updateReg, deleteReg,
 	createCustomer, getCustomer, updateCustomer, deleteCustomer,
-	getOrg, getWaterworks])
+	getOrg])
 
 //DEV DO NOT UNCOMMENT
 const HotMess = require('./api/DONOTRUN/SERIOUSLYDONT')
