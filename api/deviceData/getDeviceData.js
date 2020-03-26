@@ -233,7 +233,7 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 			else {
 
 				let query = `SELECT id, \`data\`, created, device_id
-				FROM Device_data_clean
+				FROM deviceDataClean
 				WHERE device_id=? AND NOT ISNULL(\`data\`) AND created >= ? AND created <= ? ORDER BY created`
 				console.log(deviceID, from, to, nId)
 				console.log(await mysqlConn.format(query, [deviceID, from, to]))
