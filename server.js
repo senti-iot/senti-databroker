@@ -51,6 +51,7 @@ const deleteDevice = require('./api/device/deleteDevice')
 // const createDeviceV2 = require('./api/v2/device/createDevice')
 
 const getWaterworksV2 = require('./api/v2/waterworks/waterworks')
+const climaidInsightV2 = require('./api/v2/climaidInsight/climaidInsight')
 
 //#endregion
 
@@ -103,6 +104,7 @@ app.use(cors())
 // app.use([getDeviceV2, getDevicesV2, createDeviceV2])
 // app.use([getRegistryV2])
 app.use([getWaterworksV2])
+app.use([climaidInsightV2])
 
 // V1 USE
 app.use([getMessages, getDeviceData, getDataExternal,
