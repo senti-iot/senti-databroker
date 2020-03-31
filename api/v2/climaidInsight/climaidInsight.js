@@ -95,6 +95,7 @@ router.post('/v2/climaidinsight/heatmap/building/:from/:to', async (req, res) =>
 		let rsLatest = await mysqlConn.query(selectLatest, [req.params.from, req.params.to, ...queryUUIDs])
 		if (rsLatest[0].length === 1) {
 			rs[0][0] = { ...rs[0][0], ...rsLatest[0][0] }
+			console.log(rs[0][0])
 		}
 	}
 
@@ -124,6 +125,7 @@ router.post('/v2/climaidinsight/heatmap/building/:from/:to', async (req, res) =>
 		} else if (d.CO2_gen60 > cfg.CO2_ben1) {
 			CO2_color = 2
 		}
+		console.log(d.ts, T_color, RH_color, CO2_color)
 		return { ts: d.ts, color: Math.max(T_color, RH_color, CO2_color) }
 	}
 	let result = rs[0].map(testColor)
