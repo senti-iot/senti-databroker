@@ -78,7 +78,7 @@ router.post('/v2/climaidinsight/colorstate/room/:from/:to', async (req, res) => 
 		return
 	}
 	let result = rs[0].map((d) => {
-		testColor(d, req.body.config)
+		return testColor(d, req.body.config)
 	})
 	res.status(200).json(result)
 })
@@ -142,7 +142,7 @@ router.post('/v2/climaidinsight/colorstate/building/:from/:to', async (req, res)
 		}
 	}
 	let result = rs[0].map((d) => {
-		testColor(d, req.body.config)
+		return testColor(d, req.body.config)
 	})
 	res.status(200).json(result)
 })
