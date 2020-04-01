@@ -38,7 +38,7 @@ const testColor = (d, cfg) => {
 	return { ts: d.ts, color: Math.max(T_color, RH_color, CO2_color) }
 }
 
-router.post('/v2/climaidinsight/colorstate/room/:from/:to', async (req, res) => {
+router.post('/v2/climaidinsight/colorstate/room', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
 		res.status(401).json()
@@ -64,8 +64,7 @@ router.post('/v2/climaidinsight/colorstate/room/:from/:to', async (req, res) => 
 							FROM (
 								SELECT ddc.device_id, MAX(ddc.created) AS created
 								FROM deviceDataClean ddc
-								WHERE ddc.created >= ?
-									AND ddc.created < ?
+								WHERE 1
 									${clause}
 								GROUP BY ddc.device_id
 							) t
@@ -77,10 +76,10 @@ router.post('/v2/climaidinsight/colorstate/room/:from/:to', async (req, res) => 
 		res.status(404).json([])
 		return
 	}
-	let result = rs[0].map((d) => {
-		return testColor(d, req.body.config)
-	})
-	res.status(200).json(result)
+	// let result = rs[0].map((d) => {
+	// 	return testColor(d, req.body.config)
+	// })
+	res.status(200).json(testColor(rs[0][0], req.body.config))
 })
 router.post('/v2/climaidinsight/colorstate/building/:from/:to', async (req, res) => {
 	let lease = await authClient.getLease(req)
