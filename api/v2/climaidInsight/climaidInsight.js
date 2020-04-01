@@ -70,8 +70,8 @@ router.post('/v2/climaidinsight/colorstate/room', async (req, res) => {
 							) t
 							INNER JOIN deviceDataClean d ON t.device_id=d.device_id AND t.created=d.created
 						) t2`
-	console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs]))
-	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, ...queryUUIDs])
+	// console.log(mysqlConn.format(select, [...queryUUIDs]))
+	let rs = await mysqlConn.query(select, [...queryUUIDs])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
 		return
