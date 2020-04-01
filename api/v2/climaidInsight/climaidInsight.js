@@ -46,7 +46,7 @@ router.post('/v2/climaidinsight/qualitative/byhour/:from/:to', async (req, res) 
 		res.status(401).json()
 		return
 	}
-	if (!(req.body && req.body.devices && req.body.config)) {
+	if (!(req.body && req.body.devices)) {
 		res.status(400).json()
 		return
 	}
