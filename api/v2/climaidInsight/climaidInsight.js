@@ -56,6 +56,9 @@ router.post('/v2/climaidinsight/colorstate/room', async (req, res) => {
 	let clause = (queryUUIDs.length > 0) ? ' AND ddc.device_id IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
 	let select = `SELECT 
 							CONCAT(date(created), ' ', hour(created)) AS ts, 
+							SUM(t)/count(*) AS T_gen60,
+							SUM(h)/count(*) AS RH_gen60,
+							SUM(co2)/count(*) AS CO2_gen60,
 							SUM(t)/count(*) AS T_rel,
 							SUM(h)/count(*) AS RH_rel,
 							SUM(co2)/count(*) AS CO2_rel
@@ -76,9 +79,6 @@ router.post('/v2/climaidinsight/colorstate/room', async (req, res) => {
 		res.status(404).json([])
 		return
 	}
-	// let result = rs[0].map((d) => {
-	// 	return colorState(d, req.body.config)
-	// })
 	res.status(200).json(colorState(rs[0][0], req.body.config))
 })
 router.post('/v2/climaidinsight/colorstate/building/:from/:to', async (req, res) => {
