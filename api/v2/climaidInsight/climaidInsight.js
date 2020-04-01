@@ -28,12 +28,14 @@ const colorState = (d, cfg) => {
 		RH_color = 2
 	}
 	let CO2_color = 1
-	if (d.CO2_gen60 > cfg.CO2_ben3) {
-		CO2_color = 4
-	} else if (d.CO2_gen60 > cfg.CO2_ben2) {
-		CO2_color = 3
-	} else if (d.CO2_gen60 > cfg.CO2_ben1) {
-		CO2_color = 2
+	if (d.CO2_gen60 !== null) {
+		if (d.CO2_gen60 > cfg.CO2_ben3) {
+			CO2_color = 4
+		} else if (d.CO2_gen60 > cfg.CO2_ben2) {
+			CO2_color = 3
+		} else if (d.CO2_gen60 > cfg.CO2_ben1) {
+			CO2_color = 2
+		}
 	}
 	return { ts: d.ts, color: Math.max(T_color, RH_color, CO2_color) }
 }
@@ -73,7 +75,7 @@ router.post('/v2/climaidinsight/colorstate/room', async (req, res) => {
 							) t
 							INNER JOIN deviceDataClean d ON t.device_id=d.device_id AND t.created=d.created
 						) t2`
-	// console.log(mysqlConn.format(select, [...queryUUIDs]))
+	console.log(mysqlConn.format(select, [...queryUUIDs]))
 	let rs = await mysqlConn.query(select, [...queryUUIDs])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
