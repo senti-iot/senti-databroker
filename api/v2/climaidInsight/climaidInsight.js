@@ -10,7 +10,7 @@ const authClient = require('../../../server').authClient
 const sentiDeviceService = require('../../../lib/device/sentiDeviceService')
 // const deviceService = new sentiDeviceService(mysqlConn)
 
-const testColor = (d, cfg) => {
+const colorState = (d, cfg) => {
 	let T_color = 1
 	if (cfg.T_ben1 > d.T_gen60 || cfg.T_ben6 < d.T_rel) {
 		T_color = 4
@@ -70,16 +70,16 @@ router.post('/v2/climaidinsight/colorstate/room', async (req, res) => {
 							) t
 							INNER JOIN deviceDataClean d ON t.device_id=d.device_id AND t.created=d.created
 						) t2`
-	// console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs]))
+	console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs]))
 	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, ...queryUUIDs])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
 		return
 	}
 	// let result = rs[0].map((d) => {
-	// 	return testColor(d, req.body.config)
+	// 	return colorState(d, req.body.config)
 	// })
-	res.status(200).json(testColor(rs[0][0], req.body.config))
+	res.status(200).json(colorState(rs[0][0], req.body.config))
 })
 router.post('/v2/climaidinsight/colorstate/building/:from/:to', async (req, res) => {
 	let lease = await authClient.getLease(req)
@@ -141,7 +141,7 @@ router.post('/v2/climaidinsight/colorstate/building/:from/:to', async (req, res)
 		}
 	}
 	let result = rs[0].map((d) => {
-		return testColor(d, req.body.config)
+		return colorState(d, req.body.config)
 	})
 	res.status(200).json(result)
 })
