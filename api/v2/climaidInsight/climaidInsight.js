@@ -120,7 +120,7 @@ router.post('/v2/climaidinsight/colorstate/room', async (req, res) => {
 		res.status(404).json([])
 		return
 	}
-	res.status(200).json(colorState({ ts: d.ts, T: rs[0][0].T_rel, RH: rs[0][0]. RH_rel, CO2: rs[0][0].CO2_rel }, req.body.config))
+	res.status(200).json(colorState({ ts: rs[0][0].ts, T: rs[0][0].T_rel, RH: rs[0][0]. RH_rel, CO2: rs[0][0].CO2_rel }, req.body.config))
 })
 router.post('/v2/climaidinsight/colorstate/building/:from/:to', async (req, res) => {
 	let lease = await authClient.getLease(req)
