@@ -351,11 +351,13 @@ router.get('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 		res.status(401).json()
 		return
 	}
+	console.time('get devices')
 	let resources = await aclClient.findResources(lease.uuid, '00000000-0000-0000-0000-000000000000', sentiAclResourceType.device, sentiAclPriviledge.device.read)
 	if (resources.length === 0) {
 		res.status(404).json([])
 		return
 	}
+	console.timeEnd('get devices')
 	let queryUUIDs = (resources.length > 0) ? resources.map(item => { return item.uuid }) : []
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
 	let select = `SELECT dd.created AS t, dd.data->? as val, d.uuid AS uuid
@@ -365,8 +367,10 @@ router.get('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 								AND dd.created >= ?
 								AND dd.created <= ?
 					WHERE NOT ISNULL(dd.data->?) ${clause}`
-	// console.log(mysqlConn.format(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs]))
+	console.log(mysqlConn.format(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs]))
+	console.time('get result')
 	let rs = await mysqlConn.query(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs])
+	console.timeEnd('get result')
 	res.status(200).json(rs[0])
 })
 router.post('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
@@ -380,7 +384,9 @@ router.post('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 		res.status(404).json([])
 		return
 	}
+	console.time('test devices')
 	let access = await aclClient.testResources(lease.uuid, queryUUIDs, [sentiAclPriviledge.device.read])
+	console.timeEnd('test devices')
 	if (access.allowed === false) {
 		res.status(403).json()
 		return
@@ -393,8 +399,10 @@ router.post('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 								AND dd.created >= ?
 								AND dd.created <= ?
 					WHERE NOT ISNULL(dd.data->?) ${clause}`
-	// console.log(mysqlConn.format(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs]))
+	console.log(mysqlConn.format(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs]))
+	console.time('get result')
 	let rs = await mysqlConn.query(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs])
+	console.timeEnd('get result')
 	res.status(200).json(rs[0])
 })
 
