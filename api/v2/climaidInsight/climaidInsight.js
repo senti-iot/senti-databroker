@@ -12,28 +12,28 @@ const sentiDeviceService = require('../../../lib/device/sentiDeviceService')
 
 const colorState = (d, cfg) => {
 	let T_color = 1
-	if (cfg.T_ben1 > d.T_gen60 || cfg.T_ben6 < d.T_rel) {
+	if (cfg.T_ben1 > d.T || cfg.T_ben6 < d.T) {
 		T_color = 4
-	} else if (d.T_gen60 < cfg.T_ben2 || cfg.T_ben5 < d.T_rel) {
+	} else if (d.T < cfg.T_ben2 || cfg.T_ben5 < d.T) {
 		T_color = 3
-	} else if (d.T_gen60 < cfg.T_ben3 || cfg.T_ben4 < d.T_rel) {
+	} else if (d.T < cfg.T_ben3 || cfg.T_ben4 < d.T) {
 		T_color = 2
 	}
 	let RH_color = 1
-	if (cfg.RH_ben1 > d.RH_gen60 || cfg.RH_ben6 < d.RH_rel) {
+	if (cfg.RH_ben1 > d.RH || cfg.RH_ben6 < d.RH) {
 		RH_color = 4
-	} else if (d.RH_gen60 < cfg.RH_ben2 || cfg.RH_ben5 < d.RH_rel) {
+	} else if (d.RH < cfg.RH_ben2 || cfg.RH_ben5 < d.RH) {
 		RH_color = 3
-	} else if (d.RH_gen60 < cfg.RH_ben3 || cfg.RH_ben4 < d.RH_rel) {
+	} else if (d.RH < cfg.RH_ben3 || cfg.RH_ben4 < d.RH) {
 		RH_color = 2
 	}
 	let CO2_color = 1
-	if (d.CO2_gen60 !== null) {
-		if (d.CO2_gen60 > cfg.CO2_ben3) {
+	if (d.CO2 !== null) {
+		if (d.CO2 > cfg.CO2_ben3) {
 			CO2_color = 4
-		} else if (d.CO2_gen60 > cfg.CO2_ben2) {
+		} else if (d.CO2 > cfg.CO2_ben2) {
 			CO2_color = 3
-		} else if (d.CO2_gen60 > cfg.CO2_ben1) {
+		} else if (d.CO2 > cfg.CO2_ben1) {
 			CO2_color = 2
 		}
 	}
@@ -100,9 +100,6 @@ router.post('/v2/climaidinsight/colorstate/room', async (req, res) => {
 	let clause = (queryUUIDs.length > 0) ? ' AND ddc.device_id IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
 	let select = `SELECT 
 						CONCAT(date(created), ' ', hour(created)) AS ts, 
-						SUM(t)/count(*) AS T_gen60,
-						SUM(h)/count(*) AS RH_gen60,
-						SUM(co2)/count(*) AS CO2_gen60,
 						SUM(t)/count(*) AS T_rel,
 						SUM(h)/count(*) AS RH_rel,
 						SUM(co2)/count(*) AS CO2_rel
@@ -123,7 +120,7 @@ router.post('/v2/climaidinsight/colorstate/room', async (req, res) => {
 		res.status(404).json([])
 		return
 	}
-	res.status(200).json(colorState(rs[0][0], req.body.config))
+	res.status(200).json(colorState({ T: rs[0][0].T_rel, RH: rs[0][0]. RH_rel, CO2: rs[0][0].CO2_rel }, req.body.config))
 })
 router.post('/v2/climaidinsight/colorstate/building/:from/:to', async (req, res) => {
 	let lease = await authClient.getLease(req)
@@ -145,10 +142,7 @@ router.post('/v2/climaidinsight/colorstate/building/:from/:to', async (req, res)
 					CONCAT(date(created), ' ', hour(created)) AS ts, 
 					sum(data->'$.temperature')/count(*) as T_gen60,
 					sum(data->'$.humidity')/count(*) as RH_gen60,
-					sum(data->'$.co2')/count(*) as CO2_gen60,
-					sum(data->'$.temperature')/count(*) as T_rel,
-					sum(data->'$.humidity')/count(*) as RH_rel,
-					sum(data->'$.co2')/count(*) as CO2_rel
+					sum(data->'$.co2')/count(*) as CO2_gen60
 				FROM deviceDataClean ddc
 				WHERE ddc.created >= ? 
 					AND ddc.created < ?
@@ -160,32 +154,8 @@ router.post('/v2/climaidinsight/colorstate/building/:from/:to', async (req, res)
 		res.status(404).json([])
 		return
 	}
-	if (rs[0].length === 1) {
-		let selectLatest = `SELECT 
-							CONCAT(date(created), ' ', hour(created)) AS ts, 
-							SUM(t)/count(*) AS T_rel,
-							SUM(h)/count(*) AS RH_rel,
-							SUM(co2)/count(*) AS CO2_rel
-						FROM (
-							SELECT data->'$.temperature' AS t, data->'$.humidity' AS h,  data->'$.co2' AS co2, d.device_id, d.created
-							FROM (
-								SELECT ddc.device_id, MAX(ddc.created) AS created
-								FROM deviceDataClean ddc
-								WHERE ddc.created >= ?
-									AND ddc.created < ?
-									${clause}
-								GROUP BY ddc.device_id
-							) t
-							INNER JOIN deviceDataClean d ON t.device_id=d.device_id AND t.created=d.created
-						) t2`
-		// console.log(mysqlConn.format(selectLatest, [req.params.from, req.params.to, ...queryUUIDs]))
-		let rsLatest = await mysqlConn.query(selectLatest, [req.params.from, req.params.to, ...queryUUIDs])
-		if (rsLatest[0].length === 1) {
-			rs[0][0] = { ...rs[0][0], ...rsLatest[0][0] }
-		}
-	}
 	let result = rs[0].map((d) => {
-		return colorState(d, req.body.config)
+		return colorState({ T: d.T_gen60, RH: d.RH_gen60, CO2: d.CO2_gen60 }, req.body.config)
 	})
 	res.status(200).json(result)
 })
