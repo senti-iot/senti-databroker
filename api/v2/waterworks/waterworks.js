@@ -360,16 +360,27 @@ router.get('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 	console.timeEnd('get devices')
 	let queryUUIDs = (resources.length > 0) ? resources.map(item => { return item.uuid }) : []
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT dd.created AS t, dd.data->? as val, d.uuid AS uuid
-					FROM device d 
-						INNER JOIN deviceDataClean dd 
-							ON dd.device_id = d.id 
+	// let select = `SELECT dd.created AS t, dd.data->? as val, d.uuid AS uuid
+	// 				FROM device d 
+	// 					INNER JOIN deviceDataClean dd 
+	// 						ON dd.device_id = d.id 
+	// 							AND dd.created >= ?
+	// 							AND dd.created <= ?
+	// 				WHERE NOT ISNULL(dd.data->?) ${clause}`
+	let select = `SELECT dd.created AS t, dd.data->? as val, t.uuid AS uuid
+					FROM (
+						SELECT  d.id, d.uuid
+						FROM device d
+						WHERE 1 ${clause}
+					) t
+					INNER JOIN deviceDataClean dd FORCE INDEX (index4)  ON dd.device_id = t.id
 								AND dd.created >= ?
 								AND dd.created <= ?
-					WHERE NOT ISNULL(dd.data->?) ${clause}`
-	console.log(mysqlConn.format(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs]))
+					WHERE NOT ISNULL(dd.data->?)`
+
+	console.log(mysqlConn.format(select, ['$.'+req.params.field, ...queryUUIDs, req.params.from, req.params.to, '$.'+req.params.field]))
 	console.time('get result')
-	let rs = await mysqlConn.query(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs])
+	let rs = await mysqlConn.query(select, ['$.'+req.params.field, ...queryUUIDs, req.params.from, req.params.to, '$.'+req.params.field])
 	console.timeEnd('get result')
 	res.status(200).json(rs[0])
 })
@@ -392,17 +403,32 @@ router.post('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 		return
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT dd.created AS t, dd.data->? as val, d.uuid AS uuid
-					FROM device d 
-						INNER JOIN deviceDataClean dd 
-							ON dd.device_id = d.id 
+	// let select = `SELECT dd.created AS t, dd.data->? as val, d.uuid AS uuid
+	// 				FROM device d 
+	// 					INNER JOIN deviceDataClean dd 
+	// 						ON dd.device_id = d.id 
+	// 							AND dd.created >= ?
+	// 							AND dd.created <= ?
+	// 				WHERE NOT ISNULL(dd.data->?) ${clause}`
+	let select = `SELECT dd.created AS t, dd.data->? as val, t.uuid AS uuid
+					FROM (
+						SELECT  d.id, d.uuid
+						FROM device d
+						WHERE 1 ${clause}
+					) t
+					INNER JOIN deviceDataClean dd FORCE INDEX (index4)  ON dd.device_id = t.id
 								AND dd.created >= ?
 								AND dd.created <= ?
-					WHERE NOT ISNULL(dd.data->?) ${clause}`
-	console.log(mysqlConn.format(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs]))
+					WHERE NOT ISNULL(dd.data->?)`
+
+	console.log(mysqlConn.format(select, ['$.'+req.params.field, ...queryUUIDs, req.params.from, req.params.to, '$.'+req.params.field]))
 	console.time('get result')
-	let rs = await mysqlConn.query(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs])
+	let rs = await mysqlConn.query(select, ['$.'+req.params.field, ...queryUUIDs, req.params.from, req.params.to, '$.'+req.params.field])
 	console.timeEnd('get result')
+	// console.log(mysqlConn.format(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs]))
+	// console.time('get result')
+	// let rs = await mysqlConn.query(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs])
+	// console.timeEnd('get result')
 	res.status(200).json(rs[0])
 })
 
