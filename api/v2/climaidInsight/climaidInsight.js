@@ -58,7 +58,7 @@ router.post('/v2/climaidinsight/qualitative/byhour/:from/:to', async (req, res) 
 	let clause = (queryUUIDs.length > 0) ? ' AND ddc.device_id IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
 	let select = `SELECT 
 					CONCAT(date(created), ' ', hour(created)) AS ts,
-					UNIX_TIMESTAMP(CONCAT(date(created), ' ', hour(created))) as uts, 
+					UNIX_TIMESTAMP(CAST(CONCAT(date(created), ' ', hour(created))  AS DATETIME)) as uts, 
 					sum(data->'$.cold') as cold,
 					sum(data->'$.warm') as warm,
 					sum(data->'$.noisy') as noisy,
