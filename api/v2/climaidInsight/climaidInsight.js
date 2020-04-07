@@ -57,7 +57,8 @@ router.post('/v2/climaidinsight/qualitative/byhour/:from/:to', async (req, res) 
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND ddc.device_id IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
 	let select = `SELECT 
-					CONCAT(date(created), ' ', hour(created)) AS ts, 
+					CONCAT(date(created), ' ', hour(created)) AS ts,
+					UNIX_TIMESTAMP(CONCAT(date(created), ' ', hour(created))) as uts, 
 					sum(data->'$.cold') as cold,
 					sum(data->'$.warm') as warm,
 					sum(data->'$.noisy') as noisy,
@@ -73,6 +74,49 @@ router.post('/v2/climaidinsight/qualitative/byhour/:from/:to', async (req, res) 
 					AND ddc.created < ?
 					${clause}
 				GROUP BY DATE(created), HOUR(created)`
+	console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs]))
+	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, ...queryUUIDs])
+	if (rs[0].length === 0) {
+		res.status(404).json([])
+		return
+	}
+	res.status(200).json(rs[0])
+})
+
+router.post('/v2/climaidinsight/qualitative/byday/:from/:to', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	if (!(req.body && req.body.devices)) {
+		res.status(400).json()
+		return
+	}
+	let queryUUIDs = (req.body.devices.length) ? req.body.devices : []
+	if (queryUUIDs.length === 0) {
+		res.status(404).json([])
+		return
+	}
+	let clause = (queryUUIDs.length > 0) ? ' AND ddc.device_id IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
+	let select = `SELECT 
+					date(created) AS ts,
+					UNIX_TIMESTAMP(date(created)) as uts, 
+					sum(data->'$.cold') as cold,
+					sum(data->'$.warm') as warm,
+					sum(data->'$.noisy') as noisy,
+					sum(data->'$.tired') as tired,
+					sum(data->'$.windy') as windy,
+					sum(data->'$.blinded') as blinded,
+					sum(data->'$.heavyair') as heavyair,
+					sum(data->'$.lighting') as lighting,
+					sum(data->'$.itchyeyes') as itchyeyes,
+					sum(data->'$.concentration') as concentration
+				FROM deviceDataClean ddc
+				WHERE ddc.created >= ? 
+					AND ddc.created < ?
+					${clause}
+				GROUP BY DATE(created)`
 	console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs]))
 	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, ...queryUUIDs])
 	if (rs[0].length === 0) {
