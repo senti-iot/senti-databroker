@@ -592,7 +592,7 @@ router.get('/v2/waterworks/data/benchmark/:orguuid/:from/:to', async (req, res) 
 		res.status(401).json()
 		return
 	}
-	let select = `SELECT totalflow/daycount as averageFlowPerSecond, 86400*totalflow/daycount as averageFlowPerDay, d
+	let select = `SELECT totalflow, totalflow/daycount as averageFlowPerSecond, 86400*totalflow/daycount as averageFlowPerDay, d
 					FROM (
 					SELECT SUM(flow) AS totalflow, count(*) AS daycount, date(t) AS d
 					FROM (
