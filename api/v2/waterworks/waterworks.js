@@ -303,7 +303,7 @@ router.post('/v2/waterworks/data/totalusagebyday/:from/:to', async (req, res) =>
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
 
-	let select = `sum((vdiff/diff)*86400) as totalFlowPerDay, date(t) AS d
+	let select = `SELECT sum(vdiff/diff) as totalFlowPerSecond, sum((vdiff/diff)*86400) as totalFlowPerDay, date(t) AS d
 					FROM (
 						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
 						FROM (
