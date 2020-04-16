@@ -127,7 +127,6 @@ router.post('/v2/climaidinsight/qualitative/byday/:from/:to', async (req, res) =
 })
 
 router.post('/v2/climaidinsight/activity/:from/:to', async (req, res) => {
-	// req.query.firsthour, req.query.lasthour
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
 		res.status(401).json()
@@ -179,14 +178,107 @@ router.post('/v2/climaidinsight/activity/:from/:to', async (req, res) => {
 	}
 	res.status(200).json(rs[0][0])
 })
+router.post('/v2/climaidinsight/activity/byquarter/:from/:to', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	if (!(req.body && req.body.devices && req.body.config)) {
+		res.status(400).json()
+		return
+	}
+	let firstday = (req.body.config.firstday) ? req.body.config.firstday : 0
+	let lastday = (req.body.config.lastday) ? req.body.config.lastday : 4
+	let firsthour = (req.body.config.firsthour) ? req.body.config.firsthour : 7
+	let lasthour = (req.body.config.lasthour) ? req.body.config.lasthour : 16
 
+	let queryUUIDs = (req.body.devices.length) ? req.body.devices : []
+	if (queryUUIDs.length === 0) {
+		res.status(404).json([])
+		return
+	}
+	let clause = (queryUUIDs.length > 0) ? ' AND ddc.device_id IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
+	let select = `SELECT avg(IF(m+mCO2>0,1,0)) AS motion, ts
+					FROM (
+						SELECT SUM(motion) AS m, avg(co2), SUM(IF(co2>450, 1,0)) AS mCO2, date_add(date_add(d, INTERVAL h hour), INTERVAL q*15 MINUTE) AS ts, d, h,q, did
+						FROM (
+							SELECT    ddc.created AS ts
+									, ddc.data->'$.motion' as motion
+									, ddc.data->'$.co2' as co2
+									, DATE(ddc.created) AS d
+									, HOUR(ddc.created) AS h
+									, floor(MINUTE(ddc.created) / 15) AS q
+									, ddc.device_id as did
+							FROM     deviceDataClean ddc
+							WHERE 1 ${clause}
+								AND ddc.created >= ?
+								AND ddc.created < ?
+								AND weekday(created) between ? AND  ? AND HOUR(created) between ? and ?
+							)t
+						GROUP BY did, d, h, q
+					) tt
+					GROUP BY ts`
+	console.log(mysqlConn.format(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour]))
+	let rs = await mysqlConn.query(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour])
+	if (rs[0].length === 0) {
+		res.status(404).json([])
+		return
+	}
+	res.status(200).json(rs[0])
+})
 router.post('/v2/climaidinsight/activity/byhour/:from/:to', async (req, res) => {
 	// { devices: [1,2,3], config: { firsthour: 07, lasthour: 16} }
 
 })
-
 router.post('/v2/climaidinsight/activity/byday/:from/:to', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	if (!(req.body && req.body.devices && req.body.config)) {
+		res.status(400).json()
+		return
+	}
+	let firstday = (req.body.config.firstday) ? req.body.config.firstday : 0
+	let lastday = (req.body.config.lastday) ? req.body.config.lastday : 4
+	let firsthour = (req.body.config.firsthour) ? req.body.config.firsthour : 7
+	let lasthour = (req.body.config.lasthour) ? req.body.config.lasthour : 16
 
+	let queryUUIDs = (req.body.devices.length) ? req.body.devices : []
+	if (queryUUIDs.length === 0) {
+		res.status(404).json([])
+		return
+	}
+	let clause = (queryUUIDs.length > 0) ? ' AND ddc.device_id IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
+	let select = `SELECT avg(IF(m+mCO2>0,1,0)) AS motion, date(ts)
+					FROM (
+						SELECT SUM(motion) AS m, avg(co2), SUM(IF(co2>450, 1,0)) AS mCO2, date_add(date_add(d, INTERVAL h hour), INTERVAL q*15 MINUTE) AS ts, d, h,q, did
+						FROM (
+							SELECT    ddc.created AS ts
+									, ddc.data->'$.motion' as motion
+									, ddc.data->'$.co2' as co2
+									, DATE(ddc.created) AS d
+									, HOUR(ddc.created) AS h
+									, floor(MINUTE(ddc.created) / 15) AS q
+									, ddc.device_id as did
+							FROM     deviceDataClean ddc
+							WHERE 1 ${clause}
+								AND ddc.created >= ?
+								AND ddc.created < ?
+								AND weekday(created) between ? AND  ? AND HOUR(created) between ? and ?
+						)t
+						GROUP BY did, d, h, q
+					) tt
+					GROUP BY date(ts)`
+	console.log(mysqlConn.format(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour]))
+	let rs = await mysqlConn.query(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour])
+	if (rs[0].length === 0) {
+		res.status(404).json([])
+		return
+	}
+	res.status(200).json(rs[0])
 })
 
 
