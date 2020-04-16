@@ -147,7 +147,7 @@ router.post('/v2/climaidinsight/activity/:from/:to', async (req, res) => {
 		return
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND ddc.device_id IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT avg(motion) * 100 as motion, max(ts) as ts
+	let select = `SELECT avg(motion) * 100 as motion, max(ts) as date
 	FROM (
 	SELECT avg(IF(m+mCO2>0,1,0)) AS motion, date(ts) as ts
 	FROM (
@@ -199,7 +199,7 @@ router.post('/v2/climaidinsight/activity/byquarter/:from/:to', async (req, res) 
 		return
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND ddc.device_id IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT avg(IF(m+mCO2>0,1,0)) * 100 AS motion, ts
+	let select = `SELECT avg(IF(m+mCO2>0,1,0)) * 100 AS motion, ts AS date
 					FROM (
 						SELECT SUM(motion) AS m, avg(co2), SUM(IF(co2>450, 1,0)) AS mCO2, date_add(date_add(d, INTERVAL h hour), INTERVAL q*15 MINUTE) AS ts, d, h,q, did
 						FROM (
@@ -252,7 +252,7 @@ router.post('/v2/climaidinsight/activity/byday/:from/:to', async (req, res) => {
 		return
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND ddc.device_id IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT avg(IF(m+mCO2>0,1,0)) * 100 AS motion, date(ts) AS ts
+	let select = `SELECT avg(IF(m+mCO2>0,1,0)) * 100 AS motion, date(ts) AS date
 					FROM (
 						SELECT SUM(motion) AS m, avg(co2), SUM(IF(co2>450, 1,0)) AS mCO2, date_add(date_add(d, INTERVAL h hour), INTERVAL q*15 MINUTE) AS ts, d, h,q, did
 						FROM (
