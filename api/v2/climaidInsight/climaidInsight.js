@@ -148,7 +148,7 @@ router.post('/v2/climaidinsight/activity/:from/:to', async (req, res) => {
 		return
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND ddc.device_id IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT avg(motion) as motion, max(ts) as ts
+	let select = `SELECT (avg(motion) * 100) as motion, max(ts) as ts
 	FROM (
 	SELECT avg(IF(m+mCO2>0,1,0)) AS motion, date(ts) as ts
 	FROM (
