@@ -29,6 +29,15 @@ router.get('/v2/waterworks/organisation/:orguuid/device/:uuname', async (req, re
 	res.status(200).json(device)
 })
 
+router.post('/v2/waterworks/acldevice/:deviceid', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	let device = deviceService.getDeviceById(req.params.deviceid)
+	res.status(200).json(device)
+})
 router.post('/v2/waterworks/adddevice/:deviceuuid/touser/:useruuid', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
