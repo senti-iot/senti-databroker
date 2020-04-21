@@ -42,7 +42,12 @@ router.post('/v2/waterworks/acldevice/:deviceid', async (req, res) => {
 						LEFT JOIN deviceMetadata dm on dm.device_id = d.id
 					WHERE d.id = ? AND d.deleted = 0`
 	let rs = await mysqlConn.query(select, [req.params.deviceid])
-	res.status(200).json(rs[0])
+
+	let result1 = await aclClient.registerResource(rs[0][0].uuid, sentiAclResourceType.device)
+	let result2 = await aclClient.addResourceToParent(rs[0][0].uuid, rs[0][0].reguuid)
+	rs[0][0].result1 = result1
+	rs[0][0].result2 = result2
+	res.status(200).json(rs[0][0])
 })
 router.post('/v2/waterworks/adddevice/:deviceuuid/touser/:useruuid', async (req, res) => {
 	let lease = await authClient.getLease(req)
