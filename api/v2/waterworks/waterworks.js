@@ -35,8 +35,14 @@ router.post('/v2/waterworks/acldevice/:deviceid', async (req, res) => {
 		res.status(401).json()
 		return
 	}
-	let device = deviceService.getDeviceById(req.params.deviceid)
-	res.status(200).json(device)
+	let select = `SELECT d.id, d.uuid, d.uuname, d.name, r.uuid, d.type_id, d.reg_id, dm.\`data\` as metadata, dm.inbound as cloudfunctions, d.communication
+					FROM device d
+						INNER JOIN registry r ON r.id = d.reg_id
+						INNER JOIN customer c on c.id = r.customer_id
+						LEFT JOIN deviceMetadata dm on dm.device_id = d.id
+					WHERE d.id = ? AND d.deleted = 0`
+	let rs = await mysqlConn.query(select, [req.params.deviceid])
+	res.status(200).json(rs[0])
 })
 router.post('/v2/waterworks/adddevice/:deviceuuid/touser/:useruuid', async (req, res) => {
 	let lease = await authClient.getLease(req)
