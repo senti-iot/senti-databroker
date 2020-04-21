@@ -35,7 +35,7 @@ router.post('/v2/waterworks/acldevice/:deviceid', async (req, res) => {
 		res.status(401).json()
 		return
 	}
-	let select = `SELECT d.id, d.uuid, d.uuname, d.name, r.uuid, d.type_id, d.reg_id, dm.\`data\` as metadata, dm.inbound as cloudfunctions, d.communication
+	let select = `SELECT d.id, d.uuid, d.uuname, d.name, r.uuid as reguuid, d.type_id, d.reg_id, dm.\`data\` as metadata, dm.inbound as cloudfunctions, d.communication
 					FROM device d
 						INNER JOIN registry r ON r.id = d.reg_id
 						INNER JOIN customer c on c.id = r.customer_id
