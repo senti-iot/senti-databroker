@@ -10,7 +10,7 @@ const cleanUpSpecialChars = require('../../utils/cleanUpSpecialChars')
 
 
 const createDeviceQuery = `INSERT INTO device
-			(uuname, name, typeHash, regHash, description, lat, lng, address, locType, communication, uuid, shortHash)
+			(uuname, name, type_id, reg_id, description, lat, lng, address, locType, communication, uuid, shortHash)
 			VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
 
 const createMetaDataQuery = `INSERT INTO deviceMetadata
@@ -40,7 +40,7 @@ router.put('/:version/device', async (req, res) => {
 				let uuname = data.uuname ? data.uuname + '-' + shortHash : cleanUpSpecialChars(data.name).toLowerCase() + '-' + shortHash
 
 				console.log(uuid, shortHash)
-				let arr = [uuname, data.name, data.typeHash, data.regHash,
+				let arr = [uuname, data.name, data.type_id, data.reg_id,
 					data.description,
 					data.lat, data.lng, data.address,
 					data.locType, data.communication,
