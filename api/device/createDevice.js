@@ -66,7 +66,7 @@ router.put('/:version/device', async (req, res) => {
 					let mtd = data.metadata
 					console.log(mtd, createMetaDataQuery)
 					let mtdUUID = uuidv4()
-					let mtdArr = [r[0].insertId, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
+					let mtdArr = [rs[0].insertId, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
 					mysqlConn.query(createMetaDataQuery, mtdArr).then(async r => {
 						console.log('Created', r[0].insertId)
 						// log({
