@@ -48,7 +48,7 @@ router.put('/:version/device', async (req, res) => {
 			try {
 				let uuid = uuidv4()
 				let shortHash = shortHashGen(uuid)
-				let uuname = data.uuname ? data.uuname + '-' + shortHash : cleanUpSpecialChars(data.name).toLowerCase() + '-' + shortHash
+				let uuname = data.uuname ? data.uuname : cleanUpSpecialChars(data.name).toLowerCase() + '-' + shortHash
 
 				console.log(uuid, shortHash)
 				let arr = [uuname, data.name, data.type_id, data.reg_id,
@@ -57,7 +57,7 @@ router.put('/:version/device', async (req, res) => {
 					data.locType, data.communication,
 					uuid]
 				console.log(mysqlConn.format(createDeviceQuery, arr))
-				mysqlConn.query(createDeviceQuery, arr).then(rs => {
+				await mysqlConn.query(createDeviceQuery, arr).then(rs => {
 					console.log('Device Created', rs[0].insertId)
 					log({
 						msg: `Device [0] Created`,
