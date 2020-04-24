@@ -11,7 +11,7 @@ const cleanUpSpecialChars = require('../../utils/cleanUpSpecialChars')
 
 const createDeviceQuery = `INSERT INTO device
 			(uuname, name, type_id, reg_id, description, lat, lng, address, locType, communication, uuid)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
+			VALUES (?,?,?,?,?,?,?,?,?,?,?)`
 
 const createMetaDataQuery = `INSERT INTO deviceMetadata
 					(device_id, data, inbound, outbound)
