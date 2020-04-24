@@ -10,21 +10,32 @@ const cleanUpSpecialChars = require('../../utils/cleanUpSpecialChars')
 
 
 const createDeviceQuery = `INSERT INTO device
-			(uuname, name, type_id, reg_id, description, lat, lng, address, locType, communication, uuid, shortHash)
+			(uuname, name, type_id, reg_id, description, lat, lng, address, locType, communication, uuid)
 			VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
 
 const createMetaDataQuery = `INSERT INTO deviceMetadata
-					(deviceHash, data, inbound, outbound, uuid)
-					VALUES(?, ?, ?, ?, ?);`
+					(device_id, data, inbound, outbound)
+					VALUES(?, ?, ?, ?);`
 
-const getDeviceQuery = `SELECT d.uuid, d.name, d.shortHash, d.uuname, d.description, lat, lng, address,
+// const getDeviceQuery = `SELECT d.uuid, d.name, d.shortHash, d.uuname, d.description, lat, lng, address,
+// 			locType, communication, tags, \`data\` as metadata, dm.outbound as dataKeys, dm.inbound,
+// 			r.name as regName, r.shortHash as regShortHash, r.protocol as protocol,
+// 			c.name as customerName, c.shortHash as cShortHash
+// 			FROM device d
+// 			LEFT JOIN registry r on r.uuid = d.regHash
+// 			INNER JOIN customer c on c.uuid = r.custHash
+// 			LEFT JOIN deviceMetadata dm ON d.uuid = dm.deviceHash
+// 			WHERE d.uuid=? and d.deleted=0`
+
+
+			const getDeviceQuery = `SELECT d.uuid, d.name, d.uuname, d.description, lat, lng, address,
 			locType, communication, tags, \`data\` as metadata, dm.outbound as dataKeys, dm.inbound,
-			r.name as regName, r.shortHash as regShortHash, r.protocol as protocol,
-			c.name as customerName, c.shortHash as cShortHash
+			r.name as regName, r.protocol as protocol,
+			c.name as customerName
 			FROM device d
-			LEFT JOIN registry r on r.uuid = d.regHash
-			INNER JOIN customer c on c.uuid = r.custHash
-			LEFT JOIN deviceMetadata dm ON d.uuid = dm.deviceHash
+			LEFT JOIN registry r on r.id = d.reg_id
+			INNER JOIN customer c on c.id = r.customer_id
+			LEFT JOIN deviceMetadata dm ON d.id = dm.device_id
 			WHERE d.uuid=? and d.deleted=0`
 
 router.put('/:version/device', async (req, res) => {
@@ -44,7 +55,7 @@ router.put('/:version/device', async (req, res) => {
 					data.description,
 					data.lat, data.lng, data.address,
 					data.locType, data.communication,
-					uuid, shortHash]
+					uuid]
 				console.log(mysqlConn.format(createDeviceQuery, arr))
 				mysqlConn.query(createDeviceQuery, arr).then(rs => {
 					console.log('Device Created', rs[0].insertId)
@@ -55,7 +66,7 @@ router.put('/:version/device', async (req, res) => {
 					let mtd = data.metadata
 					console.log(mtd, createMetaDataQuery)
 					let mtdUUID = uuidv4()
-					let mtdArr = [uuid, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound), mtdUUID]
+					let mtdArr = [r[0].insertId, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
 					mysqlConn.query(createMetaDataQuery, mtdArr).then(async r => {
 						console.log('Created', r[0].insertId)
 						// log({
