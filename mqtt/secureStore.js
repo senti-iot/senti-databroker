@@ -94,6 +94,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				console.log("error: ", err);
 
 			})
+			// ADD DEVICE TO ACL
 			return rs[0].insertId
 		}).catch(async err => {
 			// if (err) {
@@ -182,14 +183,16 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 						console.log(e)
 					})
 					// SEND MESSAGE TO EVENT BROKER device.type_id, device.reg_id, device.id
-					this.sendMessage(`v1/event/data/${device.type_id}/${device.reg_id}/${device.id}`, sNormalized)
+					normalized.sentiEventDeviceName = device.name
+					this.sendMessage(`v1/event/data/${device.type_id}/${device.reg_id}/${device.id}`, JSON.stringify(normalized))
 				}
 				else {
 					await mysqlConn.query(insDataClean, [sData, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
 						console.log(e)
 					})
 					// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
-					this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sData)
+					pData.sentiEventDeviceName = device.name
+					this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, JSON.stringify(pData))
 				}
 			}
 		}
@@ -208,6 +211,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			let [registry] = await mysqlConn.query(getRegistry, [regName])
 			console.log(registry)
 			if (registry[0]) {
+				// ADD REG TO ACL
 				if (!Array.isArray(pData)) {
 					await this.storeDeviceData(pData, registry, customerID, regName)
 				}
@@ -274,7 +278,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 							await mysqlConn.query(insDataClean, [sNormalized, normalized.time ? dateFormatter(normalized.time) : dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => {
 								console.log('INSERTED CLEAN DATA', sNormalized)
 								// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
-								this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sNormalized)
+								normalized.sentiEventDeviceName = device[0].name
+								this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, JSON.stringify(normalized))
 								console.log(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`)
 							}).catch(e => {
 								console.log(e)
@@ -287,7 +292,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 								console.log(e)
 							})
 							// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
-							this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, sData)
+							pData.sentiEventDeviceName = device[0].name
+							this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, JSON.stringify(pData))
 
 						}
 				return true
