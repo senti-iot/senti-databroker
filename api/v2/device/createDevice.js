@@ -12,7 +12,7 @@ const sentiDeviceService = require('../../../lib/device/sentiDeviceService')
 const deviceService = new sentiDeviceService(mysqlConn)
 const sentiRegistryService = require('../../../lib/registry/sentiRegistryDataService')
 const registryService = new sentiRegistryService(mysqlConn)
-const sentiDeviceTypeService = require('../../../lib/deviceType/sentiDeviceTypeDataService')
+const sentiDeviceTypeService = require('../../../lib/deviceType/sentiDeviceTypeService')
 const deviceTypeService = new sentiDeviceTypeService(mysqlConn)
 
 router.post('/v2/device', async (req, res) => {
