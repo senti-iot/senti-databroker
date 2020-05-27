@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const { aclClient, authClient } = require('../../../server')
+const { sentiAclPriviledge, sentiAclResourceType } = require('senti-apicore')
 
 var mysqlConn = require('../../../mysql/mysql_handler')
 
