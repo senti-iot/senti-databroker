@@ -73,6 +73,9 @@ const getDTs = require('./api/deviceType/getDeviceTypes')
 const updateDT = require('./api/deviceType/updateDeviceType')
 const createDT = require('./api/deviceType/createDeviceType')
 const deleteDT = require('./api/deviceType/deleteDeviceType')
+// V2
+const getDeviceTypeV2 = require('./api/v2/devicetype/getDeviceType')
+
 //#endregion
 
 //#region Device Data
@@ -102,6 +105,7 @@ app.use(cors())
 
 // V2 USE
 app.use([getDeviceV2, getDevicesV2, createDeviceV2])
+app.use([getDeviceTypeV2])
 // app.use([getRegistryV2])
 app.use([getWaterworksV2])
 app.use([climaidInsightV2])
