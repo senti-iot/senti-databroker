@@ -66,8 +66,9 @@ router.post('/v2/registry', async (req, res) => {
 			return res.status(500).json(registry)
 		}
 	}
-	catch (e) {
-		res.status(500).json(e)
+
+	catch (error) {
+		res.status(500).json(error.message)
 	}
 })
 
