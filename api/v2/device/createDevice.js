@@ -21,7 +21,7 @@ router.post('/v2/device', async (req, res) => {
 		res.status(401).json()
 		return
 	}
-	requestDevice = new RequestDevice(req.body)
+	let requestDevice = new RequestDevice(req.body)
 	let access = await aclClient.testPrivileges(lease.uuid, requestDevice.regUUID, [sentiAclPriviledge.device.create, sentiAclPriviledge.registry.modify])
 	if (access.allowed === false) {
 		res.status(403).json()
