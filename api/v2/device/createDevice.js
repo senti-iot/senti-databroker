@@ -10,7 +10,7 @@ const RequestDevice = require('../../../lib/device/dataClasses/RequestDevice')
 
 const sentiDeviceService = require('../../../lib/device/sentiDeviceService')
 const deviceService = new sentiDeviceService(mysqlConn)
-const sentiRegistryService = require('../../../lib/registry/sentiRegistryDataService')
+const sentiRegistryService = require('../../../lib/registry/sentiRegistryService')
 const registryService = new sentiRegistryService(mysqlConn)
 const sentiDeviceTypeService = require('../../../lib/deviceType/sentiDeviceTypeService')
 const deviceTypeService = new sentiDeviceTypeService(mysqlConn)
@@ -21,7 +21,7 @@ router.post('/v2/device', async (req, res) => {
 		res.status(401).json()
 		return
 	}
-	requestDevice = new RequestDevice(req.body)
+	let requestDevice = new RequestDevice(req.body)
 	let access = await aclClient.testPrivileges(lease.uuid, requestDevice.regUUID, [sentiAclPriviledge.device.create, sentiAclPriviledge.registry.modify])
 	if (access.allowed === false) {
 		res.status(403).json()

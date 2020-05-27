@@ -62,7 +62,7 @@ function cleanUpSpecialChars(str) {
 		.replace(/[øØ]/g, "ou")
 		.replace(/[æÆ]/g, "ae")
 		.replace(/[åÅ]/g, "aa")
-		.replace(/[^a-z0-9]/gi, '-'); // final clean up
+		.replace(/[^a-z0-9]/gi, '-') // final clean up
 }
 
 class StoreMqttHandler extends MqttHandler {
@@ -92,13 +92,13 @@ class StoreMqttHandler extends MqttHandler {
 			mysqlConn.query(createMetaDataQuery, mtdArr).then(r => {
 				console.log('Device Metadata Created', r[0].insertId)
 			}).catch(err => {
-				console.log("error: ", err);
+				console.log("error: ", err)
 
 			})
 			return rs[0].insertId
 		}).catch(async err => {
 			// if (err) {
-			console.log("error: ", err);
+			console.log("error: ", err)
 		})
 	}
 	async getDevice(customerID, deviceName, regName) {
@@ -162,7 +162,7 @@ class StoreMqttHandler extends MqttHandler {
 			 */
 			let lastId = null
 			await mysqlConn.query(insDeviceDataQuery, [sData, dateFormatter(pData.time), sData, customerID, deviceName, regName]).then(([res]) => {
-				lastId = res.insertId;
+				lastId = res.insertId
 			})
 			/**
 			 * Device Data Clean Table insertion and CloudFunctions process
@@ -174,7 +174,7 @@ class StoreMqttHandler extends MqttHandler {
 						'/',
 						{ nIds: device.cloudfunctions.map(n => n.nId), data: { ...pData, ...device.metadata } })
 						.then(rs => {
-							console.log('EngineAPI Response:', rs.status, rs.data);
+							console.log('EngineAPI Response:', rs.status, rs.data)
 							return rs.ok ? rs.data : null
 						})
 
@@ -197,7 +197,7 @@ class StoreMqttHandler extends MqttHandler {
 			console.log('STORING DATA BY REGISTRY')
 			console.log(regName, customerID)
 			let pData = JSON.parse(data)
-			console.log(pData)
+			// console.log(pData)
 
 			/**
 			 * Get the registry
@@ -228,7 +228,7 @@ class StoreMqttHandler extends MqttHandler {
 			console.log(deviceName, regName, customerID)
 			let pData = JSON.parse(data)
 			let sData = JSON.stringify(pData)
-			console.log(pData)
+			// console.log(pData)
 
 			let shaString = SHA2['SHA-256'](sData).toString('hex')
 
@@ -250,7 +250,7 @@ class StoreMqttHandler extends MqttHandler {
 			}
 			let lastId = null
 			await mysqlConn.query(insDeviceDataQuery, [sData, dateFormatter(pData.time), sData, customerID, deviceName, regName]).then(([res]) => {
-				lastId = res.insertId;
+				lastId = res.insertId
 			})
 			if (device.length > 0) {
 				if (device[0].communication)
@@ -260,7 +260,7 @@ class StoreMqttHandler extends MqttHandler {
 							normalized = await engineAPI.post('/',
 								{ nIds: device[0].cloudfunctions.map(n => n.nId), data: { ...pData, ...device[0].metadata } })
 								.then(rs => {
-									console.log('EngineAPI Response:', rs.status, rs.data);
+									console.log('EngineAPI Response:', rs.status, rs.data)
 									return rs.ok ? rs.data : null
 								})
 							console.log(normalized.time, moment.unix(pData.time).isValid())
