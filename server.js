@@ -63,6 +63,7 @@ const createReg = require('./api/registry/createRegistry')
 const updateReg = require('./api/registry/updateRegistry')
 const deleteReg = require('./api/registry/deleteRegistry')
 // V2
+const createRegistryV2 = require('./api/v2/registry/createRegistry')
 // const getRegistryV2 = require('./api/v2/registry/getRegistry')
 
 //#endregion
@@ -101,8 +102,15 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cors())
 
 // V2 USE
+/**
+ * Devices
+ */
 app.use([getDeviceV2, getDevicesV2, createDeviceV2])
 // app.use([getRegistryV2])
+/**
+ * Registries
+ */
+app.use([createRegistryV2])
 app.use([getWaterworksV2])
 app.use([climaidInsightV2])
 
@@ -119,7 +127,7 @@ const HotMess = require('./api/DONOTRUN/SERIOUSLYDONT')
 
 app.use([HotMess])
 
-var allRoutes = require('./api/logging/routeLogging');
+var allRoutes = require('./api/logging/routeLogging')
 
 const startAPIServer = () => {
 	console.clear()
