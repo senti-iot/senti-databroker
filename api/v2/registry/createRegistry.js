@@ -25,7 +25,7 @@ router.post('/v2/registry', async (req, res) => {
 	 * Check if the user has access to create registries and modify orgs to insert registry
 	 */
 
-	let access = await aclClient(testPrivileges(lease.uuid, requestRegistry.orgUUID, [sentiAclPriviledge.registry.create, sentiAclPriviledge.organisation.modify]))
+	let access = await aclClient.testPrivileges(lease.uuid, requestRegistry.orgUUID, [sentiAclPriviledge.registry.create, sentiAclPriviledge.organisation.modify])
 	if (access.allowed === false) {
 		res.status(403).json()
 		return
