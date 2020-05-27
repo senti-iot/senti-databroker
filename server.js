@@ -46,9 +46,9 @@ const updateDevice = require('./api/device/updateDevice')
 const createDevice = require('./api/device/createDevice')
 const deleteDevice = require('./api/device/deleteDevice')
 // V2
-// const getDeviceV2 = require('./api/v2/device/getDevice')
-// const getDevicesV2 = require('./api/v2/device/getDevices')
-// const createDeviceV2 = require('./api/v2/device/createDevice')
+const getDeviceV2 = require('./api/v2/device/getDevice')
+const getDevicesV2 = require('./api/v2/device/getDevices')
+const createDeviceV2 = require('./api/v2/device/createDevice')
 
 const getWaterworksV2 = require('./api/v2/waterworks/waterworks')
 const climaidInsightV2 = require('./api/v2/climaidInsight/climaidInsight')
@@ -101,7 +101,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cors())
 
 // V2 USE
-// app.use([getDeviceV2, getDevicesV2, createDeviceV2])
+app.use([getDeviceV2, getDevicesV2, createDeviceV2])
 // app.use([getRegistryV2])
 app.use([getWaterworksV2])
 app.use([climaidInsightV2])
