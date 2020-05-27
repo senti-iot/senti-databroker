@@ -45,6 +45,8 @@ router.post('/v2/registry', async (req, res) => {
 		 */
 		let registry = await registryService.createRegistry(requestRegistry)
 
+		let aclOrgResources = sentiDataCore.getAclOrgResourcesOnName(requestRegistry.orgId)
+
 		if (registry) {
 			/**
 			 * Register the new registry with the ACL
@@ -53,7 +55,7 @@ router.post('/v2/registry', async (req, res) => {
 			/**
 			 * Tie the registry to its organisation
 			 */
-			await aclClient.addResourceToParent(registry.uuid, requestRegistry.org.uuid)
+			await aclClient.addResourceToParent(registry.uuid, aclOrgResources['devices'].uuid) // use the aclOrgResource for devices aclOrgResources['devices'].uuid instead of requestRegistry.org.uuid
 			/**
 			 * Return the new registry
 			 */
