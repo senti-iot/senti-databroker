@@ -10,7 +10,7 @@ const RequestDevice = require('../../../lib/device/dataClasses/RequestDevice')
 
 const sentiDeviceService = require('../../../lib/device/sentiDeviceService')
 const deviceService = new sentiDeviceService(mysqlConn)
-const sentiRegistryService = require('../../../lib/registry/sentiRegistryDataService')
+const sentiRegistryService = require('../../../lib/registry/sentiRegistryService')
 const registryService = new sentiRegistryService(mysqlConn)
 const sentiDeviceTypeService = require('../../../lib/deviceType/sentiDeviceTypeService')
 const deviceTypeService = new sentiDeviceTypeService(mysqlConn)

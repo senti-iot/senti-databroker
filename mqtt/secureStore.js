@@ -5,7 +5,7 @@ const asyncForEach = require('../utils/asyncForEach')
 // const logService = require('../server').logService
 const moment = require('moment')
 const SHA2 = require('sha2')
-const uuidv4 = require('uuid/v4');
+const uuidv4 = require('uuid/v4')
 
 const format = 'YYYY-MM-DD HH:mm:ss'
 const dateFormatter = (date) => {
@@ -73,7 +73,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				this.storeDataByDevice(message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] })
 			}
 			if (arr.length === 7) {
-				console.log(arr)
+				// console.log(arr)
 				this.storeDataByRegistry(message.toString(), { regName: arr[5], customerID: arr[1] })
 			}
 		})
@@ -91,14 +91,14 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			await mysqlConn.query(createMetaDataQuery, mtdArr).then(r => {
 				console.log('Device Metadata Created', r[0].insertId)
 			}).catch(err => {
-				console.log("error: ", err);
+				console.log("error: ", err)
 
 			})
 			// ADD DEVICE TO ACL
 			return rs[0].insertId
 		}).catch(async err => {
 			// if (err) {
-			console.log("error: ", err);
+			console.log("error: ", err)
 		})
 	}
 	async getDevice(customerID, deviceName, regName) {
@@ -162,7 +162,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			 */
 			let lastId = null
 			await mysqlConn.query(insDeviceDataQuery, [sData, dateFormatter(pData.time), sData, customerID, deviceName, regName]).then(([res]) => {
-				lastId = res.insertId;
+				lastId = res.insertId
 			})
 			/**
 			 * Device Data Clean Table insertion and CloudFunctions process
@@ -174,7 +174,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 						'/',
 						{ nIds: device.cloudfunctions.map(n => n.nId), data: { ...pData, ...device.metadata } })
 						.then(rs => {
-							console.log('EngineAPI Response:', rs.status, rs.data);
+							console.log('EngineAPI Response:', rs.status, rs.data)
 							return rs.ok ? rs.data : null
 						})
 
@@ -203,13 +203,13 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			console.log('STORING DATA BY REGISTRY')
 			console.log(regName, customerID)
 			let pData = JSON.parse(data)
-			console.log(pData)
+			// console.log(pData)
 
 			/**
 			 * Get the registry
 			 */
 			let [registry] = await mysqlConn.query(getRegistry, [regName])
-			console.log(registry)
+			// console.log(registry)
 			if (registry[0]) {
 				// ADD REG TO ACL
 				if (!Array.isArray(pData)) {
@@ -236,7 +236,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			console.log(deviceName, regName, customerID)
 			let pData = JSON.parse(data)
 			let sData = JSON.stringify(pData)
-			console.log(pData)
+			// console.log(pData)
 
 			let shaString = SHA2['SHA-256'](sData).toString('hex')
 
@@ -258,7 +258,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			}
 			let lastId = null
 			await mysqlConn.query(insDeviceDataQuery, [sData, dateFormatter(pData.time), sData, customerID, deviceName, regName]).then(([res]) => {
-				lastId = res.insertId;
+				lastId = res.insertId
 			})
 			if (device.length > 0) {
 				if (device[0].communication)
@@ -268,7 +268,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 							normalized = await engineAPI.post('/',
 								{ nIds: device[0].cloudfunctions.map(n => n.nId), data: { ...pData, ...device[0].metadata } })
 								.then(rs => {
-									console.log('EngineAPI Response:', rs.status, rs.data);
+									console.log('EngineAPI Response:', rs.status, rs.data)
 									return rs.ok ? rs.data : null
 								})
 							console.log(normalized.time, moment.unix(pData.time).isValid())
