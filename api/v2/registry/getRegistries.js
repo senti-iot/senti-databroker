@@ -3,7 +3,7 @@ const router = express.Router()
 
 var mysqlConn = require('../../../mysql/mysql_handler')
 
-const { sentiAclPriviledge } = require('senti-apicore')
+const { sentiAclPriviledge, sentiAclResourceType } = require('senti-apicore')
 const { aclClient, authClient } = require('../../../server')
 
 const sentiRegistryService = require('../../../lib/registry/sentiRegistryService')
@@ -23,13 +23,9 @@ router.get('/v2/registries', async (req, res) => {
 	/**
 	 * Return all resources the user has access
 	 */
-	let resources = await aclClient.findResources(lease.uuid, '00000000-0000-0000-0000-000000000000', sentiAclPriviledge.registry, sentiAclPriviledge.registry.read)
+	let resources = await aclClient.findResources(lease.uuid, '00000000-0000-0000-0000-000000000000', sentiAclResourceType.registry, sentiAclPriviledge.registry.read)
 	if (resources.length === 0) {
-		/**
-		 * @TODO Why it is 404 and not 200 ?
-		 * @Mikkel
-		 */
-		res.status(200).json([])
+		res.status(404).json([])
 		return
 	}
 	/**
