@@ -33,7 +33,7 @@ router.post('/v2/devicetype', async (req, res) => {
 	}
 	requestDeviceType.orgId = await databrokerCoreService.getOrganisationIdByUUID(requestDeviceType.orgUUID)
 	let deviceType = await deviceTypeService.createDeviceType(requestDeviceType)
-	let aclOrgResources = databrokerCoreService.getAclOrgResourcesOnName(requestDeviceType.orgId)
+	let aclOrgResources = await databrokerCoreService.getAclOrgResourcesOnName(requestDeviceType.orgId)
 	// console.log(requestDevice)
 	await aclClient.registerResource(deviceType.uuid, sentiAclResourceType.deviceType)
 	await aclClient.addResourceToParent(deviceType.uuid, aclOrgResources['devices'].uuid)

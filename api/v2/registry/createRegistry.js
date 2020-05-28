@@ -44,7 +44,6 @@ router.post('/v2/registry', async (req, res) => {
 		 * Create the Registry
 		 */
 		let registry = await registryService.createRegistry(requestRegistry)
-
 		let aclOrgResources = await sentiDataCore.getAclOrgResourcesOnName(requestRegistry.orgId)
 
 		if (registry) {
