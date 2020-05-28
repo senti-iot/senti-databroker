@@ -75,7 +75,7 @@ const updateDT = require('./api/deviceType/updateDeviceType')
 const createDT = require('./api/deviceType/createDeviceType')
 const deleteDT = require('./api/deviceType/deleteDeviceType')
 // V2
-const getDeviceTypeV2 = require('./api/v2/devicetype/getDeviceType')
+// const getDeviceTypeV2 = require('./api/v2/devicetype/getDeviceType')
 
 //#endregion
 
@@ -109,7 +109,7 @@ app.use(cors())
  * Devices
  */
 app.use([getDeviceV2, getDevicesV2, createDeviceV2])
-app.use([getDeviceTypeV2])
+// app.use([getDeviceTypeV2])
 // app.use([getRegistryV2])
 /**
  * Registries
