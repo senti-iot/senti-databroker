@@ -65,6 +65,7 @@ const deleteReg = require('./api/registry/deleteRegistry')
 // V2
 const createRegistryV2 = require('./api/v2/registry/createRegistry')
 const getRegistryV2 = require('./api/v2/registry/getRegistry')
+const getRegistriesV2 = require('./api/v2/registry/getRegistries')
 
 //#endregion
 
@@ -114,7 +115,7 @@ app.use([getDeviceV2, getDevicesV2, createDeviceV2])
 /**
  * Registries
  */
-app.use([createRegistryV2, getRegistryV2])
+app.use([createRegistryV2, getRegistryV2, getRegistriesV2])
 app.use([getWaterworksV2])
 app.use([climaidInsightV2])
 
