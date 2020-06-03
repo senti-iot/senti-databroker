@@ -12,16 +12,14 @@ const registryService = new sentiRegistryService(mysqlConn)
 const sentiDatabrokerCoreService = require('../../../lib/databrokerCore/sentiDatabrokerCoreService')
 const sentiDataCore = new sentiDatabrokerCoreService(mysqlConn)
 
-router.put('/v2/registry/:uuid', async (req, res) => {
+router.put('/v2/registry', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
-		res.statusMessage = 'Access denied'
 		return res.status(401).json()
 	}
 	let requestRegistry = new RequestRegistry(req.body)
 	let access = await aclClient.testPrivileges(lease.uuid, requestRegistry.org.uuid, [sentiAclPriviledge.registry.modify, sentiAclPriviledge.organisation.modify])
 	if (access.allowed === false) {
-		res.statusMessage = 'Insufficient Privileges'
 		return res.status(403).json()
 	}
 	let registry = await registryService.getDbRegistryByUUID(requestRegistry.uuid)
@@ -46,7 +44,10 @@ router.put('/v2/registry/:uuid', async (req, res) => {
 	}
 
 	let updReg = registry.assignDiff(requestRegistry)
+	console.log('[Registry] updReg', updReg)
+	// console.log(updReg)
 	let result = registryService.updateRegistry(updReg)
+	console.log('[Registry] result', result)
 	if (result) {
 		return res.status(200).json(result)
 	}
