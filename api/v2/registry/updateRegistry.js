@@ -30,8 +30,8 @@ router.put('/v2/registry', async (req, res) => {
 	/**
 	 * Update ACL
 	 */
-	let newOrg = sentiDataCore.getDbOrganisationByUUID(requestRegistry.org.uuid)
-	let oldOrg = sentiDataCore.getDbOrganisationById(registry.orgId)
+	let newOrg = await sentiDataCore.getDbOrganisationByUUID(requestRegistry.org.uuid)
+	let oldOrg = await sentiDataCore.getDbOrganisationById(registry.orgId)
 	/**
 	 * If the orgs are different
 	 */
