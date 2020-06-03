@@ -42,7 +42,9 @@ router.put('/v2/registry', async (req, res) => {
 
 		await aclClient.removeResourceFromParent(registry.uuid, oldOrgAclResources['devices'].uuid)
 		await aclClient.addResourceToParent(registry.uuid, newOrgAclResources['devices'].uuid)
+		console.log(registry.orgId)
 		requestRegistry.orgId = newOrg.id
+		console.log(requestRegistry.orgId)
 	}
 
 	registry.assignDiff(requestRegistry)
