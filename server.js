@@ -128,9 +128,8 @@ app.use([getMessages, getDeviceData, getDataExternal,
 	getOrg])
 
 //DEV DO NOT UNCOMMENT
-const HotMess = require('./api/DONOTRUN/SERIOUSLYDONT')
-
-app.use([HotMess])
+// const HotMess = require('./api/DONOTRUN/SERIOUSLYDONT')
+// app.use([HotMess])
 
 var allRoutes = require('./api/logging/routeLogging')
 
