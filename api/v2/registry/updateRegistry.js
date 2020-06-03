@@ -45,7 +45,8 @@ router.put('/v2/registry/:uuid', async (req, res) => {
 		await aclClient.addResourceToParent(registry.uuid, newOrgAclResources['devices'].uuid)
 	}
 
-	let result = registryService.updateRegistry(registry)
+	let updReg = registry.assignDiff(requestRegistry)
+	let result = registryService.updateRegistry(updReg)
 	if (result) {
 		return res.status(200).json(result)
 	}
