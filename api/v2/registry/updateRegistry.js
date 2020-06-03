@@ -26,6 +26,7 @@ router.put('/v2/registry', async (req, res) => {
 	if (!registry) {
 		return res.status(404).json()
 	}
+	console.log('[Registry]', registry)
 	/**
 	 * Update ACL
 	 */
@@ -46,7 +47,7 @@ router.put('/v2/registry', async (req, res) => {
 	let updReg = registry.assignDiff(requestRegistry)
 	console.log('[Registry] updReg', updReg)
 	// console.log(updReg)
-	let result = registryService.updateRegistry(updReg)
+	let result = await registryService.updateRegistry(updReg)
 	console.log('[Registry] result', result)
 	if (result) {
 		return res.status(200).json(result)
