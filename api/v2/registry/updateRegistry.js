@@ -35,6 +35,8 @@ router.put('/v2/registry', async (req, res) => {
 	/**
 	 * If the orgs are different
 	 */
+	console.log("newOrg", newOrg)
+	console.log("oldOrg", oldOrg)
 	if (newOrg.uuid !== oldOrg.uuid) {
 		console.log('Update registry ownership')
 		let newOrgAclResources = await sentiDataCore.getAclOrgResourcesOnName(newOrg.id)
