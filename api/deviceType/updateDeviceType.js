@@ -43,16 +43,16 @@ router.post('/:version/devicetype', async (req, res, next) => {
 					if (DTQ[0].length !== 0) {
 
 						let values = [data.custHash,
-						data.name, data.description, JSON.stringify(data.inbound),
-						JSON.stringify(data.outbound), JSON.stringify(data.metadata), dtId]
+							data.name, data.description, JSON.stringify(data.inbound),
+							JSON.stringify(data.outbound), JSON.stringify(data.metadata), dtId]
 
 						mysqlConn.query(queryUpdateDT, values)
 							.then(async (result) => {
 								let [newDtq] = await mysqlConn.query(findDevQ, dtId)
-								res.status(200).json(newDtq[0]);
+								res.status(200).json(newDtq[0])
 							})
 							.catch(err => {
-								console.log("error: ", err);
+								console.log("error: ", err)
 								res.status(404).json({
 									err: err,
 									// sql: mysqlConn.format(queryUpdateDT, values)
@@ -60,11 +60,11 @@ router.post('/:version/devicetype', async (req, res, next) => {
 							})
 					}
 					else {
-						console.log("error");
+						console.log("error")
 						res.status(404).json(null)
 					}
 				}).catch(err => {
-					console.log("error: ", err);
+					console.log("error: ", err)
 					res.status(404).json(err)
 				})
 
