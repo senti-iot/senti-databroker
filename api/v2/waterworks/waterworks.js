@@ -6,6 +6,7 @@ var mysqlConn = require('../../../mysql/mysql_handler')
 const { sentiAclPriviledge, sentiAclResourceType } = require('senti-apicore')
 const authClient = require('../../../server').authClient
 const aclClient = require('../../../server').aclClient
+const secureMqttClient = require('../../../server').secureMqttClient
 
 const sentiDeviceService = require('../../../lib/device/sentiDeviceService')
 const deviceService = new sentiDeviceService(mysqlConn)
@@ -840,7 +841,7 @@ router.get('/v2/waterworks/alarm/threshold/:orguuid', async (req, res) => {
 		 INNER JOIN deviceDataClean DC2 ON DC2.id=lid
 	) tttt;`
 	let rs = await mysqlConn.query(select, [req.params.orguuid])
-	
+	secureMqttClient.sendMessage('v1/event/treshold/123', JSON.stringify(rs[0]))
 	res.status(200).json(rs[0])
 })
 /*
