@@ -841,7 +841,12 @@ router.get('/v2/waterworks/alarm/threshold/:orguuid', async (req, res) => {
 		 INNER JOIN deviceDataClean DC2 ON DC2.id=lid
 	) tttt;`
 	let rs = await mysqlConn.query(select, [req.params.orguuid])
-	secureMqttClient.sendMessage('v1/event/treshold/123', JSON.stringify(rs[0]))
+
+	await Promise.all(rs[0].map(async ([, flowData]) => {
+		secureMqttClient.sendMessage('v1/event/treshold/123', JSON.stringify(flowData))
+	}))
+
+	// secureMqttClient.sendMessage('v1/event/treshold/123', JSON.stringify(rs[0]))
 	res.status(200).json(rs[0])
 })
 /*
