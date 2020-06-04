@@ -812,11 +812,11 @@ router.post('/v2/waterworks/data/benchmark/:from/:to', async (req, res) => {
 	// res.status(200).json(rs[0])
 })
 router.get('/v2/waterworks/alarm/threshold/:orguuid', async (req, res) => {
-	// let lease = await authClient.getLease(req)
-	// if (lease === false) {
-	// 	res.status(401).json()
-	// 	return
-	// }
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
 	let select = `SELECT tttt.device_id, (vol2-vol1)*3600/timeDiff AS flowPerHour, ((vol2-vol1)*3600/timeDiff)*24 AS flowPerDay, latest, earlier
 	FROM (
 		SELECT DC1.device_id, DC2.data->'$.volume' AS vol2,  DC1.data->'$.volume' AS vol1, timestampdiff(SECOND, earlier, latest) AS timeDiff, latest, earlier, eid, lid
@@ -841,8 +841,9 @@ router.get('/v2/waterworks/alarm/threshold/:orguuid', async (req, res) => {
 		 INNER JOIN deviceDataClean DC2 ON DC2.id=lid
 	) tttt;`
 	let rs = await mysqlConn.query(select, [req.params.orguuid])
-
+	console.log(rs[0].length)
 	await Promise.all(rs[0].map(async ([, flowData]) => {
+		console.log(flowData)
 		await secureMqttClient.sendMessage('v1/event/treshold/123', JSON.stringify(flowData))
 	}))
 
