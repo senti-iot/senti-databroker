@@ -37,6 +37,13 @@ const aclBackend = new sentiAclBackend(process.env.ACLBACKENDTURL)
 const aclClient = new sentiAclClient(aclBackend)
 module.exports.aclClient = aclClient
 
+//#region MQTT
+const SecureStoreMqttHandler = require('./mqtt/secureStore')
+const secureMqttClient = new SecureStoreMqttHandler(process.env.MQTT_HOST, process.env.MQTT_USER, process.env.MQTT_PASS, 'dataBroker')
+secureMqttClient.connect()
+module.exports.secureMqttClient = secureMqttClient
+//#endregion
+
 
 app.use('/', testing)
 //#region Device
@@ -153,9 +160,3 @@ const startAPIServer = () => {
 startAPIServer()
 
 //#endregion
-
-//#region MQTT
-
-const SecureStoreMqttHandler = require('./mqtt/secureStore')
-const secureMqttClient = new SecureStoreMqttHandler(process.env.MQTT_HOST, process.env.MQTT_USER, process.env.MQTT_PASS, 'dataBroker')
-secureMqttClient.connect()
