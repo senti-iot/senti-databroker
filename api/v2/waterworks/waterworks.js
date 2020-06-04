@@ -817,15 +817,15 @@ router.get('/v2/waterworks/alarm/threshold/:orguuid', async (req, res) => {
 		res.status(401).json()
 		return
 	}
-	let select = `SELECT tttt.device_id, (vol2-vol1)*3600/timeDiff AS flowPerHour, ((vol2-vol1)*3600/timeDiff)*24 AS flowPerDay, latest, earlier
+	let select = `SELECT tttt.device_id, (vol2-vol1)*3600/timeDiff AS flowPerHour, ((vol2-vol1)*3600/timeDiff)*24 AS flowPerDay, latest, earlier, sentiEventDeviceName
 	FROM (
-		SELECT DC1.device_id, DC2.data->'$.volume' AS vol2,  DC1.data->'$.volume' AS vol1, timestampdiff(SECOND, earlier, latest) AS timeDiff, latest, earlier, eid, lid
+		SELECT DC1.device_id, DC2.data->'$.volume' AS vol2,  DC1.data->'$.volume' AS vol1, timestampdiff(SECOND, earlier, latest) AS timeDiff, latest, earlier, eid, lid, namsentiEventDeviceNamee
 		FROM (
-			SELECT DC.device_id, MAX(DC.created) as earlier, tt.latest, tt.lid, MAX(DC.id) AS eid
+			SELECT DC.device_id, MAX(DC.created) as earlier, tt.latest, tt.lid, MAX(DC.id) AS eid, sentiEventDeviceName
 			FROM (
-				SELECT latest, date_sub(latest, INTERVAL 24 HOUR) AS deadline, date_sub(latest, INTERVAL 7 day) AS earliest, t.device_id, t.lid
+				SELECT latest, date_sub(latest, INTERVAL 24 HOUR) AS deadline, date_sub(latest, INTERVAL 7 day) AS earliest, t.device_id, t.lid, sentiEventDeviceName
 				FROM (
-					SELECT MAX(DC.created) AS latest, DC.device_id,MAX(DC.id) AS lid
+					SELECT MAX(DC.created) AS latest, DC.device_id,MAX(DC.id) AS lid, D.name as sentiEventDeviceName
 					FROM organisation O
 					INNER JOIN registry R ON R.orgId=O.id
 					INNER JOIN device D ON D.reg_id=R.id
@@ -842,7 +842,7 @@ router.get('/v2/waterworks/alarm/threshold/:orguuid', async (req, res) => {
 	) tttt;`
 	let rs = await mysqlConn.query(select, [req.params.orguuid])
 	rs[0].map(flowData => {
-		secureMqttClient.sendMessage(`v1/event/treshold/${flowData.device_id}`, JSON.stringify(flowData))
+		secureMqttClient.sendMessage(`v1/event/data/0/0/${flowData.device_id}`, JSON.stringify(flowData))
 	})
 	res.status(200).json(rs[0])
 })
