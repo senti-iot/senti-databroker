@@ -63,7 +63,6 @@ router.post('/v2/waterworks/adddevice/:deviceuuid/touser/:useruuid', async (req,
 	await aclClient.addPrivileges(req.params.useruuid, req.params.deviceuuid, [sentiAclPriviledge.device.read])
 	res.status(200).json()
 })
-
 router.get('/v2/waterworks/data/usage/:from/:to', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
@@ -811,4 +810,41 @@ router.post('/v2/waterworks/data/benchmark/:from/:to', async (req, res) => {
 	// let rs = await mysqlConn.query(select, [req.params.orguuid, req.params.from, req.params.to, req.params.orguuid, req.params.from, req.params.to])
 	// res.status(200).json(rs[0])
 })
+router.get('/v2/waterworks/alarm/threshold/:orguuid', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	let select = `SELECT tttt.device_id, (vol2-vol1)*3600/timeDiff AS flowPerHour, ((vol2-vol1)*3600/timeDiff)*24 AS flowPerDay, latest, earlier
+	FROM (
+		SELECT DC1.device_id, DC2.data->'$.volume' AS vol2,  DC1.data->'$.volume' AS vol1, timestampdiff(SECOND, earlier, latest) AS timeDiff, latest, earlier, eid, lid
+		FROM (
+			SELECT DC.device_id, MAX(DC.created) as earlier, tt.latest, tt.lid, MAX(DC.id) AS eid
+			FROM (
+				SELECT latest, date_sub(latest, INTERVAL 24 HOUR) AS deadline, date_sub(latest, INTERVAL 7 day) AS earliest, t.device_id, t.lid
+				FROM (
+					SELECT MAX(DC.created) AS latest, DC.device_id,MAX(DC.id) AS lid
+					FROM organisation O
+					INNER JOIN registry R ON R.orgId=O.id
+					INNER JOIN device D ON D.reg_id=R.id
+					INNER JOIN deviceDataClean DC ON DC.device_id=D.id AND DC.created> date_sub(NOW(), INTERVAL 3 DAY) AND NOT ISNULL(DC.data->'$.volume')
+					WHERE O.uuid = ?
+					GROUP BY DC.device_id
+				)t
+			) tt
+			INNER JOIN deviceDataClean DC ON DC.device_id=tt.device_id AND DC.created<tt.deadline AND DC.created >tt.earliest AND NOT ISNULL(DC.data->'$.volume')
+			GROUP BY DC.device_id
+		 ) ttt
+		 INNER JOIN deviceDataClean DC1 ON DC1.id=eid
+		 INNER JOIN deviceDataClean DC2 ON DC2.id=lid
+	) tttt;`
+	let rs = await mysqlConn.query(select, [req.params.orguuid])
+	
+	res.status(200).json(rs[0])
+})
+/*
+
+*/
+
 module.exports = router

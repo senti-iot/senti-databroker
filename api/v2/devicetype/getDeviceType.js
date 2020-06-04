@@ -10,21 +10,35 @@ const sentiDeviceTypeService = require('../../../lib/deviceType/sentiDeviceTypeS
 const deviceTypeService = new sentiDeviceTypeService(mysqlConn)
 
 router.get('/v2/devicetype/:uuid', async (req, res) => {
-	let lease = await authClient.getLease(req)
-	if (lease === false) {
-		res.status(401).json()
-		return
+	try {
+		/**
+		 * Check if the user is logged in and his lease is still good
+		 */
+		let lease = await authClient.getLease(req)
+		if (lease === false) {
+			res.status(401).json()
+			return
+		}
+		/**
+		 * Check if the user has access to the devicetype
+		 */
+		let access = await aclClient.testPrivileges(lease.uuid, req.params.uuid, [sentiAclPriviledge.deviceType.read])
+		if (access.allowed === false) {
+			res.status(403).json()
+			return
+		}
+		/**
+		 * Get the DeviceType
+		 */
+		let deviceType = await deviceTypeService.getDeviceTypeByUUID(req.params.uuid)
+		if (deviceType === false) {
+			res.status(404).json()
+			return
+		}
+		res.status(200).json(deviceType)
 	}
-	// let access = await aclClient.testPrivileges(lease.uuid, req.params.uuid, [sentiAclPriviledge.deviceType.read])
-	// if (access.allowed === false) {
-	// 	res.status(403).json()
-	// 	return
-	// }
-	let deviceType = await deviceTypeService.getDeviceTypeByUUID(req.params.uuid)
-	if (deviceType === false) {
-		res.status(404).json()
-		return
+	catch (error) {
+		res.status(500).json({ message: error.message, stack: error.stack })
 	}
-	res.status(200).json(deviceType)
 })
 module.exports = router
