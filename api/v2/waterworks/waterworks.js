@@ -817,7 +817,7 @@ router.get('/v2/waterworks/alarm/threshold/:orguuid', async (req, res) => {
 		res.status(401).json()
 		return
 	}
-	let select = `SELECT tttt.device_id, (vol2-vol1)*3600/timeDiff AS flowPerHour, ((vol2-vol1)*3600/timeDiff)*24 AS flowPerDay, latest, earlier, sentiEventDeviceName
+	let select = `SELECT tttt.device_id, (vol2-vol1)*3600/timeDiff AS flowPerHour, ((vol2-vol1)*3600/timeDiff)*24 AS flowPerDay, (((vol2-vol1)*3600/timeDiff)*24)*1000 AS flowLitersPerDay, latest, earlier, sentiEventDeviceName
 	FROM (
 		SELECT DC1.device_id, DC2.data->'$.volume' AS vol2,  DC1.data->'$.volume' AS vol1, timestampdiff(SECOND, earlier, latest) AS timeDiff, latest, earlier, eid, lid, sentiEventDeviceName
 		FROM (
