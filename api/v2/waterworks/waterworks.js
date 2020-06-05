@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+const moment = require('moment')
 
 var mysqlConn = require('../../../mysql/mysql_handler')
 
@@ -842,6 +843,7 @@ router.get('/v2/waterworks/alarm/threshold/:orguuid', async (req, res) => {
 	) tttt;`
 	let rs = await mysqlConn.query(select, [req.params.orguuid])
 	rs[0].map(flowData => {
+		flowData.latestFormat = moment(flowData.latest).format('DD/MM-YYYY HH:mm:ss')
 		secureMqttClient.sendMessage(`v1/event/data/0/0/${flowData.device_id}`, JSON.stringify(flowData))
 	})
 	res.status(200).json(rs[0])
