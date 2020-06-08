@@ -24,7 +24,6 @@
 			"error",
 			"tab",
 			{
-				"VariableDeclarator": 1,
 				"SwitchCase": 1,
 				"ignoredNodes": [
 					"TemplateLiteral"
