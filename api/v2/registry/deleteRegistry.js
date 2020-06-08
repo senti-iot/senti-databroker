@@ -12,7 +12,7 @@ const registryService = new sentiRegistryService(mysqlConn)
 const sentiDatabrokerCoreService = require('../../../lib/databrokerCore/sentiDatabrokerCoreService')
 const sentiDataCore = new sentiDatabrokerCoreService(mysqlConn)
 
-router.put('/v2/registry', async (req, res) => {
+router.delete('/v2/registry', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
 		return res.status(401).json()
