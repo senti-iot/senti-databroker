@@ -30,8 +30,9 @@ router.post('/v2/device', async (req, res) => {
 		}
 		requestDevice.reg_id = await registryService.getIdByUUID(requestDevice.registry.uuid)
 		requestDevice.type_id = await deviceTypeService.getIdByUUID(requestDevice.deviceType.uuid)
-		
+
 		let device = await deviceService.createDevice(requestDevice)
+		console.log('device', device)
 		await aclClient.registerResource(device.uuid, sentiAclResourceType.device)
 		await aclClient.addResourceToParent(device.uuid, requestDevice.registry.uuid)
 		res.status(200).json(await deviceService.getDeviceById(device.id))
