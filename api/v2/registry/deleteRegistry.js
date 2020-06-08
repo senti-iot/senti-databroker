@@ -38,7 +38,7 @@ router.delete('/v2/registry', async (req, res) => {
 	/**
 	 * Update ACL
 	 */
-	let oldOrg = await sentiDataCore.getDbOrganisationById(registry.orgId)
+	let oldOrg = await sentiDataCore.getDbOrganisationByUUID(registry.org.uuid)
 
 	/**
 	 * If the orgs are different
