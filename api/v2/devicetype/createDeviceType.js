@@ -26,7 +26,7 @@ router.post('/v2/devicetype', async (req, res) => {
 		/**
 		 * Create the DeviceType obj from the body request
 		 */
-		requestDeviceType = new RequestDeviceType(req.body)
+		let requestDeviceType = new RequestDeviceType(req.body)
 		/**
 		 * Check if the user has access to create devicetypes in the requested Organisation
 		 */
