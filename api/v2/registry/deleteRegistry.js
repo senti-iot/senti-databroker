@@ -38,15 +38,15 @@ router.delete('/v2/registry', async (req, res) => {
 	/**
 	 * Update ACL
 	 */
-	let oldOrg = await sentiDataCore.getDbOrganisationByUUID(registry.org.uuid)
+	let org = await sentiDataCore.getDbOrganisationByUUID(registry.org.uuid)
 
 	/**
-	 * If the orgs are different
+	 * If there is an org
 	 */
-	if (oldOrg.uuid) {
-		console.log('Update registry ownership')
-		let oldOrgAclResources = await sentiDataCore.getAclOrgResourcesOnName(oldOrg.id)
-		let hasDevices = await aclClient.findResources(registry.uuid, oldOrgAclResources['devices'].uuid)
+	if (org.uuid) {
+		console.log('Delete registry')
+		let orgAclResources = await sentiDataCore.getAclOrgResourcesOnName(org.id)
+		let hasDevices = await aclClient.findResources(registry.uuid, orgAclResources['devices'].uuid)
 		console.log('hasDevices', hasDevices)
 		// await aclClient.removeResourceFromParent(registry.uuid, oldOrgAclResources['devices'].uuid)
 	}
