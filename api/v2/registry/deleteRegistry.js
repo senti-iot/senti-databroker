@@ -24,6 +24,7 @@ router.delete('/v2/registry', async (req, res) => {
 	/**
 	 * Check if the user has access to the registry
 	 */
+	console.log(requestRegistry)
 	let access = await aclClient.testPrivileges(lease.uuid, requestRegistry.org.uuid, [sentiAclPriviledge.registry.delete, sentiAclPriviledge.organisation.modify])
 	if (access.allowed === false) {
 		return res.status(403).json()
