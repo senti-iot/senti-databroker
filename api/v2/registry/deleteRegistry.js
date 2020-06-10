@@ -9,8 +9,8 @@ const RequestRegistry = require('../../../lib/registry/dataClasses/RequestRegist
 
 const sentiRegistryService = require('../../../lib/registry/sentiRegistryService')
 const registryService = new sentiRegistryService(mysqlConn)
-const sentiDatabrokerCoreService = require('../../../lib/databrokerCore/sentiDatabrokerCoreService')
-const sentiDataCore = new sentiDatabrokerCoreService(mysqlConn)
+// const sentiDatabrokerCoreService = require('../../../lib/databrokerCore/sentiDatabrokerCoreService')
+// const sentiDataCore = new sentiDatabrokerCoreService(mysqlConn)
 
 router.delete('/v2/registry', async (req, res) => {
 	let lease = await authClient.getLease(req)
@@ -37,24 +37,23 @@ router.delete('/v2/registry', async (req, res) => {
 	if (!registry) {
 		return res.status(404).json()
 	}
+
 	/**
 	 * Update ACL
 	 */
-	let org = await sentiDataCore.getDbOrganisationById(registry.orgId)
 
 	/**
 	 * If there is an org
 	 */
-	if (org.uuid) {
-		console.log('Delete registry')
-		let orgAclResources = await sentiDataCore.getAclOrgResourcesOnName(org.id)
-		let hasDevices = await aclClient.findResources(registry.uuid, orgAclResources['devices'].uuid)
-		console.log('hasDevices', hasDevices)
-		// await aclClient.removeResourceFromParent(registry.uuid, oldOrgAclResources['devices'].uuid)
-	}
+	console.log('Delete registry')
+	// let hasDevices = await aclClient.findResources(registry.uuid, orgAclResources['devices'].uuid)
+	// console.log('hasDevices', hasDevices)
+	// await aclClient.removeResourceFromParent(registry.uuid, orgAclResources['devices'].uuid)
 
-	// let result = await registryService.deleteRegistry(registry)
-	let result = false
+
+	let result = await registryService.deleteRegistry(registry)
+	await aclClient.deleteResource(registry.uuid)
+	// let result = false
 	console.log('[Registry] result', result)
 	if (result) {
 		return res.status(200).json(result)
