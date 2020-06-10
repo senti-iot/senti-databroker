@@ -33,13 +33,14 @@ router.delete('/v2/registry', async (req, res) => {
 	 * Get the Registry from the DB
 	 */
 	let registry = await registryService.getDbRegistryByUUID(requestRegistry.uuid)
+	console.log(registry)
 	if (!registry) {
 		return res.status(404).json()
 	}
 	/**
 	 * Update ACL
 	 */
-	let org = await sentiDataCore.getDbOrganisationByUUID(registry.org.uuid)
+	let org = await sentiDataCore.getDbOrganisationById(registry.orgId)
 
 	/**
 	 * If there is an org
