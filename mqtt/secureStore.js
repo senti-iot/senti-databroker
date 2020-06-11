@@ -67,13 +67,13 @@ const selectDeviceType = `SELECT * from deviceType where id=?`
 class SecureStoreMqttHandler extends SecureMqttHandler {
 	init() {
 		this.topics = ['v1/+/location/+/registries/+/devices/+/publish', 'v1/+/location/+/registries/+/publish']
+		// this.topics = ['v2/test']
 		this.mqttClient.on('message', (topic, message) => {
 			let arr = topic.split('/')
 			if (arr.length === 9 && arr.indexOf('devices' > -1)) {
 				this.storeDataByDevice(message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] })
 			}
 			if (arr.length === 7) {
-				// console.log(arr)
 				this.storeDataByRegistry(message.toString(), { regName: arr[5], customerID: arr[1] })
 			}
 		})
@@ -92,7 +92,6 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				console.log('Device Metadata Created', r[0].insertId)
 			}).catch(err => {
 				console.log("error: ", err)
-
 			})
 			// ADD DEVICE TO ACL
 			return rs[0].insertId
@@ -102,20 +101,74 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		})
 	}
 	async getDevice(customerID, deviceName, regName) {
+		// console.log(await mysqlConn.format(deviceQuery, [customerID, deviceName, regName]))
 		let [device] = await mysqlConn.query(deviceQuery, [customerID, deviceName, regName])
 		return device[0]
 	}
+	async getDeviceType(deviceTypeId) {
+		let [deviceType] = await mysqlConn.query(selectDeviceType, [deviceTypeId])
+		return deviceType[0]
+	}
+
+	async storeData(pData, device) {
+		let sData = JSON.stringify(pData)
+		/**
+		 * Insert data into DeviceData table
+		 */
+		let lastId = null
+		let insert = `INSERT INTO deviceData(data, created, device_id, signature) VALUES(?, ?, ?, SHA2(?, 256))`
+		await mysqlConn.query(insert, [sData, dateFormatter(pData.time), device.id, sData]).then(([res]) => {
+			lastId = res.insertId
+		})
+		/**
+		 * Device Data Clean Table insertion and CloudFunctions process
+		 */
+		if (lastId) {
+			let deviceType = await this.getDeviceType(device.type_id)
+			if (deviceType.decoder !== null) {
+				let decodedData = await engineAPI.post('/', { nIds: [deviceType.decoder], data: { ...pData, ...device.metadata } })
+				pData = decodedData.data
+			}
+			if (!Array.isArray(pData)) {
+				pData = [pData]
+			}
+			let insertClean = `INSERT INTO deviceDataClean(data, created, device_id, device_data_id) VALUES(?, ?, ?, ?)`
+
+			await Promise.all(pData.map(async (d) => {
+				let cleanData = d
+				let normalized = null
+				let dataTime = dateFormatter(cleanData.time)
+
+				if (device.cloudfunctions.length >= 1) {
+					normalized = await engineAPI.post('/', { nIds: device.cloudfunctions.map(n => n.nId), data: { ...cleanData, ...device.metadata } }).then(rs => {
+							// console.log('EngineAPI Response:', rs.status, rs.data)
+							return rs.ok ? rs.data : null
+					})
+				}
+				if (normalized !== null) {
+					dataTime = normalized.time ? dateFormatter(normalized.time) : dataTime
+					cleanData = normalized
+				}
+				let sCleanData = JSON.stringify(cleanData)
+				await mysqlConn.query(insertClean, [sCleanData, dataTime, device.id, lastId]).then(() => { }).catch(e => {
+					console.log(e)
+				})
+				// SEND MESSAGE TO EVENT BROKER device.type_id, device.reg_id, device.id
+				cleanData.sentiEventDeviceName = device.name
+				this.sendMessage(`v1/event/data/${device.type_id}/${device.reg_id}/${device.id}`, JSON.stringify(cleanData))		
+			}))
+		}
+	}
+
 	async storeDeviceData(pData, registry, customerID, regName) {
 		/**
 		 * Get the key name
 		 */
 		let deviceName = pData[registry[0].config.deviceId]
-		console.log(deviceName)
 		/**
 		 *  Check if the device exists
 		 * */
 		let device = await this.getDevice(customerID, deviceName, regName)
-		console.log(device)
 		/**
 		 * If the device doesn't exist create it
 		 */
@@ -134,10 +187,6 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			return false
 		}
 		if (device) {
-			/**
-			 * Delete device id from package and stringify the package
-			 */
-			// delete pData[registry[0].config.deviceId]
 			let sData = JSON.stringify(pData)
 
 			/**
@@ -147,9 +196,9 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			let shaString = SHA2['SHA-256'](sData).toString('hex')
 
 			let check = await mysqlConn.query(packageCheckQ, [shaString, deviceName]).then(([res]) => {
-				console.log('\n')
-				console.log(SHA2['SHA-256'](sData).toString('hex'))
-				console.log('\n')
+				// console.log('\n')
+				// console.log(SHA2['SHA-256'](sData).toString('hex'))
+				// console.log('\n')
 				return res
 			})
 			if (check.length > 0) {
@@ -157,74 +206,36 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				console.log('DUPLICATE: Package already exists!')
 				return false
 			}
-			/**
-			 * Insert data into DeviceData table
-			 */
-			let lastId = null
-			await mysqlConn.query(insDeviceDataQuery, [sData, dateFormatter(pData.time), sData, customerID, deviceName, regName]).then(([res]) => {
-				lastId = res.insertId
-			})
-			/**
-			 * Device Data Clean Table insertion and CloudFunctions process
-			 */
-			if (lastId) {
-				if (device.cloudfunctions.length >= 1) {
-					let normalized = null
-					normalized = await engineAPI.post(
-						'/',
-						{ nIds: device.cloudfunctions.map(n => n.nId), data: { ...pData, ...device.metadata } })
-						.then(rs => {
-							console.log('EngineAPI Response:', rs.status, rs.data)
-							return rs.ok ? rs.data : null
-						})
 
-					let sNormalized = JSON.stringify(normalized)
-					await mysqlConn.query(insDataClean, [sNormalized, normalized.time ? dateFormatter(normalized.time) : dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
-						console.log(e)
-					})
-					// SEND MESSAGE TO EVENT BROKER device.type_id, device.reg_id, device.id
-					normalized.sentiEventDeviceName = device.name
-					this.sendMessage(`v1/event/data/${device.type_id}/${device.reg_id}/${device.id}`, JSON.stringify(normalized))
-				}
-				else {
-					await mysqlConn.query(insDataClean, [sData, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => { }).catch(e => {
-						console.log(e)
-					})
-					// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
-					pData.sentiEventDeviceName = device.name
-					this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, JSON.stringify(pData))
-				}
-			}
+			await this.storeData(pData, device)
 		}
 	}
 
 	async storeDataByRegistry(data, { regName, customerID }) {
 		try {
-			console.log('STORING DATA BY REGISTRY')
-			console.log(regName, customerID)
 			let pData = JSON.parse(data)
-			// console.log(pData)
-
 			/**
 			 * Get the registry
 			 */
 			let [registry] = await mysqlConn.query(getRegistry, [regName])
-			// console.log(registry)
 			if (registry[0]) {
-				// ADD REG TO ACL
+				console.log('STORING DATA BY REGISTRY')
+				let deviceName = pData[registry[0].config.deviceId]
+				console.log(customerID, regName, deviceName)
+				if (deviceName === undefined) {
+					console.log(pData)
+				}
 				if (!Array.isArray(pData)) {
 					await this.storeDeviceData(pData, registry, customerID, regName)
 				}
 				else {
 					if (Array.isArray(pData)) {
 						asyncForEach(pData, async (d) => {
-							console.log(d)
 							await this.storeDeviceData(d, registry, customerID, regName)
 						})
 					}
 				}
 			}
-
 		}
 		catch (e) {
 			console.log(e.message)
@@ -232,18 +243,11 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 	}
 	async storeDataByDevice(data, { deviceName, regName, customerID }) {
 		try {
-			console.log('STORING DATA')
-			console.log(deviceName, regName, customerID)
 			let pData = JSON.parse(data)
 			let sData = JSON.stringify(pData)
-			// console.log(pData)
 
 			let shaString = SHA2['SHA-256'](sData).toString('hex')
-
 			let check = await mysqlConn.query(packageCheckQ, [shaString, deviceName]).then(([res]) => {
-				console.log('\n')
-				console.log(SHA2['SHA-256'](sData).toString('hex'))
-				console.log('\n')
 				return res
 			})
 			if (check.length > 0) {
@@ -251,63 +255,27 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				console.warn('DUPLICATE: Package already exists!')
 				return false
 			}
-			let [device] = await mysqlConn.query(deviceQuery, [customerID, deviceName, regName])
-			if (device.length > 0 && device[0].communication == 0) {
+			/**
+			 * Get the device
+			 */
+			let device = await this.getDevice(customerID, deviceName, regName)
+			/**
+			* Check if device accepts communication
+			*/
+			if (device && device.communication == 0) {
 				console.warn('COMMUNICATION: Not allowed!')
 				return false
 			}
-			let lastId = null
-			await mysqlConn.query(insDeviceDataQuery, [sData, dateFormatter(pData.time), sData, customerID, deviceName, regName]).then(([res]) => {
-				lastId = res.insertId
-			})
-			if (device.length > 0) {
-				if (device[0].communication)
-					if (device[0].cloudfunctions)
-						if (device[0].cloudfunctions.length >= 1) {
-							let normalized = null
-							normalized = await engineAPI.post('/',
-								{ nIds: device[0].cloudfunctions.map(n => n.nId), data: { ...pData, ...device[0].metadata } })
-								.then(rs => {
-									console.log('EngineAPI Response:', rs.status, rs.data)
-									return rs.ok ? rs.data : null
-								})
-							console.log(normalized.time, moment.unix(pData.time).isValid())
-
-							// console.log(mysqlConn.format(normalizedQ))
-							let sNormalized = JSON.stringify(normalized)
-							await mysqlConn.query(insDataClean, [sNormalized, normalized.time ? dateFormatter(normalized.time) : dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => {
-								console.log('INSERTED CLEAN DATA', sNormalized)
-								// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
-								normalized.sentiEventDeviceName = device[0].name
-								this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, JSON.stringify(normalized))
-								console.log(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`)
-							}).catch(e => {
-								console.log(e)
-							})
-						}
-						else {
-							await mysqlConn.query(insDataClean, [sData, dateFormatter(pData.time), lastId, customerID, deviceName, regName]).then(() => {
-								console.log('INSERTED CLEAN DATA', sData)
-							}).catch(e => {
-								console.log(e)
-							})
-							// SEND MESSAGE TO EVENT BROKER device[0].type_id, device[0].reg_id, device[0].id
-							pData.sentiEventDeviceName = device[0].name
-							this.sendMessage(`v1/event/data/${device[0].type_id}/${device[0].reg_id}/${device[0].id}`, JSON.stringify(pData))
-
-						}
-				return true
-			}
-			else {
-				return false
+			console.log('STORING DATA BY DEVICE')
+			console.log(customerID, regName, deviceName)
+			if (device) {
+				await this.storeData(pData, device)
 			}
 		}
 		catch (e) {
-			console.log("ERROR:", e.message)
-			return false
+			console.log(e.message)
 		}
 	}
-
 }
 
 module.exports = SecureStoreMqttHandler
