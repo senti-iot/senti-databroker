@@ -153,6 +153,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				await mysqlConn.query(insertClean, [sCleanData, dataTime, device.id, lastId]).then(() => { }).catch(e => {
 					console.log(e)
 				})
+				
 				// SEND MESSAGE TO EVENT BROKER device.type_id, device.reg_id, device.id
 				cleanData.sentiEventDeviceName = device.name
 				this.sendMessage(`v1/event/data/${device.type_id}/${device.reg_id}/${device.id}`, JSON.stringify(cleanData))		
