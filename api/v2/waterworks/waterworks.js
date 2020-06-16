@@ -808,7 +808,7 @@ router.get('/v2/waterworks/data/benchmark/:orguuid/:from/:to', async (req, res) 
 	res.status(200).json(rs[0])
 })
 
-router.get('/v2/waterworks/data/benchmarkbyhour/:orguuid/:from/:to', async (req, res) => {
+router.get('/v2/waterworks/data/benchmark/byhour/:orguuid/:from/:to', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
 		res.status(401).json()
