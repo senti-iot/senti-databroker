@@ -686,7 +686,7 @@ router.get('/v2/waterworks/data/device/:deviceuuid/usagebyhour/:from/:to', async
 												ON dd.device_id = d.id 
 													AND dd.created >= DATE_SUB(?, INTERVAL 1 HOUR)
 													AND dd.created < ?
-										WHERE 1 d.uuid = ?
+										WHERE d.uuid = ?
 									) dd
 									WHERE NOT ISNULL(val)
 								) ddd
