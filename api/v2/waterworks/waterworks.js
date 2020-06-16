@@ -694,6 +694,7 @@ router.get('/v2/waterworks/data/device/:deviceuuid/usagebyhour/:from/:to', async
 							) ddd ON 1
 						) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
 					) kiddingme;`
+	console.log(mysqlConn.format(select, [req.params.from, req.params.to, req.params.deviceuuid, req.params.from, req.params.to, req.params.deviceuuid]))
 	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, req.params.deviceuuid, req.params.from, req.params.to, req.params.deviceuuid])
 	res.status(200).json(rs[0])
 })
