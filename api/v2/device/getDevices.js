@@ -20,7 +20,7 @@ router.get('/v2/devices', async (req, res) => {
 		res.status(404).json([])
 		return
 	}
-	console.log(resources)
+	// console.log(resources)
 	let queryUUIDs = (resources.length > 0) ? resources.map(item => { return item.uuid }) : false
 	res.status(200).json(await deviceService.getDevicesByUUID(queryUUIDs))
 })
