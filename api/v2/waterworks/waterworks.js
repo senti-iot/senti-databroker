@@ -79,16 +79,16 @@ router.get('/v2/waterworks/data/usage/:from/:to', async (req, res) => {
 	let queryUUIDs = (resources.length > 0) ? resources.map(item => { return item.uuid }) : []
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
 	
-	let select = `SELECT vdiff as volumeDifference, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*86400 as averageFlowPerDay, t, did
+	let select = `SELECT (vdiff/diff)*86400 as value, t as 'datetime', uuid, vdiff as volumeDifference, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*86400 as averageFlowPerDay, t, did
 					FROM (
-						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
+						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
 						FROM (
-							SELECT val, t, @row:=@row+1 as r, d3.did
+							SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
 							FROM ( SELECT @row:=0) foo
 							INNER JOIN (
-								SELECT dd.val, dd.t, dd.did
+								SELECT dd.val, dd.t, dd.did, dd.uuid
 								FROM (
-									SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+									SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did, d.uuid
 									FROM device d 
 										INNER JOIN deviceDataClean dd 
 											ON dd.device_id = d.id 
@@ -101,12 +101,12 @@ router.get('/v2/waterworks/data/usage/:from/:to', async (req, res) => {
 							) d3 ON 1
 						) d4
 						INNER JOIN (
-							SELECT val, t, @row2:=@row2+1 as r, did
+							SELECT val, t, @row2:=@row2+1 as r, did, uuid
 							FROM ( SELECT @row2:=0) foo
 							INNER JOIN (
-								SELECT dd.val, dd.t, dd.did
+								SELECT dd.val, dd.t, dd.did, dd.uuid
 								FROM (
-									SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+									SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did, d.uuid
 									FROM device d 
 										INNER JOIN deviceDataClean dd 
 											ON dd.device_id = d.id 
@@ -133,16 +133,16 @@ router.get('/v2/waterworks/data/device/:deviceuuid/usage/:from/:to', async (req,
 		res.status(403).json()
 		return
 	}
-	let select = `SELECT vdiff as volumeDifference, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*86400 as averageFlowPerDay, t, did
+	let select = `SELECT (vdiff/diff)*86400 as value, t as 'datetime', uuid, vdiff as volumeDifference, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*86400 as averageFlowPerDay, t, did
 					FROM (
-						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
+						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
 						FROM (
-							SELECT val, t, @row:=@row+1 as r, d3.did
+							SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
 							FROM ( SELECT @row:=0) foo
 							INNER JOIN (
-								SELECT dd.val, dd.t, dd.did
+								SELECT dd.val, dd.t, dd.did, dd.uuid
 								FROM (
-									SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+									SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did, d.uuid
 									FROM device d 
 										INNER JOIN deviceDataClean dd 
 											ON dd.device_id = d.id 
@@ -189,18 +189,18 @@ router.get('/v2/waterworks/data/usagebyday/:from/:to', async (req, res) => {
 	}
 	let queryUUIDs = (resources.length > 0) ? resources.map(item => { return item.uuid }) : []
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT vdiff/diff as averageFlowPerSecond, (vdiff/diff)*86400 as averageFlowPerDay, date(t) AS d, did
+	let select = `SELECT (vdiff/diff)*86400 as value, date(t) as 'datetime', uuid, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*86400 as averageFlowPerDay, date(t) AS d, did
 					FROM (
-						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
+						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
 						FROM (
-							SELECT val, t, @row:=@row+1 as r, d3.did
+							SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
 							FROM ( SELECT @row:=0) foo
 							INNER JOIN (
-								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did, ddd.uuid
 								FROM (
-									SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
+									SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did, dd.uuid
 									FROM (
-										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did, d.uuid
 										FROM device d 
 											INNER JOIN deviceDataClean dd 
 												ON dd.device_id = d.id 
@@ -257,18 +257,18 @@ router.post('/v2/waterworks/data/usagebyday/:from/:to', async (req, res) => {
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
 
-	let select = `SELECT vdiff/diff as averageFlowPerSecond, (vdiff/diff)*86400 as averageFlowPerDay, date(t) AS d, did
+	let select = `SELECT (vdiff/diff)*86400 as value, date(t) as 'datetime', uuid, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*86400 as averageFlowPerDay, date(t) AS d, did
 					FROM (
-						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
+						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
 						FROM (
-							SELECT val, t, @row:=@row+1 as r, d3.did
+							SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
 							FROM ( SELECT @row:=0) foo
 							INNER JOIN (
-								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did, ddd.uuid
 								FROM (
-									SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
+									SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did, dd.uuid
 									FROM (
-										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did, d.uuid
 										FROM device d 
 											INNER JOIN deviceDataClean dd 
 												ON dd.device_id = d.id 
@@ -319,18 +319,18 @@ router.get('/v2/waterworks/data/usagebyhour/:from/:to', async (req, res) => {
 	}
 	let queryUUIDs = (resources.length > 0) ? resources.map(item => { return item.uuid }) : []
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT vdiff/diff as averageFlowPerSecond, (vdiff/diff)*3600 as averageFlowPerHour, CONCAT(DATE(t),' ',HOUR(t),':00:00') AS datehour, did
+	let select = `SELECT (vdiff/diff)*3600 as value, CONCAT(DATE(t),' ',HOUR(t),':00:00') as 'datetime', uuid, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*3600 as averageFlowPerHour, CONCAT(DATE(t),' ',HOUR(t),':00:00') AS datehour, did
 					FROM (
-						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
+						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
 						FROM (
-							SELECT val, t, @row:=@row+1 as r, d3.did
+							SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
 							FROM ( SELECT @row:=0) foo
 							INNER JOIN (
-								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did, ddd.uuid
 								FROM (
-									SELECT dd.val, DATE(dd.t) AS d, HOUR(dd.t) As h, dd.t, dd.did
+									SELECT dd.val, DATE(dd.t) AS d, HOUR(dd.t) As h, dd.t, dd.did, dd.uuid
 									FROM (
-										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did, d.uuid
 										FROM device d 
 											INNER JOIN deviceDataClean dd 
 												ON dd.device_id = d.id 
@@ -386,18 +386,18 @@ router.post('/v2/waterworks/data/usagebyhour/:from/:to', async (req, res) => {
 		return
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT vdiff/diff as averageFlowPerSecond, (vdiff/diff)*3600 as averageFlowPerHour, CONCAT(DATE(t),' ',HOUR(t),':00:00') AS datehour, did
+	let select = `SELECT (vdiff/diff)*3600 as value, CONCAT(DATE(t),' ',HOUR(t),':00:00') as 'datetime', uuid, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*3600 as averageFlowPerHour, CONCAT(DATE(t),' ',HOUR(t),':00:00') AS datehour, did
 					FROM (
-						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
+						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
 						FROM (
-							SELECT val, t, @row:=@row+1 as r, d3.did
+							SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
 							FROM ( SELECT @row:=0) foo
 							INNER JOIN (
-								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did, ddd.uuid
 								FROM (
-									SELECT dd.val, DATE(dd.t) AS d, HOUR(dd.t) As h, dd.t, dd.did
+									SELECT dd.val, DATE(dd.t) AS d, HOUR(dd.t) As h, dd.t, dd.did, dd.uuid
 									FROM (
-										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did, d.uuid
 										FROM device d 
 											INNER JOIN deviceDataClean dd 
 												ON dd.device_id = d.id 
@@ -458,18 +458,18 @@ router.get('/v2/waterworks/data/totalusagebyday/:orguuid/:from/:to', async (req,
 	// 	return
 	// }
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT sum(vdiff/diff) as totalFlowPerSecond, sum((vdiff/diff)*86400) as totalFlowPerDay, date(t) AS d
+	let select = `SELECT sum((vdiff/diff)*86400) as value, date(t) as 'datetime', uuid, sum(vdiff/diff) as totalFlowPerSecond, sum((vdiff/diff)*86400) as totalFlowPerDay, date(t) AS d
 					FROM (
-						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
+						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
 						FROM (
-							SELECT val, t, @row:=@row+1 as r, d3.did
+							SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
 							FROM ( SELECT @row:=0) foo
 							INNER JOIN (
-								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did, ddd.uuid
 								FROM (
-									SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
+									SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did, dd.uuid
 									FROM (
-										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did, d.uuid
 										FROM device d 
 											INNER JOIN deviceDataClean dd 
 												ON dd.device_id = d.id 
@@ -527,18 +527,18 @@ router.post('/v2/waterworks/data/totalusagebyday/:from/:to', async (req, res) =>
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
 
-	let select = `SELECT sum(vdiff/diff) as totalFlowPerSecond, sum((vdiff/diff)*86400) as totalFlowPerDay, date(t) AS d
+	let select = `SELECT sum((vdiff/diff)*86400) as value, date(t) as 'datetime', uuid, sum(vdiff/diff) as totalFlowPerSecond, sum((vdiff/diff)*86400) as totalFlowPerDay, date(t) AS d
 					FROM (
-						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
+						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
 						FROM (
-							SELECT val, t, @row:=@row+1 as r, d3.did
+							SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
 							FROM ( SELECT @row:=0) foo
 							INNER JOIN (
-								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did, ddd.uuid
 								FROM (
-									SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
+									SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did, dd.uuid
 									FROM (
-										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did, d.uuid
 										FROM device d 
 											INNER JOIN deviceDataClean dd 
 												ON dd.device_id = d.id 
@@ -588,18 +588,18 @@ router.get('/v2/waterworks/data/device/:deviceuuid/usagebyday/:from/:to', async 
 		res.status(403).json()
 		return
 	}
-	let select = `SELECT vdiff/diff as averageFlowPerSecond, (vdiff/diff)*86400 as averageFlowPerDay, date(t) AS d, did
+	let select = `SELECT (vdiff/diff)*86400 as value, date(t) as 'datetime', uuid, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*86400 as averageFlowPerDay, date(t) AS d, did
 					FROM (
-						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
+						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
 						FROM (
-							SELECT val, t, @row:=@row+1 as r, d3.did
+							SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
 							FROM ( SELECT @row:=0) foo
 							INNER JOIN (
-								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did, ddd.uuid
 								FROM (
-									SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
+									SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did, dd.uuid
 									FROM (
-										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did, d.uuid
 										FROM device d 
 											INNER JOIN deviceDataClean dd 
 												ON dd.device_id = d.id 
@@ -648,18 +648,18 @@ router.get('/v2/waterworks/data/device/:deviceuuid/usagebyhour/:from/:to', async
 		res.status(403).json()
 		return
 	}
-	let select = `SELECT vdiff/diff as averageFlowPerSecond, (vdiff/diff)*3600 as averageFlowPerHour, CONCAT(DATE(t),' ',HOUR(t),':00:00') AS datehour, did
+	let select = `SELECT (vdiff/diff)*3600 as value, CONCAT(DATE(t),' ',HOUR(t),':00:00') AS 'datetime', uuid, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*3600 as averageFlowPerHour, CONCAT(DATE(t),' ',HOUR(t),':00:00') AS datehour, did
 					FROM (
-						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
+						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
 						FROM (
-							SELECT val, t, @row:=@row+1 as r, d3.did
+							SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
 							FROM ( SELECT @row:=0) foo
 							INNER JOIN (
-								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did, ddd.uuid
 								FROM (
-									SELECT dd.val, DATE(dd.t) AS d, HOUR(dd.t) As h, dd.t, dd.did
+									SELECT dd.val, DATE(dd.t) AS d, HOUR(dd.t) As h, dd.t, dd.did, dd.uuid
 									FROM (
-										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did, d.uuid
 										FROM device d 
 											INNER JOIN deviceDataClean dd 
 												ON dd.device_id = d.id 
@@ -720,7 +720,7 @@ router.get('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 	// 							AND dd.created >= ?
 	// 							AND dd.created <= ?
 	// 				WHERE NOT ISNULL(dd.data->?) ${clause}`
-	let select = `SELECT dd.created AS t, dd.data->? as val, t.uuid AS uuid
+	let select = `SELECT dd.created AS 'datetime', dd.data->? as value, dd.created AS t, dd.data->? as val, t.uuid AS uuid
 					FROM (
 						SELECT  d.id, d.uuid
 						FROM device d
@@ -763,7 +763,7 @@ router.post('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 	// 							AND dd.created >= ?
 	// 							AND dd.created <= ?
 	// 				WHERE NOT ISNULL(dd.data->?) ${clause}`
-	let select = `SELECT dd.created AS t, dd.data->? as val, t.uuid AS uuid
+	let select = `SELECT dd.created AS 'datetime', dd.data->? as value, dd.created AS t, dd.data->? as val, t.uuid AS uuid
 					FROM (
 						SELECT  d.id, d.uuid
 						FROM device d
@@ -796,7 +796,7 @@ router.get('/v2/waterworks/data/device/:deviceuuid/:field/:from/:to', async (req
 		res.status(403).json()
 		return
 	}
-	let select = `SELECT dd.created AS t, dd.data->? as val, d.uuid AS uuid
+	let select = `SELECT dd.created AS 'datetime', dd.data->? as value, dd.created AS t, dd.data->? as val, d.uuid AS uuid
 					FROM device d 
 						INNER JOIN deviceDataClean dd 
 							ON dd.device_id = d.id 
@@ -815,7 +815,7 @@ router.get('/v2/waterworks/data/totalbyday/:orguuid/:field/:from/:to', async (re
 		res.status(401).json()
 		return
 	}
-	let select = `SELECT t.d, sum(t.val) as total
+	let select = `SELECT t.d as 'datetime', sum(t.val) as value, t.d, sum(t.val) as total
 					FROM (
 						SELECT date(dd.created) AS d, max(dd.data->?) as val, dd.device_id
 						FROM  organisation o
@@ -851,7 +851,7 @@ router.post('/v2/waterworks/data/totalbyday/:field/:from/:to', async (req, res) 
 		return
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT t.d, sum(t.val) as total
+	let select = `SELECT t.d as 'datetime', sum(t.val) as value, t.d, sum(t.val) as total
 					FROM (
 						SELECT date(dd.created) AS d, max(dd.data->?) as val, dd.device_id
 						FROM  organisation o
@@ -877,7 +877,7 @@ router.get('/v2/waterworks/data/benchmark/:orguuid/:from/:to', async (req, res) 
 		res.status(401).json()
 		return
 	}
-	let select = `SELECT 86400*totalflow as totalFlowPerDay, totalflow/daycount as averageFlowPerSecond, 86400*totalflow/daycount as averageFlowPerDay, d
+	let select = `SELECT 86400*totalflow/daycount as value, d as 'datetime', 86400*totalflow as totalFlowPerDay, totalflow/daycount as averageFlowPerSecond, 86400*totalflow/daycount as averageFlowPerDay, d
 					FROM (
 					SELECT SUM(flow) AS totalflow, count(*) AS daycount, date(t) AS d
 					FROM (
@@ -940,7 +940,9 @@ router.get('/v2/waterworks/data/benchmark/byhour/:orguuid/:from/:to', async (req
 		res.status(401).json()
 		return
 	}
-	let select = `SELECT	3600*totalflow as totalFlowPerHour
+	let select = `SELECT 3600*totalflow/hourcount as value
+						, d AS 'datetime'
+						, 3600*totalflow as totalFlowPerHour
 						, totalflow/hourcount as averageFlowPerSecond
 						, 3600*totalflow/hourcount as averageFlowPerHour
 						, d AS datehour
