@@ -901,6 +901,7 @@ router.get('/v2/waterworks/data/benchmark/:orguuid/:from/:to', async (req, res) 
 											AND dd.created >= ?
 											and dd.created <= ?
 									) dd
+									WHERE NOT ISNULL(val)
 								) ddd
 								GROUP BY did, y,m,d
 							) d3 ON 1
@@ -922,6 +923,7 @@ router.get('/v2/waterworks/data/benchmark/:orguuid/:from/:to', async (req, res) 
 											AND dd.created >= ?
 											and dd.created <= ?
 									) dd
+									WHERE NOT ISNULL(val)
 								) ddd
 								GROUP BY did,y,m,d
 							) ddd ON 1
@@ -969,6 +971,7 @@ router.get('/v2/waterworks/data/benchmark/byhour/:orguuid/:from/:to', async (req
 												AND dd.created >= DATE_SUB(?, INTERVAL 1 HOUR) 
 												AND dd.created < ?
 										) dd 
+										WHERE NOT ISNULL(val)
 									) ddd 
 									GROUP BY did, d,h 
 								) d3 ON 1 
@@ -990,6 +993,7 @@ router.get('/v2/waterworks/data/benchmark/byhour/:orguuid/:from/:to', async (req
 											AND dd.created >= DATE_SUB(?,INTERVAL 1 HOUR) 
 											AND dd.created < ?
 									) dd 
+									WHERE NOT ISNULL(val)
 								) ddd 
 								GROUP BY did,d,h
 							) ddd ON 1 
