@@ -63,18 +63,19 @@ const climaidInsightV2 = require('./api/v2/climaidInsight/climaidInsight')
 //#endregion
 
 //#region Registries
-const getRegistries = require('./api/registry/getRegistries')
-const getRegistryDevices = require('./api/registry/getRegistryDevices')
-const getRegistry = require('./api/registry/getRegistry')
-const createReg = require('./api/registry/createRegistry')
-const updateReg = require('./api/registry/updateRegistry')
-const deleteReg = require('./api/registry/deleteRegistry')
 // V2
 const createRegistryV2 = require('./api/v2/registry/createRegistry')
 const getRegistryV2 = require('./api/v2/registry/getRegistry')
 const getRegistriesV2 = require('./api/v2/registry/getRegistries')
 const updateRegistryV2 = require('./api/v2/registry/updateRegistry')
 const deleteRegistryV2 = require('./api/v2/registry/deleteRegistry')
+// V1
+const getRegistries = require('./api/registry/getRegistries')
+const getRegistryDevices = require('./api/registry/getRegistryDevices')
+const getRegistry = require('./api/registry/getRegistry')
+const createReg = require('./api/registry/createRegistry')
+const updateReg = require('./api/registry/updateRegistry')
+const deleteReg = require('./api/registry/deleteRegistry')
 //#endregion
 
 //#region Device Types
