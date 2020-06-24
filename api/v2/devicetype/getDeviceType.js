@@ -3,7 +3,7 @@ const router = express.Router()
 
 var mysqlConn = require('../../../mysql/mysql_handler')
 
-const { sentiAclPriviledge, sentiAclResourceType } = require('senti-apicore')
+const { sentiAclPriviledge } = require('senti-apicore')
 const { aclClient, authClient } = require('../../../server')
 
 const sentiDeviceTypeService = require('../../../lib/deviceType/sentiDeviceTypeService')

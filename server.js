@@ -86,9 +86,11 @@ const updateDT = require('./api/deviceType/updateDeviceType')
 const createDT = require('./api/deviceType/createDeviceType')
 const deleteDT = require('./api/deviceType/deleteDeviceType')
 // V2
-// const getDeviceTypeV2 = require('./api/v2/devicetype/getDeviceType')
-// const getDeviceTypesV2 = require('./api/v2/devicetype/getDeviceTypes')
-
+const getDeviceTypeV2 = require('./api/v2/devicetype/getDeviceType')
+const getDeviceTypesV2 = require('./api/v2/devicetype/getDeviceTypes')
+const createDeviceTypeV2 = require('./api/v2/devicetype/createDeviceType')
+const updateDeviceTypeV2 = require('./api/v2/devicetype/updateDeviceType')
+const deleteDeviceTypeV2 = require('./api/v2/devicetype/deleteDeviceType')
 //#endregion
 
 //#region Device Data
@@ -116,16 +118,19 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
 
-// V2 USE
 /**
- * Devices
+ * Devices V2
  */
 app.use([getDeviceV2, getDevicesV2, createDeviceV2, updateDeviceV2, deleteDeviceV2])
-// app.use([getDeviceTypeV2, getDeviceTypesV2])
-// app.use([getRegistryV2])
+
 /**
- * Registries
+ * Device Types V2
  */
+app.use([getDeviceTypeV2, getDeviceTypesV2, createDeviceTypeV2, updateDeviceTypeV2, deleteDeviceTypeV2])
+/**
+ * Registries V2
+ */
+
 app.use([createRegistryV2, getRegistryV2, getRegistriesV2, updateRegistryV2, deleteRegistryV2])
 app.use([getWaterworksV2])
 app.use([climaidInsightV2])

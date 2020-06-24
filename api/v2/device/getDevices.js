@@ -25,6 +25,10 @@ router.get('/v2/devices', async (req, res) => {
 	res.status(200).json(await deviceService.getDevicesByUUID(queryUUIDs))
 })
 
+/**
+ * Get Devices under a specific Registry
+ * @param {UUIDv4} req.params.uuid UUID of the Registry
+ */
 router.get('/v2/devices/:uuid', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
