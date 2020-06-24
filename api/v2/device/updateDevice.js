@@ -3,7 +3,7 @@ const router = express.Router()
 
 var mysqlConn = require('../../../mysql/mysql_handler')
 
-const { sentiAclPriviledge, sentiAclResourceType } = require('senti-apicore')
+const { sentiAclPriviledge, /* sentiAclResourceType */ } = require('senti-apicore')
 const { aclClient, authClient } = require('../../../server')
 
 const RequestDevice = require('../../../lib/device/dataClasses/RequestDevice')
@@ -28,7 +28,7 @@ router.put('/v2/device/:uuid', async (req, res) => {
 			return
 		}
 		let requestDevice = new RequestDevice(req.body)
-		if(requestDevice.uuid !== req.params.uuid) {
+		if (requestDevice.uuid !== req.params.uuid) {
 			res.status(400).json()
 			return
 		}
@@ -41,7 +41,7 @@ router.put('/v2/device/:uuid', async (req, res) => {
 		/**
 		 * Change ACL if device is moved to new registry
 		 */
-		if(requestDevice.reg_id !== device.reg_id) {
+		if (requestDevice.reg_id !== device.reg_id) {
 			let registryModifyAccess = await aclClient.testPrivileges(lease.uuid, requestDevice.registry.uuid, [sentiAclPriviledge.device.create, sentiAclPriviledge.registry.modify])
 			if (registryModifyAccess.allowed === false) {
 				res.status(403).json()
