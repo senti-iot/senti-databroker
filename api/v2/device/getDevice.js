@@ -28,6 +28,28 @@ router.get('/v2/device/:uuid', async (req, res) => {
 	res.status(200).json(device)
 })
 
+router.get('/v2/internal/fixacldevicetype', async (req, res) => {
+	let select = `SELECT DT.name as dtname, DT.uuid as dtuuid, O.name as orgname, O.uuid as orguuid, AOR.uuid as orgresuuid 
+					FROM deviceType DT
+						INNER JOIN organisation O ON DT.orgId = O.id
+						INNER JOIN aclOrganisationResource AOR ON AOR.orgId = O.id
+						INNER JOIN aclResource AR ON AR.id = AOR.resourceId AND AR.type = 8`
+	let rs = await mysqlConn.query(select, [])
+	if (rs[0].length === 0) {
+		res.status(404).json()
+		return
+	}
+	let result = []
+	await rs[0].forEach(async row => {
+		console.log(row)
+		await aclClient.registerResource(row.dtuuid, sentiAclResourceType.deviceType)
+		await aclClient.addResourceToParent(row.dtuuid, row.orgresuuid)
+		result.push(row)
+	})
+	res.status(200).json(result)
+})
+
+
 router.get('/v2/internal/fixaclreg', async (req, res) => {
 	let select = `SELECT R.name as regname, R.uuid as reguuid, O.name as orgname, O.uuid as orguuid, AOR.uuid as orgresuuid 
 					FROM registry R
