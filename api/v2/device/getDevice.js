@@ -49,7 +49,6 @@ router.get('/v2/internal/fixacldevicetype', async (req, res) => {
 	res.status(200).json(result)
 })
 
-
 router.get('/v2/internal/fixaclreg', async (req, res) => {
 	let select = `SELECT R.name as regname, R.uuid as reguuid, O.name as orgname, O.uuid as orguuid, AOR.uuid as orgresuuid 
 					FROM registry R
