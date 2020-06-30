@@ -5,14 +5,24 @@ const { sentiAclPriviledge, sentiAclResourceType } = require('senti-apicore')
 
 var mysqlConn = require('../../../mysql/mysql_handler')
 
-const RequestRegistry = require('../../../lib/registry/dataClasses/RequestRegistry')
+const RequestCloudFunction = require('../../../lib/cloudFunction/dataClasses/RequestCloudFunction')
 
-const sentiRegistryService = require('../../../lib/registry/sentiRegistryService')
-const registryService = new sentiRegistryService(mysqlConn)
+const cloudFunctionService = require('../../../lib/cloudFunction/cloudFunctionService')
+const cfService = new cloudFunctionService(mysqlConn)
 const sentiDatabrokerCoreService = require('../../../lib/databrokerCore/sentiDatabrokerCoreService')
+const { request } = require('express')
 const sentiDataCore = new sentiDatabrokerCoreService(mysqlConn)
 
-router.post('/v2/registry', async (req, res) => {
+/**
+ * Route serving login form.
+ * @name POST/v2/cf
+ * @function
+ * @memberof module:routers/cloud-functions
+ * @inner
+ * @param {string} path - Express path
+ * @param {callback} middleware - Express middleware.
+ */
+router.post('/v2/cf', async (req, res) => {
 	try {
 
 		/**
@@ -24,47 +34,48 @@ router.post('/v2/registry', async (req, res) => {
 			return
 		}
 		/**
-		 * Check if the user has access to create registries and modify orgs to insert registry
+		 * Check if the user has access to create cloud functions and modify orgs to insert registry
 		 */
 
-		let access = await aclClient.testPrivileges(lease.uuid, req.body.org.uuid, [sentiAclPriviledge.registry.create, sentiAclPriviledge.organisation.modify])
+		let access = await aclClient.testPrivileges(lease.uuid, req.body.org.uuid, [sentiAclPriviledge.cloudfunction.create, sentiAclPriviledge.organisation.modify])
 		if (access.allowed === false) {
 			res.status(403).json()
 			return
 		}
 
 		/**
-		 * Create the Registry obj from the body request
+		 * Create the Cloud Function from the body request
 		 * and get the DB OrgId
 		 */
-		let requestRegistry = new RequestRegistry(req.body)
-		requestRegistry.orgId = await sentiDataCore.getOrganisationIdByUUID(requestRegistry.org.uuid)
+		let requestCF = new RequestCloudFunction(req.body)
+		requestCF.orgId = await sentiDataCore.getOrganisationIdByUUID(request.org.uuid)
 
 		/**
-		 * Create the Registry
+		 * Create the Cloud Function
 		 */
-		let registry = await registryService.createRegistry(requestRegistry)
-		let aclOrgResources = await sentiDataCore.getAclOrgResourcesOnName(requestRegistry.orgId)
 
-		if (registry) {
+		let cloudFunction = await cfService.createCloudFunction(requestCF)
+		let aclOrgResources = await sentiDataCore.getAclOrgResourcesOnName(requestCF.orgId)
+
+		if (cloudFunction) {
 			/**
 			 * Register the new registry with the ACL
 			 */
-			await aclClient.registerResource(registry.uuid, sentiAclResourceType.registry)
+			await aclClient.registerResource(cloudFunction.uuid, sentiAclResourceType.cloudFunction)
 			/**
 			 * Tie the registry to its organisation
 			 */
-			await aclClient.addResourceToParent(registry.uuid, aclOrgResources['devices'].uuid) // use the aclOrgResource for devices aclOrgResources['devices'].uuid instead of requestRegistry.org.uuid
+			await aclClient.addResourceToParent(cloudFunction.uuid, aclOrgResources['devices'].uuid)
 			/**
 			 * Return the new registry
 			 */
-			return res.status(200).json(registry)
+			return res.status(200).json(cloudFunction)
 		}
 		else {
 			/**
 			 * If there is no registry created, an error occured, throw 500
 			 */
-			return res.status(500).json(registry)
+			return res.status(500).json(cloudFunction)
 		}
 	}
 

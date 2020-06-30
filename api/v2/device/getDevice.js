@@ -1,14 +1,54 @@
+/** Express router providing user related routes
+ * @module routers/devices
+ * @requires express
+ * @requires senti-apicore
+ */
+
+/**
+ * express module
+ * @const
+ */
 const express = require('express')
+/**
+ * express router
+ * @const
+ */
 const router = express.Router()
 
+/**
+ * MySQL connector
+ * @const
+ */
 var mysqlConn = require('../../../mysql/mysql_handler')
 
+/**
+ * ACL Privileges
+ * @const sentiAclPriviledge
+ */
+/**
+ * ACL Resource Types
+ * @const sentiAclResourceType
+ */
+/**
+ * ACL Client
+ * @const aclClient
+ */
+/**
+ * Auth Client
+ * @const authClient
+ */
 const { sentiAclPriviledge, sentiAclResourceType } = require('senti-apicore')
 const { aclClient, authClient } = require('../../../server')
 
 const sentiDeviceService = require('../../../lib/device/sentiDeviceService')
 const deviceService = new sentiDeviceService(mysqlConn)
 
+/**
+ * Route serving a device based on UUID provided
+ * @function GET /v2/device/:uuid
+ * @memberof module:routers/devices
+ * @param {String} req.params.uuid UUID of the Requested Device
+ */
 router.get('/v2/device/:uuid', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
@@ -29,7 +69,7 @@ router.get('/v2/device/:uuid', async (req, res) => {
 })
 
 router.get('/v2/internal/fixacldevicetype', async (req, res) => {
-	let select = `SELECT DT.name as dtname, DT.uuid as dtuuid, O.name as orgname, O.uuid as orguuid, AOR.uuid as orgresuuid 
+	let select = `SELECT DT.name as dtname, DT.uuid as dtuuid, O.name as orgname, O.uuid as orguuid, AOR.uuid as orgresuuid
 					FROM deviceType DT
 						INNER JOIN organisation O ON DT.orgId = O.id
 						INNER JOIN aclOrganisationResource AOR ON AOR.orgId = O.id
@@ -50,7 +90,7 @@ router.get('/v2/internal/fixacldevicetype', async (req, res) => {
 })
 
 router.get('/v2/internal/fixaclreg', async (req, res) => {
-	let select = `SELECT R.name as regname, R.uuid as reguuid, O.name as orgname, O.uuid as orguuid, AOR.uuid as orgresuuid 
+	let select = `SELECT R.name as regname, R.uuid as reguuid, O.name as orgname, O.uuid as orguuid, AOR.uuid as orgresuuid
 					FROM registry R
 						INNER JOIN organisation O ON R.orgId = O.id
 						INNER JOIN aclOrganisationResource AOR ON AOR.orgId = O.id
@@ -80,7 +120,7 @@ router.get('/v2/internal/fixacldevice', async (req, res) => {
 		return
 	}
 	let result = []
-	
+
 	await rs[0].reduce(async (promise, row) => {
 		await promise;
 		console.log(row)

@@ -9,6 +9,11 @@ const { aclClient, authClient } = require('../../../server')
 const sentiDeviceService = require('../../../lib/device/sentiDeviceService')
 const deviceService = new sentiDeviceService(mysqlConn)
 
+/**
+ * Route serving all devices
+ * @function GET /v2/devices
+ * @memberof module:routers/devices
+ */
 router.get('/v2/devices', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
@@ -26,8 +31,10 @@ router.get('/v2/devices', async (req, res) => {
 })
 
 /**
- * Get Devices under a specific Registry
- * @param {UUIDv4} req.params.uuid UUID of the Registry
+ * Route serving all devices based on the owner UUID of the devices
+ * @function GET /v2/devices/:uuid
+ * @memberof module:routers/devices
+ * @param {UUIDv4} req.params.uuid - Owner UUID
  */
 router.get('/v2/devices/:uuid', async (req, res) => {
 	let lease = await authClient.getLease(req)
