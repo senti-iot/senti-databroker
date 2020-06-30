@@ -22,7 +22,7 @@ const sentiDataCore = new sentiDatabrokerCoreService(mysqlConn)
  * @param {string} path - Express path
  * @param {callback} middleware - Express middleware.
  */
-router.post('/v2/cf', async (req, res) => {
+router.post('/v2/cloudfunction', async (req, res) => {
 	try {
 
 		/**

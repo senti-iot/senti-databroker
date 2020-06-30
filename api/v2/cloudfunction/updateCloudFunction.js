@@ -14,24 +14,24 @@ const cfService = new cloudFunctionService(mysqlConn)
 const sentiDatabrokerCoreService = require('../../../lib/databrokerCore/sentiDatabrokerCoreService')
 const sentiDataCore = new sentiDatabrokerCoreService(mysqlConn)
 
-router.put('/v2/device/:uuid', async (req, res) => {
+router.put('/v2/cloudfunction', async (req, res) => {
 	try {
 		let lease = await authClient.getLease(req)
 		if (lease === false) {
 			res.status(401).json()
 			return
 		}
-		let access = await aclClient.testPrivileges(lease.uuid, req.params.uuid, [sentiAclPriviledge.device.modify])
+		let access = await aclClient.testPrivileges(lease.uuid, req.body.uuid, [sentiAclPriviledge.device.modify])
 		if (access.allowed === false) {
 			res.status(403).json()
 			return
 		}
 		let requestCloudFunc = new RequestCloudFunction(req.body)
-		if (requestCloudFunc.uuid !== req.params.uuid) {
+		if (requestCloudFunc.uuid !== req.body.uuid) {
 			res.status(400).json()
 			return
 		}
-		let cloudFunction = await cfService.getCloudFunctionByUUID(req.params.uuid)
+		let cloudFunction = await cfService.getCloudFunctionByUUID(req.body.uuid)
 		if (!cloudFunction) {
 			return res.status(404).json()
 		}
