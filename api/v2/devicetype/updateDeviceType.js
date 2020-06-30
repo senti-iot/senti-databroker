@@ -3,15 +3,15 @@ const router = express.Router()
 
 var mysqlConn = require('../../../mysql/mysql_handler')
 
-const { sentiAclPriviledge, sentiAclResourceType } = require('senti-apicore')
+const { sentiAclPriviledge, /* sentiAclResourceType */ } = require('senti-apicore')
 const { aclClient, authClient } = require('../../../server')
 
-const RequestDeviceType = require('../../../lib/devicetype/dataClasses/RequestDevicetype')
+const RequestDeviceType = require('../../../lib/devicetype/dataClasses/RequestDeviceType')
 
 const sentiDeviceTypeService = require('../../../lib/deviceType/sentiDeviceTypeService')
 const deviceTypeService = new sentiDeviceTypeService(mysqlConn)
 const sentiDatabrokerCoreService = require('../../../lib/databrokerCore/sentiDatabrokerCoreService')
-const databrokerCoreService = new sentiDatabrokerCoreService(mysqlConn)
+const sentiDataCore = new sentiDatabrokerCoreService(mysqlConn)
 
 router.put('/v2/devicetype/:uuid', async (req, res) => {
 	// return res.status(404)
