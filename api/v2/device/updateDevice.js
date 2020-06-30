@@ -53,7 +53,7 @@ router.put('/v2/device/:uuid', async (req, res) => {
 		let dbDevice = await deviceService.getDbDeviceByUUID(device.uuid)
 		// Assign changed data and update device
 		dbDevice.assignDiff(requestDevice)
-		await deviceService.updaveDevice(dbDevice)
+		await deviceService.updateDevice(dbDevice)
 		res.status(200).json(await deviceService.getDeviceById(device.id))
 	}
 	catch (error) {
