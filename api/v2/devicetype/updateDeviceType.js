@@ -6,7 +6,7 @@ var mysqlConn = require('../../../mysql/mysql_handler')
 const { sentiAclPriviledge, /* sentiAclResourceType */ } = require('senti-apicore')
 const { aclClient, authClient } = require('../../../server')
 
-const RequestDeviceType = require('../../../lib/devicetype/dataClasses/RequestDeviceType')
+const RequestDeviceType = require('../../../lib/deviceType/dataClasses/RequestDeviceType')
 
 const sentiDeviceTypeService = require('../../../lib/deviceType/sentiDeviceTypeService')
 const deviceTypeService = new sentiDeviceTypeService(mysqlConn)
