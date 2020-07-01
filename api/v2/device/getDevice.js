@@ -70,7 +70,7 @@ router.get('/v2/device/:uuid', async (req, res) => {
 
 router.get('/v2/internal/fixaclcloudfunctions', async (req, res) => {
 	let select = `SELECT CF.name as dtname, CF.uuid as dtuuid, O.name as orgname, O.uuid as orguuid, AOR.uuid as orgresuuid
-					FROM cloudFunctions CF
+					FROM cloudFunction CF
 						INNER JOIN organisation O ON CF.orgId = O.id
 						INNER JOIN aclOrganisationResource AOR ON AOR.orgId = O.id
 						INNER JOIN aclResource AR ON AR.id = AOR.resourceId AND AR.type = 8`
