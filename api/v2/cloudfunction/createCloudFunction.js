@@ -24,17 +24,11 @@ const sentiDataCore = new sentiDatabrokerCoreService(mysqlConn)
 router.post('/v2/cloudfunction', async (req, res) => {
 	try {
 
-		/**
-		 * Check if the user is logged in and his lease is still good
-		 */
 		let lease = await authClient.getLease(req)
 		if (lease === false) {
 			res.status(401).json()
 			return
 		}
-		/**
-		 * Check if the user has access to create cloud functions and modify orgs to insert registry
-		 */
 
 		let access = await aclClient.testPrivileges(lease.uuid, req.body.org.uuid, [sentiAclPriviledge.cloudfunction.create, sentiAclPriviledge.organisation.modify])
 		if (access.allowed === false) {
@@ -42,38 +36,22 @@ router.post('/v2/cloudfunction', async (req, res) => {
 			return
 		}
 
-		/**
-		 * Create the Cloud Function from the body request
-		 * and get the DB OrgId
-		 */
 		let requestCF = new RequestCloudFunction(req.body)
-		requestCF.orgId = await sentiDataCore.getOrganisationIdByUUID(requestCF.org.uuid)
-
-		/**
-		 * Create the Cloud Function
-		 */
+		requestCF.orgId = await sentiDataCore.getOrganisationIdByUUID(req.body.org.uuid)
 
 		let cloudFunction = await cfService.createCloudFunction(requestCF)
 		let aclOrgResources = await sentiDataCore.getAclOrgResourcesOnName(requestCF.orgId)
 
 		if (cloudFunction) {
-			/**
-			 * Register the new registry with the ACL
-			 */
+
 			await aclClient.registerResource(cloudFunction.uuid, sentiAclResourceType.cloudFunction)
-			/**
-			 * Tie the registry to its organisation
-			 */
 			await aclClient.addResourceToParent(cloudFunction.uuid, aclOrgResources['devices'].uuid)
-			/**
-			 * Return the new registry
-			 */
 			return res.status(200).json(cloudFunction)
+
 		}
+
 		else {
-			/**
-			 * If there is no registry created, an error occured, throw 500
-			 */
+
 			return res.status(500).json(cloudFunction)
 		}
 	}
