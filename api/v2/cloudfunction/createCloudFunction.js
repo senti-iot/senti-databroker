@@ -10,7 +10,6 @@ const RequestCloudFunction = require('../../../lib/cloudFunction/dataClasses/Req
 const cloudFunctionService = require('../../../lib/cloudFunction/cloudFunctionService')
 const cfService = new cloudFunctionService(mysqlConn)
 const sentiDatabrokerCoreService = require('../../../lib/databrokerCore/sentiDatabrokerCoreService')
-const { request } = require('express')
 const sentiDataCore = new sentiDatabrokerCoreService(mysqlConn)
 
 /**
@@ -48,7 +47,7 @@ router.post('/v2/cloudfunction', async (req, res) => {
 		 * and get the DB OrgId
 		 */
 		let requestCF = new RequestCloudFunction(req.body)
-		requestCF.orgId = await sentiDataCore.getOrganisationIdByUUID(request.org.uuid)
+		requestCF.orgId = await sentiDataCore.getOrganisationIdByUUID(requestCF.org.uuid)
 
 		/**
 		 * Create the Cloud Function
