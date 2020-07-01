@@ -93,6 +93,15 @@ const updateDeviceTypeV2 = require('./api/v2/devicetype/updateDeviceType')
 const deleteDeviceTypeV2 = require('./api/v2/devicetype/deleteDeviceType')
 //#endregion
 
+//#region Cloud Functions
+const getCFs = require('./api/v2/cloudfunction/getCloudFunctions')
+const getCF = require('./api/v2/cloudfunction/getCloudFunction')
+const updateCF = require('./api/v2/cloudfunction/updateCloudFunction')
+const deleteCF = require('./api/v2/cloudfunction/deleteCloudFunction')
+
+//#endregion
+
+
 //#region Device Data
 const getDeviceData = require('./api/deviceData/getDeviceData')
 const getMessages = require('./api/deviceData/getMessages')
@@ -127,13 +136,18 @@ app.use([getDeviceV2, getDevicesV2, createDeviceV2, updateDeviceV2, deleteDevice
  * Device Types V2
  */
 app.use([getDeviceTypeV2, getDeviceTypesV2, createDeviceTypeV2, updateDeviceTypeV2, deleteDeviceTypeV2])
+
 /**
  * Registries V2
  */
-
 app.use([createRegistryV2, getRegistryV2, getRegistriesV2, updateRegistryV2, deleteRegistryV2])
 app.use([getWaterworksV2])
 app.use([climaidInsightV2])
+
+/**
+ * Cloud functions V2
+ */
+app.use([getCF, getCFs, updateCF, deleteCF])
 
 // V1 USE
 app.use([getMessages, getDeviceData, getDataExternal,
