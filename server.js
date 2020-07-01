@@ -96,6 +96,7 @@ const deleteDeviceTypeV2 = require('./api/v2/devicetype/deleteDeviceType')
 //#region Cloud Functions
 const getCFs = require('./api/v2/cloudfunction/getCloudFunctions')
 const getCF = require('./api/v2/cloudfunction/getCloudFunction')
+const createCF = require('./api/v2/cloudfunction/createCloudFunction')
 const updateCF = require('./api/v2/cloudfunction/updateCloudFunction')
 const deleteCF = require('./api/v2/cloudfunction/deleteCloudFunction')
 
@@ -147,7 +148,7 @@ app.use([climaidInsightV2])
 /**
  * Cloud functions V2
  */
-app.use([getCF, getCFs, updateCF, deleteCF])
+app.use([getCF, getCFs, createCF, updateCF, deleteCF])
 
 // V1 USE
 app.use([getMessages, getDeviceData, getDataExternal,
