@@ -21,7 +21,7 @@ router.put('/v2/cloudfunction', async (req, res) => {
 			res.status(401).json()
 			return
 		}
-		let access = await aclClient.testPrivileges(lease.uuid, req.body.uuid, [sentiAclPriviledge.device.modify])
+		let access = await aclClient.testPrivileges(lease.uuid, req.body.uuid, [sentiAclPriviledge.cloudfunction.modify])
 		if (access.allowed === false) {
 			res.status(403).json()
 			return
@@ -64,7 +64,7 @@ router.put('/v2/cloudfunction', async (req, res) => {
 		// Assign changed data and update cloudFunction
 		dbCloudFunction.assignDiff(requestCloudFunc)
 		await cfService.updateCloudFunction(dbCloudFunction)
-		res.status(200).json(await cfService.getDeviceById(cloudFunction.id))
+		res.status(200).json(await cfService.getCloudFunctionById(cloudFunction.id))
 	}
 	catch (error) {
 		res.status(500).json({ message: error.message, stack: error.stack })
