@@ -32,6 +32,7 @@ router.put('/v2/cloudfunction', async (req, res) => {
 			return
 		}
 		let cloudFunction = await cfService.getCloudFunctionByUUID(req.body.uuid)
+		console.log(cloudFunction)
 		if (!cloudFunction) {
 			return res.status(404).json()
 		}
