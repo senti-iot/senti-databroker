@@ -63,7 +63,7 @@ router.put('/v2/cloudfunction', async (req, res) => {
 		let dbCloudFunction = await cfService.getDbCloudFunctionByUUID(cloudFunction.uuid)
 		// Assign changed data and update cloudFunction
 		dbCloudFunction.assignDiff(requestCloudFunc)
-		await cfService.updateDevice(dbCloudFunction)
+		await cfService.updateCloudFunction(dbCloudFunction)
 		res.status(200).json(await cfService.getDeviceById(cloudFunction.id))
 	}
 	catch (error) {
