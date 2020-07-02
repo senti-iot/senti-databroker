@@ -38,10 +38,7 @@ router.put('/v2/cloudfunction', async (req, res) => {
 		if (!cloudFunction) {
 			return res.status(404).json()
 		}
-		/**
-		 * Change ACL if cloudFunction is moved to new org
-		 * @TODO Andrei
-		 */
+
 		/**
 		 * Update ACL
 		 */
