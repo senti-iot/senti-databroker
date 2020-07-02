@@ -44,7 +44,7 @@ router.put('/v2/cloudfunction', async (req, res) => {
 		 * Update ACL
 		 */
 		let newOrg = await sentiDataCore.getDbOrganisationByUUID(req.body.org.uuid)
-		let oldOrg = await sentiDataCore.getDbOrganisationById(cloudFunction.orgId)
+		let oldOrg = await sentiDataCore.getDbOrganisationById(cloudFunction.org.uuid)
 		/**
 		 * If the orgs are different
 		 */
