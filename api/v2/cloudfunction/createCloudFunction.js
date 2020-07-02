@@ -38,7 +38,7 @@ router.post('/v2/cloudfunction', async (req, res) => {
 
 		let requestCF = new RequestCloudFunction(req.body)
 		requestCF.orgId = await sentiDataCore.getOrganisationIdByUUID(req.body.org.uuid)
-
+		console.log(requestCF)
 		let cloudFunction = await cfService.createCloudFunction(requestCF)
 		let aclOrgResources = await sentiDataCore.getAclOrgResourcesOnName(requestCF.orgId)
 

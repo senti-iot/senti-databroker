@@ -27,7 +27,8 @@ router.put('/v2/cloudfunction', async (req, res) => {
 			return
 		}
 		let requestCloudFunc = new RequestCloudFunction(req.body)
-		requestCloudFunc.orgId = sentiDataCore.getOrganisationIdByUUID(req.body.org.uuid)
+		requestCloudFunc.orgId = await sentiDataCore.getOrganisationIdByUUID(req.body.org.uuid)
+		console.log(requestCloudFunc)
 		if (requestCloudFunc.uuid !== req.body.uuid) {
 			res.status(400).json()
 			return
