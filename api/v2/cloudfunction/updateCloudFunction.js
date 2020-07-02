@@ -43,14 +43,12 @@ router.put('/v2/cloudfunction', async (req, res) => {
 		/**
 		 * Update ACL
 		 */
-		let newOrg = await sentiDataCore.getDbOrganisationByUUID(req.body.org.uuid)
-		let oldOrg = await sentiDataCore.getDbOrganisationById(cloudFunction.org.uuid)
-		/**
-		 * If the orgs are different
-		 */
-		console.log("newOrg", newOrg)
-		console.log("oldOrg", oldOrg)
-		if (newOrg.uuid !== oldOrg.uuid) {
+		if (req.body.org.uuid !== cloudFunction.org.uuid) {
+
+			let newOrg = await sentiDataCore.getDbOrganisationByUUID(req.body.org.uuid)
+			let oldOrg = await sentiDataCore.getDbOrganisationByUUID(cloudFunction.org.uuid)
+			console.log("newOrg", newOrg)
+			console.log("oldOrg", oldOrg)
 			console.log('Update cloudFunction ownership')
 			let newOrgAclResources = await sentiDataCore.getAclOrgResourcesOnName(newOrg.id)
 			let oldOrgAclResources = await sentiDataCore.getAclOrgResourcesOnName(oldOrg.id)
@@ -60,6 +58,7 @@ router.put('/v2/cloudfunction', async (req, res) => {
 			console.log(cloudFunction.orgId)
 			requestCloudFunc.orgId = newOrg.id
 			console.log(requestCloudFunc.orgId)
+
 		}
 		let dbCloudFunction = await cfService.getDbCloudFunctionByUUID(cloudFunction.uuid)
 		// Assign changed data and update cloudFunction
