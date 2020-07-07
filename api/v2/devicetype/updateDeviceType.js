@@ -13,7 +13,7 @@ const deviceTypeService = new sentiDeviceTypeService(mysqlConn)
 const sentiDatabrokerCoreService = require('../../../lib/databrokerCore/sentiDatabrokerCoreService')
 const sentiDataCore = new sentiDatabrokerCoreService(mysqlConn)
 
-router.put('/v2/devicetype/:uuid', async (req, res) => {
+router.put('/v2/devicetype', async (req, res) => {
 	// return res.status(404)
 	try {
 		/**
@@ -27,7 +27,7 @@ router.put('/v2/devicetype/:uuid', async (req, res) => {
 		/**
 		 * Check if the user has access to modify the devicetype
 		 */
-		let access = await aclClient.testPrivileges(lease.uuid, req.params.uuid, [sentiAclPriviledge.deviceType.modify])
+		let access = await aclClient.testPrivileges(lease.uuid, req.body.uuid, [sentiAclPriviledge.deviceType.modify])
 		if (access.allowed === false) {
 			res.status(403).json()
 			return
@@ -36,7 +36,7 @@ router.put('/v2/devicetype/:uuid', async (req, res) => {
 		 * Create the DeviceType obj from the body request and test against param
 		 */
 		let requestDeviceType = new RequestDeviceType(req.body)
-		if (requestDeviceType.uuid !== req.params.uuid) {
+		if (requestDeviceType.uuid !== req.body.uuid) {
 			res.status(400).json()
 			return
 		}
