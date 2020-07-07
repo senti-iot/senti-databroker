@@ -25,12 +25,12 @@ const queryGetDT = `SELECT dt.uuid,
 			INNER JOIN customer c on c.uuid = dt.custHash
 			WHERE dt.shortHash=? and dt.deleted=0;`
 
-router.put('/:version/devicetype', async (req, res, next) => {
+router.put('/v1/devicetype', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let data = req.body
 	console.log(req.body)
-	if (verifyAPIVersion(apiVersion)) {
+	if (verifyAPIVersion('v1')) {
 		if (authenticate(authToken)) {
 			console.log('CREATING DEVICE TYPE')
 			let uuid = uuidv4()
