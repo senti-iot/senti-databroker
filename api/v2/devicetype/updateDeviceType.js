@@ -50,12 +50,12 @@ router.put('/v2/devicetype', async (req, res) => {
 		/**
 		 * Check if the organisation has changed
 		 */
-		if (deviceType.organisation.uuid !== requestDeviceType.org.uuid) {
+		if (deviceType.org.uuid !== requestDeviceType.org.uuid) {
 			/**
 			 * Update ACL
 			 */
 			let newOrg = await sentiDataCore.getDbOrganisationByUUID(requestDeviceType.org.uuid)
-			let oldOrg = await sentiDataCore.getDbOrganisationByUUID(deviceType.organisation.uuid)
+			let oldOrg = await sentiDataCore.getDbOrganisationByUUID(deviceType.org.uuid)
 			/**
 			 * Get the ACL Org resources
 			 */
