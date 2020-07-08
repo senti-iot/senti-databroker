@@ -36,6 +36,7 @@ router.put('/v2/devicetype', async (req, res) => {
 		 * Create the DeviceType obj from the body request and test against param
 		 */
 		let requestDeviceType = new RequestDeviceType(req.body)
+		console.log('RequestDeviceType', requestDeviceType)
 		if (requestDeviceType.uuid !== req.body.uuid) {
 			res.status(400).json()
 			return
@@ -73,6 +74,7 @@ router.put('/v2/devicetype', async (req, res) => {
 		 * Update deviceType
 		 */
 		let result = await deviceTypeService.updateDeviceType(deviceType)
+		console.log(result, deviceType)
 		if (result) {
 			return res.status(200).json(result)
 		} else {
