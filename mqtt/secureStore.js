@@ -23,23 +23,23 @@ const deviceQuery = `SELECT d.id, d.name, d.type_id, d.reg_id, dm.\`data\` as me
 			LEFT JOIN deviceMetadata dm on dm.device_id = d.id
 			where c.uuname=? AND d.uuname=? AND r.uuname=? AND d.deleted = 0;
 			`
-const insDeviceDataQuery = `INSERT INTO deviceData
-			(data, created, device_id, signature)
-			SELECT ?, ?, device.id as device_id, SHA2(?,256) from registry
-			INNER JOIN device ON registry.id = device.reg_id
-			INNER JOIN customer ON customer.id = registry.customer_id
-			where customer.uuname=? AND device.uuname=? AND registry.uuname=?
-			`
+// const insDeviceDataQuery = `INSERT INTO deviceData
+// 			(data, created, device_id, signature)
+// 			SELECT ?, ?, device.id as device_id, SHA2(?,256) from registry
+// 			INNER JOIN device ON registry.id = device.reg_id
+// 			INNER JOIN customer ON customer.id = registry.customer_id
+// 			where customer.uuname=? AND device.uuname=? AND registry.uuname=?
+// 			`
 const packageCheckQ = `SELECT signature from deviceData dd
 			INNER JOIN device d on d.id = dd.device_id
 			WHERE dd.signature=? and d.uuname=?
 			`
-const insDataClean = `INSERT INTO deviceDataClean
-			(data, created, device_id, device_data_id)
-			SELECT ?, ?, device.id as device_id, ? from registry
-			INNER JOIN device ON registry.id = device.reg_id
-			INNER JOIN customer ON customer.id = registry.customer_id
-			where customer.uuname=? AND device.uuname=? AND registry.uuname=?`
+// const insDataClean = `INSERT INTO deviceDataClean
+// 			(data, created, device_id, device_data_id)
+// 			SELECT ?, ?, device.id as device_id, ? from registry
+// 			INNER JOIN device ON registry.id = device.reg_id
+// 			INNER JOIN customer ON customer.id = registry.customer_id
+// 			where customer.uuname=? AND device.uuname=? AND registry.uuname=?`
 const getRegistry = `SELECT * from registry r
 			WHERE r.uuname=?`
 const createDeviceQuery = `INSERT INTO device
@@ -141,8 +141,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 
 				if (device.cloudfunctions.length >= 1) {
 					normalized = await engineAPI.post('/', { nIds: device.cloudfunctions.map(n => n.nId), data: { ...cleanData, ...device.metadata } }).then(rs => {
-							// console.log('EngineAPI Response:', rs.status, rs.data)
-							return rs.ok ? rs.data : null
+						// console.log('EngineAPI Response:', rs.status, rs.data)
+						return rs.ok ? rs.data : null
 					})
 				}
 				if (normalized !== null) {
@@ -155,7 +155,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				})
 				// SEND MESSAGE TO EVENT BROKER device.type_id, device.reg_id, device.id
 				cleanData.sentiEventDeviceName = device.name
-				this.sendMessage(`v1/event/data/${device.type_id}/${device.reg_id}/${device.id}`, JSON.stringify(cleanData))		
+				this.sendMessage(`v1/event/data/${device.type_id}/${device.reg_id}/${device.id}`, JSON.stringify(cleanData))
 			}))
 		}
 	}
