@@ -15,24 +15,24 @@ const registryService = new sentiRegistryService(mysqlConn)
 const sentiDeviceTypeService = require('../../../lib/deviceType/sentiDeviceTypeService')
 const deviceTypeService = new sentiDeviceTypeService(mysqlConn)
 
-router.put('/v2/device/:uuid', async (req, res) => {
+router.put('/v2/device', async (req, res) => {
 	try {
 		let lease = await authClient.getLease(req)
 		if (lease === false) {
 			res.status(401).json()
 			return
 		}
-		let access = await aclClient.testPrivileges(lease.uuid, req.params.uuid, [sentiAclPriviledge.device.modify])
+		let access = await aclClient.testPrivileges(lease.uuid, req.body.uuid, [sentiAclPriviledge.device.modify])
 		if (access.allowed === false) {
 			res.status(403).json()
 			return
 		}
 		let requestDevice = new RequestDevice(req.body)
-		if (requestDevice.uuid !== req.params.uuid) {
+		if (requestDevice.uuid !== req.body.uuid) {
 			res.status(400).json()
 			return
 		}
-		let device = await deviceService.getDeviceByUUID(req.params.uuid)
+		let device = await deviceService.getDeviceByUUID(req.body.uuid)
 		if (!device) {
 			return res.status(404).json()
 		}
