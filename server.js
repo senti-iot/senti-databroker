@@ -46,6 +46,11 @@ module.exports.secureMqttClient = secureMqttClient
 
 
 app.use('/', testing)
+//#region V2 Device Data
+const getDeviceDataV2 = require('./api/v2/devicedata/getDeviceData')
+
+//#endregion
+
 //#region Device
 const getDevice = require('./api/device/getDevice')
 const getDevices = require('./api/device/getDevices')
@@ -128,6 +133,10 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
 
+/**
+ * Device Data V2
+ */
+app.use([getDeviceDataV2])
 /**
  * Devices V2
  */
