@@ -34,7 +34,7 @@ router.post('/v2/newsec/deviceco2byyear', async (req, res) => {
 						SELECT dd.created AS t, dd.data->'$.co2' as val, dd.device_id AS did, d.uuid
 							FROM device d 
 								INNER JOIN deviceDataClean dd ON dd.device_id = d.id
-							WHERE 1 AND ${clause}
+							WHERE 1 ${clause}
 						) dd
 					WHERE NOT ISNULL(val)
 					GROUP BY y, uuid
