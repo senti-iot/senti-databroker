@@ -65,6 +65,7 @@ const deleteDeviceV2 = require('./api/v2/device/deleteDevice')
 const updateDeviceV2 = require('./api/v2/device/updateDevice')
 const getWaterworksV2 = require('./api/v2/waterworks/waterworks')
 const climaidInsightV2 = require('./api/v2/climaidInsight/climaidInsight')
+const newsecV2 = require('./api/v2/newsec/newsec')
 
 //#endregion
 
@@ -153,6 +154,7 @@ app.use([getDeviceTypeV2, getDeviceTypesV2, createDeviceTypeV2, updateDeviceType
 app.use([createRegistryV2, getRegistryV2, getRegistriesV2, updateRegistryV2, deleteRegistryV2])
 app.use([getWaterworksV2])
 app.use([climaidInsightV2])
+app.use([newsecV2])
 
 /**
  * Cloud functions V2
