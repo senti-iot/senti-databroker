@@ -41,6 +41,17 @@ router.post('/v2/newsec/deviceco2byyear', async (req, res) => {
 					ORDER BY y, did`
 	console.log(mysqlConn.format(select, [...queryUUIDs]))
 	let rs = await mysqlConn.query(select, [...queryUUIDs])
-	res.status(200).json(rs[0])
+	if (rs[0].length === 0) {
+		res.status(404).json([])
+		return
+	}
+	let result = {}
+	rs[0].forEach(row => {
+		if (result[row.y] === undefined) {
+			result[row.y] = {}
+		}
+		result[row.y][row.uuid] = row.val
+	})
+	res.status(200).json(result)
 })
 module.exports = router
