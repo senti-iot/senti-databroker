@@ -46,12 +46,15 @@ router.post('/v2/newsec/deviceco2byyear', async (req, res) => {
 		return
 	}
 	let result = {}
+	let result2 = []
 	rs[0].forEach(row => {
 		if (result[row.y] === undefined) {
-			result[row.y] = {}
+			result[row.y] = {
+				"year": row.y
+			}
 		}
 		result[row.y][row.uuid] = row.val
 	})
-	res.status(200).json(result)
+	res.status(200).json(Object.values(result))
 })
 module.exports = router
