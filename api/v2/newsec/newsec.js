@@ -50,10 +50,12 @@ router.post('/v2/newsec/deviceco2byyear', async (req, res) => {
 	rs[0].forEach(row => {
 		if (result[row.y] === undefined) {
 			result[row.y] = {
-				"year": row.y
+				"year": row.y,
+				"sum": 0
 			}
 		}
 		result[row.y][row.uuid] = row.val
+		result[row.y].sum += row.val
 	})
 	res.status(200).json(Object.values(result))
 })
