@@ -85,7 +85,8 @@ router.post('/v2/newsec/buildingsum/:from/:to', async (req, res) => {
 									AND dd.created <= ?
 							WHERE 1 ${clause}
 						) dd
-					WHERE NOT ISNULL(val)`
+					WHERE NOT ISNULL(val)
+					GROUP BY uuid`
 	console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs]))
 	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, ...queryUUIDs])
 	if (rs[0].length === 0) {
