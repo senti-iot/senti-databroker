@@ -121,7 +121,7 @@ router.get('/v2/newsec/benchmarkbyday/:reg/:type/:from/:to', async (req, res) =>
 	// 	res.status(403).json()
 	// 	return
 	// }
-	let select = `SELECT t, sum(CAST(dd.val AS DECIMAL(10,3))) as total, sum(CAST(dd.val AS DECIMAL(10,3)))/count(*) as val
+	let select = `SELECT t as date, sum(CAST(dd.val AS DECIMAL(10,3))) as total, sum(CAST(dd.val AS DECIMAL(10,3)))/count(*) as value
 					FROM (
 						SELECT dd.created AS t, dd.data->'$.co2' as val, dd.device_id AS did, d.uuid, d.uuname
 						FROM device d
