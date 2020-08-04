@@ -110,4 +110,37 @@ router.post('/v2/newsec/buildingsum/:from/:to', async (req, res) => {
 	// res.status(200).json(Object.values(result))
 })
 
+router.get('/v2/newsec/benchmarkbyday/:reg/:type/:from/:to', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	// let access = await aclClient.testResources(lease.uuid, queryUUIDs, [sentiAclPriviledge.device.read])
+	// if (access.allowed === false) {
+	// 	res.status(403).json()
+	// 	return
+	// }
+	let select = `SELECT t, sum(CAST(dd.val AS DECIMAL(10,3))) as total, sum(CAST(dd.val AS DECIMAL(10,3)))/count(*) as val
+					FROM (
+						SELECT dd.created AS t, dd.data->'$.co2' as val, dd.device_id AS did, d.uuid, d.uuname
+						FROM device d
+							INNER JOIN deviceDataClean dd ON dd.device_id = d.id
+								AND dd.created >= ?
+								AND dd.created <= ?
+						WHERE d.reg_id = ?
+							AND d.type_id = ?
+					) dd
+					WHERE NOT ISNULL(val)
+					GROUP BY t
+					ORDER BY t`
+	console.log(mysqlConn.format(select, [req.params.from, req.params.to, req.params.reg, req.params.type]))
+	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, req.params.reg, req.params.type])
+	if (rs[0].length === 0) {
+		res.status(404).json([])
+		return
+	}
+	res.status(200).json(rs[0])
+})
+
 module.exports = router
