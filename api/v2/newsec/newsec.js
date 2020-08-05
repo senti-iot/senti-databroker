@@ -29,16 +29,28 @@ router.post('/v2/newsec/deviceco2byyear', async (req, res) => {
 		return
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT sum(CAST(dd.val AS DECIMAL(10,3))) as val, YEAR(dd.t) as y, dd.did, dd.uuid
+	// let select = `SELECT sum(CAST(dd.val AS DECIMAL(10,3))) as val, YEAR(dd.t) as y, dd.did, dd.uuid
+	// 				FROM (
+	// 					SELECT dd.created AS t, dd.data->'$.co2' as val, dd.device_id AS did, d.uuid
+	// 						FROM device d 
+	// 							INNER JOIN deviceDataClean dd ON dd.device_id = d.id
+	// 						WHERE 1 ${clause}
+	// 					) dd
+	// 				WHERE NOT ISNULL(val)
+	// 				GROUP BY y, uuid
+	// 				ORDER BY y, did`
+
+	let select = `SELECT sum(dd.val) as val, YEAR(dd.t) as y, dd.did, dd.uuid, dd.type_id, IF(dd.type_id=79, 'Fjernvarme', IF(dd.type_id=80, 'Vand', IF(dd.type_id=81, 'Elektricitet', null))) as type
 					FROM (
-						SELECT dd.created AS t, dd.data->'$.co2' as val, dd.device_id AS did, d.uuid
+						SELECT dd.created AS t, 1.000*dd.data->'$.co2' as val, dd.device_id AS did, d.uuid
 							FROM device d 
 								INNER JOIN deviceDataClean dd ON dd.device_id = d.id
 							WHERE 1 ${clause}
 						) dd
 					WHERE NOT ISNULL(val)
-					GROUP BY y, uuid
-					ORDER BY y, did`
+					GROUP BY y, type_id
+					ORDER BY y, type_id`
+
 	console.log(mysqlConn.format(select, [...queryUUIDs]))
 	let rs = await mysqlConn.query(select, [...queryUUIDs])
 	if (rs[0].length === 0) {
@@ -121,7 +133,7 @@ router.get('/v2/newsec/benchmarkbyday/:reg/:type/:from/:to', async (req, res) =>
 	// 	res.status(403).json()
 	// 	return
 	// }
-	let select = `SELECT t as date, sum(CAST(dd.val AS DECIMAL(10,3))) as total, sum(CAST(dd.val AS DECIMAL(10,3)))/count(*) as value
+	let select = `SELECT t as date, sum(CAST(dd.val AS FLOAT(10,3))) as total, sum(CAST(dd.val AS FLOAT(10,3)))/count(*) as value
 					FROM (
 						SELECT dd.created AS t, dd.data->'$.co2' as val, dd.device_id AS did, d.uuid, d.uuname
 						FROM device d
