@@ -62,7 +62,10 @@ router.post('/v2/newsec/deviceco2byyear', async (req, res) => {
 		if (result[row.y] === undefined) {
 			result[row.y] = {
 				"year": row.y,
-				"sum": 0
+				"sum": 0,
+				"Fjernvarme": 0,
+				"Vand": 0,
+				"Elektricitet": 0
 			}
 		}
 		result[row.y][row.type] = row.val
