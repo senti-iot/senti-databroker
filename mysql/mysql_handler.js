@@ -8,6 +8,13 @@ let connection = mysql.createPool({
 	user: DB_USER,
 	password: PASSWORD,
 	database: DATABASE,
+	typeCast: function (field, next) {
+        if (field.type == "DECIMAL") {
+            var value = field.string();
+            return (value === null) ? null : Number(value);
+        }
+        return next();
+    },
 	multipleStatements: true,
 	waitForConnections: true,
 	connectionLimit: 10,
