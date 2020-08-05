@@ -42,7 +42,7 @@ router.post('/v2/newsec/deviceco2byyear', async (req, res) => {
 
 	let select = `SELECT sum(dd.val) as val, YEAR(dd.t) as y, dd.did, dd.uuid, dd.type_id, IF(dd.type_id=79, 'Fjernvarme', IF(dd.type_id=80, 'Vand', IF(dd.type_id=81, 'Elektricitet', null))) as type
 					FROM (
-						SELECT dd.created AS t, 1.000*dd.data->'$.co2' as val, dd.device_id AS did, d.uuid
+						SELECT dd.created AS t, 1.000*dd.data->'$.co2' as val, dd.device_id AS did, d.uuid, d.type_id
 							FROM device d 
 								INNER JOIN deviceDataClean dd ON dd.device_id = d.id
 							WHERE 1 ${clause}
