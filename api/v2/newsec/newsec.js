@@ -140,10 +140,10 @@ router.get('/v2/newsec/benchmarkbyday/:reg/:type/:from/:to', async (req, res) =>
 		res.status(404).json([])
 		return
 	}
-	// rs[0].map(d => {
-	// 	d.total = parseFloat(d.total)
-	// 	d.value = parseFloat(d.value)
-	// })
+	rs[0].map(d => {
+		d.total = parseFloat(d.total)
+		d.value = parseFloat(d.value)
+	})
 	res.status(200).json(rs[0])
 })
 
