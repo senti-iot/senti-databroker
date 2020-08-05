@@ -65,7 +65,7 @@ router.post('/v2/newsec/deviceco2byyear', async (req, res) => {
 				"sum": 0
 			}
 		}
-		result[row.y][row.uuid] = row.val
+		result[row.y][row.type] = row.val
 		result[row.y].sum += parseFloat(row.val)
 	})
 	res.status(200).json(Object.values(result))
