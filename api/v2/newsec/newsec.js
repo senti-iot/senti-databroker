@@ -133,9 +133,9 @@ router.get('/v2/newsec/benchmarkbyday/:reg/:type/:from/:to', async (req, res) =>
 	// 	res.status(403).json()
 	// 	return
 	// }
-	let select = `SELECT t as date, sum(CAST(dd.val AS FLOAT(10,3))) as total, sum(CAST(dd.val AS FLOAT(10,3)))/count(*) as value
+	let select = `SELECT t as date, sum(dd.val) as total, sum(dd.val)/count(*) as value
 					FROM (
-						SELECT dd.created AS t, dd.data->'$.co2' as val, dd.device_id AS did, d.uuid, d.uuname
+						SELECT dd.created AS t, 1.000*dd.data->'$.co2' as val, dd.device_id AS did, d.uuid, d.uuname
 						FROM device d
 							INNER JOIN deviceDataClean dd ON dd.device_id = d.id
 								AND dd.created >= ?
