@@ -140,6 +140,7 @@ router.get('/v2/newsec/benchmarkbyday/:reg/:type/:from/:to', async (req, res) =>
 		res.status(404).json([])
 		return
 	}
+	console.log(rs[0])
 	res.status(200).json(rs[0])
 })
 
