@@ -57,6 +57,7 @@ const waterWorksQuery = `SELECT
 							and dd.data->'$.time' <= ?
 						ORDER BY
 							dd.created;`
+
 const getDeviceDataQuery = `SELECT \`data\`, created
 							FROM deviceDataClean
 							WHERE deviceHash=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
@@ -231,7 +232,9 @@ router.get('/:version/devicedata-clean/:deviceID/:from/:to/:type/:nId/:deviceTyp
 				})
 			}
 			else {
-
+				/**
+				 * @Andrei Use This one for data
+				 * */
 				let query = `SELECT id, \`data\`, created, device_id
 				FROM deviceDataClean
 				WHERE device_id=? AND NOT ISNULL(\`data\`) AND created >= ? AND created <= ? ORDER BY created`
