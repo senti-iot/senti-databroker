@@ -6,7 +6,7 @@ const asyncForEach = require('../utils/asyncForEach')
 const moment = require('moment')
 const SHA2 = require('sha2')
 const uuidv4 = require('uuid/v4')
-
+//fix merge
 const format = 'YYYY-MM-DD HH:mm:ss'
 const dateFormatter = (date) => {
 	if (moment.unix(date).isValid()) {
