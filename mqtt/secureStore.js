@@ -210,7 +210,6 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				console.log('DUPLICATE: Package already exists!')
 				return false
 			}
-
 			await this.storeData(pData, device)
 		}
 	}
