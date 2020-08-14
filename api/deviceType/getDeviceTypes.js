@@ -4,12 +4,12 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-const getDeviceTypesCID = `SELECT t.name,t.id, t.inbound, t.outbound, t.customer_id, c.name AS customer_name, c.uuid FROM Device_type t
-			INNER JOIN Customer c on c.id = t.customer_id
-			WHERE c.ODEUM_org_id=? and t.deleted=0`
+const getDeviceTypesCID = `SELECT t.uuid, t.shortHash, t.name, t.inbound, t.outbound, t.custHash, c.name AS customerName FROM deviceType t
+			INNER JOIN customer c on c.uuid = t.custHash
+			WHERE c.uuid=? and t.deleted=0`
 
-const getDeviceTypes = `SELECT t.*, c.name AS customer_name FROM Device_type t
-			INNER JOIN Customer c on c.id = t.customer_id
+const getDeviceTypes = `SELECT t.uuid, t.name, t.inbound, t.outbound, t.custHash, c.name AS customerName FROM deviceType t
+			INNER JOIN customer c on c.uuid = t.custHash
 			WHERE t.deleted=0`
 
 router.get('/:version/:customerID/devicetypes', async (req, res, next) => {

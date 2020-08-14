@@ -4,17 +4,17 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-const getRegistriesQuery = `SELECT r.id, r.name, r.uuid, r.region, r.protocol, r.customer_id,
-								r.created, r.description, c.name AS customer_name, c.ODEUM_org_id
-							FROM Registry r
-							INNER JOIN Customer c ON c.id = r.customer_id
+const getRegistriesQuery = `SELECT r.name, r.uuid, r.region, r.protocol, r.custHash,
+								r.created, r.description, c.name AS customerName, c.ODEUM_org_id as orgId
+							FROM registry r
+							INNER JOIN customer c ON c.uuid = r.custHash
 							WHERE r.deleted=0`
 
-const getRegistriesCIDQuery = `SELECT r.id, r.name, r.uuid, r.region, r.protocol, r.customer_id,
-								r.created, r.description, c.name AS customer_name, c.ODEUM_org_id
-							FROM Registry r
-							INNER JOIN Customer c ON c.id = r.customer_id
-							WHERE c.ODEUM_org_id=? AND r.deleted=0`
+const getRegistriesCIDQuery = `SELECT r.name, r.uuid, r.region, r.protocol, r.custHash,
+								r.created, r.description, c.name AS customerName, c.ODEUM_org_id as orgId
+							FROM registry r
+							INNER JOIN customer c ON c.uuid = r.custHash
+							WHERE c.uuid=? AND r.deleted=0`
 
 router.get('/:version/registries', async (req, res, next) => {
 	let apiVersion = req.params.version

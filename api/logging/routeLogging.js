@@ -12,7 +12,6 @@ const colorizeMethods = (type) => {
 			return 'DELETE'.red
 		default:
 			return type
-			break;
 	}
 }
 
@@ -21,14 +20,14 @@ module.exports = function (app) {
 	var table = new Table();
 	console.log('\n********************************************');
 	console.log('\n****************  API  *********************');
-
+	let routes = []
 	app._router.stack.forEach(function (middleware) {
 		if (middleware.route) { // routes registered directly on the app
 			routes.push(middleware.route);
 		} else if (middleware.name === 'router') { // router middleware
 			middleware.handle.stack.forEach(function (handler) {
-				route = handler.route;
-				type = route.stack ? route.stack[0].method : ""
+				let route = handler.route;
+				let type = route.stack ? route.stack[0].method : ""
 				route && table.push([type ? colorizeMethods(type.toUpperCase()) : '', route.path.toString()]);
 			});
 		}

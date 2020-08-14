@@ -7,19 +7,19 @@ const tokenAPI = require('../engine/token')
 const log = require('../../server').log
 
 const selectLatestCleanData = `SELECT data
-		FROM Device_data_clean
-		WHERE device_id=? AND data NOT LIKE '%null%' ORDER BY created DESC LIMIT 1`
+		FROM deviceDataClean
+		WHERE deviceHash=? AND data NOT LIKE '%null%' ORDER BY created DESC LIMIT 1`
 
 const selectCleanData = `SELECT data
-		FROM Device_data_clean
-		WHERE device_id=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
+		FROM deviceDataClean
+		WHERE deviceHash=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
 
-let selectCleanDataIdDevice = `SELECT id, data, created, device_id
-		FROM Device_data_clean
-		WHERE device_id=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
+let selectCleanDataIdDevice = `SELECT id, data, created, deviceHash
+		FROM deviceDataClean
+		WHERE deviceHash=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
 
 const selectAllDevicesUnderReg = `SELECT d.*, data from Device d
-		INNER JOIN Device_data_clean dd on dd.device_id = d.id
+		INNER JOIN deviceDataClean dd on dd.deviceHash = d.id
 		WHERE d.reg_id=?
 		AND data NOT LIKE '%null%'
 		AND created >= ? AND created <= ? ORDER BY created`
@@ -28,19 +28,19 @@ const selectLatestAllDevicesUnderReg = `SELECT tt.uuid, tt.name, dd.created, dd.
 FROM (
 	SELECT max(dd.id) as did, t.uuid, t.name
 	FROM (
-		SELECT max(dd.created) as 'time', dd.device_id, d.uuid, d.name
+		SELECT max(dd.created) as 'time', dd.deviceHash, d.uuid, d.name
 		FROM Device d
-		INNER JOIN Device_data_clean dd on dd.device_id = d.id  AND dd.data NOT LIKE '%null%'
+		INNER JOIN deviceDataClean dd on dd.deviceHash = d.id  AND dd.data NOT LIKE '%null%'
 		WHERE d.reg_id=16
-		group by dd.device_id
+		group by dd.deviceHash
 	) t
-	INNER JOIN Device_data_clean dd ON t.time=dd.created AND t.device_id=dd.device_id
-	group by dd.device_id
+	INNER JOIN deviceDataClean dd ON t.time=dd.created AND t.deviceHash=dd.deviceHash
+	group by dd.deviceHash
 ) tt
-LEFT JOIN Device_data_clean dd ON tt.did=dd.id`
+LEFT JOIN deviceDataClean dd ON tt.did=dd.id`
 
-const selectRegistryIDQ = `SELECT id from Registry where uuid=?`
-const selectDeviceIDQ = `SELECT id from Device where uuid=?`
+const selectRegistryIDQ = `SELECT id from registry where uuid=?`
+const selectDeviceIDQ = `SELECT id from device where uuid=?`
 /**
  * Get all the devices & their data under the regID and between from / to period
  */

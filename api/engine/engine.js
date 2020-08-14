@@ -14,10 +14,9 @@ const encrypt = (text) => {
 	return iv.toString('hex') + ':' + encrypted.toString('hex')
 }
 
-
-
 let engineAPI = createAPI({
-	baseURL: 'http://127.0.0.1:3011/v1',
+	// baseURL: 'http://127.0.0.1:3011/v1',
+	baseURL: 'https://services.senti.cloud/functions/v1',
 	headers: { 
 		'Accept': 'application/json', 
 		'Content-Type': 'application/json',

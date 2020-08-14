@@ -3,11 +3,15 @@ const router = express.Router()
 const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
+const uuidv4 = require('uuid').v4
+const shortHashGen = require('../../utils/shortHashGen')
 
 const createRegQuery = `
-			INSERT INTO Registry(name,region,protocol, ca_certificate, description, customer_id, created, uuid)
-			(SELECT ?, ?, ?, ?, ?, c.id, NOW(), CONCAT(?,'-',CAST(LEFT(UUID(),8) as CHAR(50))) from Customer c where c.ODEUM_org_id=?)`
-
+			INSERT INTO registry(name,region,protocol, ca_certificate, description, created, uuname, uuid, shortHash, custHash)
+			(SELECT ?, ?, ?, ?, ?, NOW(), CONCAT(?,'-',CAST(LEFT(UUID(),8) as CHAR(50))), ?, ?, c.uuid from customer c where c.uuid=?)`
+const getReg = `SELECT r.*, c.name as customerName, c.ODEUM_org_id as orgId from registry r
+				  INNER JOIN customer c on c.uuid = r.custHash
+				  where r.shortHash=? and r.deleted=0;`
 function cleanUpSpecialChars(str) {
 	return str
 		.replace(/[øØ]/g, "ou")
@@ -22,7 +26,8 @@ router.put('/:version/registry', async (req, res, next) => {
 	let data = req.body
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-
+			let uuid = uuidv4()
+			let shortHash = shortHashGen(uuid)
 			let result = await mysqlConn.query(createRegQuery, [
 				data.name,
 				data.region,
@@ -30,11 +35,30 @@ router.put('/:version/registry', async (req, res, next) => {
 				data.ca_certificate,
 				data.description,
 				cleanUpSpecialChars(data.name).toLowerCase(),
-				data.orgId,
-			]).then((result) => {
-				res.status(200).json(result[0].insertId)
+				uuid,
+				shortHash,
+				data.custHash
+			]).then(async (result) => {
+				if (result[0].insertId > 0) {
+					let [registry] = await mysqlConn.query(getReg, [shortHash])
+					res.status(200).json(registry[0])
+
+				}
 			}).catch(err => {
-				res.status(500).json(err)
+				res.status(500).json({
+					err,
+					query: mysqlConn.format(createRegQuery, [
+						data.name,
+						data.region,
+						data.protocol,
+						data.ca_certificate,
+						data.description,
+						cleanUpSpecialChars(data.name).toLowerCase(),
+						uuid,
+						shortHash,
+						data.custHash
+					])
+				})
 			})
 
 		} else {

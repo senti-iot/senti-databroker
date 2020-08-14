@@ -4,19 +4,19 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-const deleteCustomerQuery = `UPDATE Customer
+const deleteCustomerQuery = `UPDATE customer
 SET deleted=1
-WHERE ODEUM_org_id=?;`
+WHERE uuid=?;`
 
-router.post('/:version/delete-customer/:id', async (req, res) => {
+router.post('/:version/delete-customer/:uuid', async (req, res) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let orgId = req.params.id
-			mysqlConn.query(deleteCustomerQuery, [orgId]).then(rs => {
-				// console.log(rs)
+			let orgId = req.params.uuid
+			await mysqlConn.query(deleteCustomerQuery, [orgId]).then(rs => {
 				if (rs[0].affectedRows > 0) {
+					console.log('Deleted client with uuid', orgId)
 					res.status(200).json(true)
 				}
 				else {

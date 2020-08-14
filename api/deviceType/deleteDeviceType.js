@@ -4,16 +4,16 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-const deleteDTQuery = `UPDATE Device_type
+const deleteDTQuery = `UPDATE deviceType
 SET deleted=1
-WHERE id=?;`
+WHERE uuid=?;`
 
-router.post('/:version/delete-device-type/:id', async (req, res) => {
+router.post('/:version/delete-device-type/:uuid', async (req, res) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
-			let dtID = req.params.id
+			let dtID = req.params.uuid
 			mysqlConn.query(deleteDTQuery, [dtID]).then(rs => {
 				// console.log(rs)
 				if (rs[0].affectedRows > 0) {

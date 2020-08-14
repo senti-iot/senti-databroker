@@ -1,17 +1,18 @@
 const mqtt = require('mqtt')
 
 class SecureMqttHandler {
-	constructor(host, user, pass) {
+	constructor(host, user, pass, clientPrefix = 'senti_') {
 		this.mqttClient = null
 		this.host = host
 		this.user = user
 		this.pass = pass
+		this.clientPrefix = clientPrefix
 		this.topics = []
 	}
 	init() {}
 	connect() {
 		this.mqttClient = mqtt.connect(this.host, {
-			clientId: 'dataBroker_' + Math.random().toString(16).substr(2, 8),
+			clientId: this.clientPrefix + Math.random().toString(16).substr(2, 8),
 			username: this.user,
 			password: this.pass
 		});
@@ -35,7 +36,6 @@ class SecureMqttHandler {
 	// Sends a mqtt message
 	sendMessage(topic, message) {
 		this.mqttClient.publish(topic, message)
-		console.log('SENDING MESSAGE TO ' + this.host)
 		console.log(topic)
 		console.log(message)
 	}

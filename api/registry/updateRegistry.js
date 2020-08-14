@@ -4,23 +4,23 @@ const verifyAPIVersion = require('senti-apicore').verifyapiversion
 const { authenticate } = require('senti-apicore')
 var mysqlConn = require('../../mysql/mysql_handler')
 
-const findReqQuery = `SELECT * from Registry where id=?`
+const findReqQuery = `SELECT * from registry where uuid=?`
 
-const updateRegQuery = `UPDATE Registry r
-						INNER JOIN Customer c on c.ODEUM_org_id = ?
+const updateRegQuery = `UPDATE registry r
+						INNER JOIN customer c on c.uuid = ?
 							SET
 								r.name = ?,
 								r.region = ?,
 								r.protocol = ?,
 								r.ca_certificate = ?,
-								r.customer_id = c.id
-						WHERE r.id = ?`
+								r.custHash = c.uuid
+						WHERE r.uuid = ?`
 
 router.post('/:version/registry', async (req, res, next) => {
 	let apiVersion = req.params.version
 	let authToken = req.headers.auth
 	let data = req.body
-	let regId = req.body.id
+	let regId = req.body.uuid
 	if (verifyAPIVersion(apiVersion)) {
 		if (authenticate(authToken)) {
 			if (regId !== null || regId !== undefined) {
@@ -29,7 +29,7 @@ router.post('/:version/registry', async (req, res, next) => {
 						return res.status(404).json(false)
 					}
 					if (result[0].length !== 0) {
-						await mysqlConn.query(updateRegQuery, [data.orgId, data.name, data.region, data.protocol, data.ca_certificate, regId])
+						await mysqlConn.query(updateRegQuery, [data.custHash, data.name, data.region, data.protocol, data.ca_certificate, regId])
 							.then((result) => {
 								res.status(200).json(true)
 							}).catch(err => {
