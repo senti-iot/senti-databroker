@@ -94,7 +94,7 @@ router.get('/v2/rescandevicedata/:uuid/:from/:to', async (req, res) => {
 					AND dd.created < ?`
 	// await mysqlConn.query(deleteDataClean, [device.id, req.params.from, req.params.to])
 	
-	let select = `SELECT dd.created, dd.data 
+	let select = `SELECT dd.created, dd.data, dd.id 
 				FROM deviceData dd
 				WHERE dd.device_id = ?
 					AND dd.created >= ?
@@ -108,6 +108,7 @@ router.get('/v2/rescandevicedata/:uuid/:from/:to', async (req, res) => {
 	let deviceType = await getDeviceType(device.type_id)
 	console.log(deviceType)
 	await Promise.all(rs[0].map(async (dd) => {
+		let lastId = dd.id
 		let pData = dd.data
 		/**
 		 * Device Data Clean Table insertion and CloudFunctions process
