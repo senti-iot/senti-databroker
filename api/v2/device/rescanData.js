@@ -114,7 +114,7 @@ router.get('/v2/rescandevicedata/:uuid/:from/:to', async (req, res) => {
 		 * Device Data Clean Table insertion and CloudFunctions process
 		 */
 		if (deviceType.decoder !== null) {
-			let decodedData = await engineAPI.post('/', { nIds: [deviceType.decoder], data: { ...pData, ...device.metadata } })
+			let decodedData = await engineAPI.post('/', { nIds: [deviceType.decoder], data: { ...pData, ...device.metadata.metadata } })
 			pData = decodedData.data
 		}
 		if (!Array.isArray(pData)) {
