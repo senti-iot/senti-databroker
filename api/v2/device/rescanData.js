@@ -86,6 +86,7 @@ router.get('/v2/rescandevicedata/:uuid/:from/:to', async (req, res) => {
 		res.status(404).json()
 		return
 	}
+	console.log(device)
 	let deleteDataClean = `DELETE ddc 
 				FROM deviceData dd
 					INNER JOIN deviceDataClean ddc ON ddc.device_data_id = dd.id
