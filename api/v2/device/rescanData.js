@@ -20,6 +20,9 @@ const router = express.Router()
  * @const
  */
 var mysqlConn = require('../../../mysql/mysql_handler')
+const moment = require('moment')
+const SHA2 = require('sha2')
+const uuidv4 = require('uuid/v4')
 
 /**
  * ACL Privileges
