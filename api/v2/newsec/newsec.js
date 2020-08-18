@@ -91,7 +91,7 @@ router.post('/v2/newsec/buildingsum/:from/:to', async (req, res) => {
 		return
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT sum(CAST(dd.val AS DECIMAL(10,3))) as val, dd.did, dd.uuid, REPLACE(dd.uuname, '-Emission', '') as buildingNo
+	let select = `SELECT sum(dd.val) as val, dd.did, dd.uuid, REPLACE(dd.uuname, '-Emission', '') as buildingNo
 					FROM (
 						SELECT dd.created AS t, dd.data->'$.co2' as val, dd.device_id AS did, d.uuid, d.uuname
 							FROM device d 
