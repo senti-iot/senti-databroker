@@ -105,39 +105,37 @@ router.get('/v2/rescandevicedata/:uuid/:from/:to', async (req, res) => {
 	console.log(deviceType)
 	await Promise.all(rs[0].map(async (dd) => {
 		let pData = dd.data
-		console.log(pData)
 		/**
 		 * Device Data Clean Table insertion and CloudFunctions process
 		 */
-		// if (deviceType.decoder !== null) {
-		// 	let decodedData = await engineAPI.post('/', { nIds: [deviceType.decoder], data: { ...pData, ...device.metadata } })
-		// 	pData = decodedData.data
-		// }
-		// if (!Array.isArray(pData)) {
-		// 	pData = [pData]
-		// }
-		// let insertClean = `INSERT INTO deviceDataClean(data, created, device_id, device_data_id) VALUES(?, ?, ?, ?)`
+		if (deviceType.decoder !== null) {
+			let decodedData = await engineAPI.post('/', { nIds: [deviceType.decoder], data: { ...pData, ...device.metadata } })
+			pData = decodedData.data
+		}
+		if (!Array.isArray(pData)) {
+			pData = [pData]
+		}
+		let insertClean = `INSERT INTO deviceDataClean(data, created, device_id, device_data_id) VALUES(?, ?, ?, ?)`
 
-		// await Promise.all(pData.map(async (d) => {
-		// 	let cleanData = d
-		// 	let normalized = null
-		// 	let dataTime = dateFormatter(cleanData.time, dd.created)
+		await Promise.all(pData.map(async (d) => {
+			let cleanData = d
+			let normalized = null
+			let dataTime = dateFormatter(cleanData.time, dd.created)
 
-		// 	if (device.cloudfunctions.length >= 1) {
-		// 		normalized = await engineAPI.post('/', { nIds: device.cloudfunctions.map(n => n.nId), data: { ...cleanData, ...device.metadata } }).then(rs => {
-		// 				// console.log('EngineAPI Response:', rs.status, rs.data)
-		// 				return rs.ok ? rs.data : null
-		// 		})
-		// 	}
-		// 	if (normalized !== null) {
-		// 		dataTime = normalized.time ? dateFormatter(normalized.time) : dataTime
-		// 		cleanData = normalized
-		// 	}
-		// 	let sCleanData = JSON.stringify(cleanData)
-		// 	await mysqlConn.query(insertClean, [sCleanData, dataTime, device.id, lastId]).then(() => { }).catch(e => {
-		// 		console.log(e)
-		// 	})
-		// }))
+			if (deviceType.inbound.length >= 1) {
+				normalized = await engineAPI.post('/', { nIds: deviceType.inbound.map(n => n.nId), data: { ...cleanData, ...device.metadata } }).then(rs => {
+						return rs.ok ? rs.data : null
+				})
+			}
+			if (normalized !== null) {
+				dataTime = normalized.time ? dateFormatter(normalized.time) : dataTime
+				cleanData = normalized
+			}
+			let sCleanData = JSON.stringify(cleanData)
+			await mysqlConn.query(insertClean, [sCleanData, dataTime, device.id, lastId]).then(() => { }).catch(e => {
+				console.log(e)
+			})
+		}))
 	}))
 	res.status(200).json(device)
 })
