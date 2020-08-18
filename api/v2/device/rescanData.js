@@ -54,6 +54,11 @@ const dateFormatter = (date, defaultDate) => {
 	}
 	return defaultDate
 }
+const getDeviceType = async (deviceTypeId) => {
+	let selectDeviceType = `SELECT * from deviceType where id=?`
+	let [deviceType] = await mysqlConn.query(selectDeviceType, [deviceTypeId])
+	return deviceType[0]
+}
 
 /**
  * Route rescanning device data on UUID provided
@@ -95,7 +100,9 @@ router.get('/v2/rescandevicedata/:uuid/:from/:to', async (req, res) => {
 		res.status(404).json()
 		return
 	}
-	let deviceType = await this.getDeviceType(device.type_id)
+	
+	let deviceType = await getDeviceType(device.type_id)
+	console.log(deviceType)
 	await Promise.all(rs[0].map(async (dd) => {
 		let pData = dd.data
 		console.log(pData)
