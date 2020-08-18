@@ -90,7 +90,7 @@ router.get('/v2/rescandevicedata/:uuid/:from/:to', async (req, res) => {
 				WHERE dd.device_id = ?
 					AND dd.created >= ?
 					AND dd.created < ?`
-	let rs = await this.db.query(select, [device.id, req.params.from, req.params.to])
+	let rs = await mysqlConn.query(select, [device.id, req.params.from, req.params.to])
 	if (rs[0].length === 0) {
 		res.status(404).json()
 		return
