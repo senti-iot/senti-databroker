@@ -115,7 +115,7 @@ router.get('/v2/rescandevicedata/:uuid/:from/:to', async (req, res) => {
 		 * Device Data Clean Table insertion and CloudFunctions process
 		 */
 		if (deviceType.decoder !== null) {
-			let decodedData = await engineAPI.post('/', { nIds: [deviceType.decoder], data: { ...pData, ...device.metadata.metadata } })
+			let decodedData = await engineAPI.post('/', { nIds: [deviceType.decoder], data: { ...pData, ...device.metadata } })
 			pData = decodedData.data
 		}
 		if (!Array.isArray(pData)) {
@@ -129,7 +129,7 @@ router.get('/v2/rescandevicedata/:uuid/:from/:to', async (req, res) => {
 			let dataTime = dateFormatter(cleanData.time, dd.created)
 
 			if (deviceType.inbound.length >= 1) {
-				normalized = await engineAPI.post('/', { nIds: deviceType.inbound.map(n => n.nId), data: { ...cleanData, ...device.metadata.metadata } }).then(rs => {
+				normalized = await engineAPI.post('/', { nIds: deviceType.inbound.map(n => n.nId), data: { ...cleanData, ...device.metadata } }).then(rs => {
 						return rs.ok ? rs.data : null
 				})
 			}
