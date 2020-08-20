@@ -79,6 +79,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				this.storeDataByDevice(message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] })
 			}
 			if (arr.length === 7) {
+				console.log(arr)
 				this.storeDataByRegistry(message.toString(), { regName: arr[5], customerID: arr[1] })
 			}
 		})
@@ -171,6 +172,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		 * Get the key name
 		 */
 		let deviceName = pData[registry[0].config.deviceId]
+		console.log(deviceName)
 		/**
 		 *  Check if the device exists
 		 * */
@@ -205,9 +207,9 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			let shaString = SHA2['SHA-256'](sData).toString('hex')
 
 			let check = await mysqlConn.query(packageCheckQ, [shaString, deviceName]).then(([res]) => {
-				// console.log('\n')
-				// console.log(SHA2['SHA-256'](sData).toString('hex'))
-				// console.log('\n')
+				console.log('\n')
+				console.log(SHA2['SHA-256'](sData).toString('hex'))
+				console.log('\n')
 				return res
 			})
 			if (check.length > 0) {
@@ -215,14 +217,17 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				console.log('DUPLICATE: Package already exists!')
 				return false
 			}
-
 			await this.storeData(pData, device)
 		}
 	}
 
 	async storeDataByRegistry(data, { regName, customerID }) {
 		try {
+			console.log('STORING DATA BY REGISTRY')
+			console.log(regName, customerID)
 			let pData = JSON.parse(data)
+			console.log(pData)
+
 			/**
 			 * Get the registry
 			 */
@@ -240,6 +245,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				else {
 					if (Array.isArray(pData)) {
 						asyncForEach(pData, async (d) => {
+							console.log(d)
 							await this.storeDeviceData(d, registry, customerID, regName)
 						})
 					}

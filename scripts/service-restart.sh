@@ -19,6 +19,14 @@ if [[ "$1" == "dev" ]]; then
 	exit 0
 fi
 
+if [[ "$1" == "merge" ]]; then
+	npm install --prefix /srv/nodejs/senti/services/databroker/merge
+	systemctl restart senti-databroker-merge.service
+	# Senti Slack Workspace
+	curl -X POST -H 'Content-type: application/json' --data '{"text":"Senti Data Broker MERGE updated and restarted!"}' $2
+	echo
+	exit 0
+fi
 exit 0
 
 
