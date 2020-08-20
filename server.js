@@ -66,6 +66,7 @@ const updateDeviceV2 = require('./api/v2/device/updateDevice')
 const getWaterworksV2 = require('./api/v2/waterworks/waterworks')
 const climaidInsightV2 = require('./api/v2/climaidInsight/climaidInsight')
 const newsecV2 = require('./api/v2/newsec/newsec')
+const rescanV2 = require('./api/v2/device/rescanData')
 
 //#endregion
 
@@ -141,7 +142,7 @@ app.use([getDeviceDataV2])
 /**
  * Devices V2
  */
-app.use([getDeviceV2, getDevicesV2, createDeviceV2, updateDeviceV2, deleteDeviceV2])
+app.use([getDeviceV2, getDevicesV2, createDeviceV2, updateDeviceV2, deleteDeviceV2, rescanV2])
 
 /**
  * Device Types V2

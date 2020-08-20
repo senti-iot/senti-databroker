@@ -23,7 +23,7 @@ const getDeviceDataQuery = `SELECT \`data\`, created as datetime
 							FROM deviceDataClean
 							WHERE device_id=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
 
-const getDeviceDataFieldQuery = field => `SELECT \`data\`->'$.${field}' as ${field}, created as datetime
+const getDeviceDataFieldQuery = field => `SELECT \`data\`->'$.${field}' as \`${field}\`, created as datetime
 											FROM deviceDataClean
 											WHERE device_id=? and \`data\` NOT LIKE '%null%' AND created >= ? and created <= ? ORDER BY created`
 
