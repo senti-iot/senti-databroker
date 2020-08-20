@@ -7,6 +7,9 @@ const moment = require('moment')
 const SHA2 = require('sha2')
 const uuidv4 = require('uuid/v4')
 
+const { sentiAclPriviledge, sentiAclResourceType } = require('senti-apicore')
+const { aclClient, authClient } = require('../server')
+
 const format = 'YYYY-MM-DD HH:mm:ss'
 const dateFormatter = (date) => {
 	if (moment.unix(date).isValid()) {
@@ -17,12 +20,14 @@ const dateFormatter = (date) => {
 	}
 	return 'NOW()'
 }
-const deviceQuery = `SELECT d.id, d.name, d.type_id, d.reg_id, dm.\`data\` as metadata, dm.inbound as cloudfunctions, d.communication from device d
-			INNER JOIN registry r ON r.id = d.reg_id
-			INNER JOIN customer c on c.id = r.customer_id
-			LEFT JOIN deviceMetadata dm on dm.device_id = d.id
-			where c.uuname=? AND d.uuname=? AND r.uuname=? AND d.deleted = 0;
-			`
+const deviceQuery = `SELECT d.id, d.uuid, d.name, d.type_id, d.reg_id, r.uuid as reguuid, d.metadata, d.communication 
+FROM device d
+	INNER JOIN registry r ON r.id = d.reg_id
+	INNER JOIN organisation o on o.id = r.orgId
+WHERE o.uuname=?
+	AND d.uuname=?
+	AND r.uuname=? 
+	AND d.deleted = 0;`
 // const insDeviceDataQuery = `INSERT INTO deviceData
 // 			(data, created, device_id, signature)
 // 			SELECT ?, ?, device.id as device_id, SHA2(?,256) from registry
@@ -93,7 +98,6 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			}).catch(err => {
 				console.log("error: ", err)
 			})
-			// ADD DEVICE TO ACL
 			return rs[0].insertId
 		}).catch(async err => {
 			// if (err) {
@@ -139,8 +143,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				let normalized = null
 				let dataTime = dateFormatter(cleanData.time)
 
-				if (device.cloudfunctions.length >= 1) {
-					normalized = await engineAPI.post('/', { nIds: device.cloudfunctions.map(n => n.nId), data: { ...cleanData, ...device.metadata } }).then(rs => {
+				if (deviceType.inbound.length >= 1) {
+					normalized = await engineAPI.post('/', { nIds: deviceType.inbound.map(n => n.nId), data: { ...cleanData, ...device.metadata } }).then(rs => {
 						// console.log('EngineAPI Response:', rs.status, rs.data)
 						return rs.ok ? rs.data : null
 					})
@@ -179,6 +183,9 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			console.log(`DEVICE ${deviceName} DOES NOT EXIST`)
 			await this.createDevice({ name: deviceName, communication: 1, ...pData }, registry[0].id, deviceTypeId)
 			device = await this.getDevice(customerID, deviceName, regName)
+			// ADD DEVICE TO ACL
+			await aclClient.registerResource(device.uuid, sentiAclResourceType.device)
+			await aclClient.addResourceToParent(device.uuid, device.reguuid)
 			console.log(device)
 		}
 		/**
