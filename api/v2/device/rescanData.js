@@ -50,6 +50,10 @@ const deviceService = new sentiDeviceService(mysqlConn)
 
 const format = 'YYYY-MM-DD HH:mm:ss'
 const dateFormatter = (date, defaultDate) => {
+	if(date === undefined) {
+		console.log('default')
+		return defaultDate
+	}
 	console.log('dateFormatter', date, defaultDate)
 	if (moment.unix(date).isValid()) {
 		console.log('unix')
