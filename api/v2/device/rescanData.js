@@ -50,6 +50,9 @@ const deviceService = new sentiDeviceService(mysqlConn)
 
 const format = 'YYYY-MM-DD HH:mm:ss'
 const dateFormatter = (date, defaultDate) => {
+	if(date === undefined) {
+		return defaultDate
+	}
 	if (moment.unix(date).isValid()) {
 		return moment.unix(date).format(format)
 	}
@@ -93,7 +96,7 @@ router.get('/v2/rescandevicedata/:uuid/:from/:to', async (req, res) => {
 				WHERE dd.device_id = ?
 					AND dd.created >= ?
 					AND dd.created < ?`
-	// await mysqlConn.query(deleteDataClean, [device.id, req.params.from, req.params.to])
+	await mysqlConn.query(deleteDataClean, [device.id, req.params.from, req.params.to])
 	
 	let select = `SELECT dd.created, dd.data, dd.id 
 				FROM deviceData dd
@@ -115,7 +118,7 @@ router.get('/v2/rescandevicedata/:uuid/:from/:to', async (req, res) => {
 		 * Device Data Clean Table insertion and CloudFunctions process
 		 */
 		if (deviceType.decoder !== null) {
-			let decodedData = await engineAPI.post('/', { nIds: [deviceType.decoder], data: { ...pData, ...device.metadata.metadata } })
+			let decodedData = await engineAPI.post('/', { nIds: [deviceType.decoder], data: { ...pData, ...device.metadata } })
 			pData = decodedData.data
 		}
 		if (!Array.isArray(pData)) {
@@ -129,7 +132,7 @@ router.get('/v2/rescandevicedata/:uuid/:from/:to', async (req, res) => {
 			let dataTime = dateFormatter(cleanData.time, dd.created)
 
 			if (deviceType.inbound.length >= 1) {
-				normalized = await engineAPI.post('/', { nIds: deviceType.inbound.map(n => n.nId), data: { ...cleanData, ...device.metadata.metadata } }).then(rs => {
+				normalized = await engineAPI.post('/', { nIds: deviceType.inbound.map(n => n.nId), data: { ...cleanData, ...device.metadata } }).then(rs => {
 						return rs.ok ? rs.data : null
 				})
 			}
