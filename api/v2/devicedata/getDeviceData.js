@@ -21,11 +21,11 @@ const { /* aclClient, */ authClient } = require('../../../server')
 
 const getDeviceDataQuery = `SELECT \`data\`, created as datetime
 							FROM deviceDataClean
-							WHERE device_id=? AND \`data\` NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
+							WHERE device_id=? AND NOT ISNULL(\`data\`) AND created >= ? AND created <= ? ORDER BY created`
 
 const getDeviceDataFieldQuery = field => `SELECT \`data\`->'$.${field}' as \`${field}\`, created as datetime
 											FROM deviceDataClean
-											WHERE device_id=? and \`data\` NOT LIKE '%null%' AND created >= ? and created <= ? ORDER BY created`
+											WHERE device_id=? AND NOT ISNULL(\`data\`->'$.${field}') AND created >= ? and created <= ? ORDER BY created`
 
 
 const getDeviceDataFieldGauge = field => `
@@ -33,6 +33,7 @@ const getDeviceDataFieldGauge = field => `
 			INNER JOIN device d on d.id = dd.device_id
 			INNER JOIN deviceType dt on dt.id = d.type_id
 			WHERE dt.uuid=? and dd.created >= ? and dd.created <= ?
+			AND NOT ISNULL(dd.\`data\`->'$.${field}')
 			ORDER BY dd.created`
 
 const getDeviceDataFieldTimeSeries = (field, timeType) => {
@@ -62,6 +63,7 @@ const getDeviceDataFieldTimeSeries = (field, timeType) => {
 			INNER JOIN device d on d.id = dd.device_id
 			INNER JOIN deviceType dt on dt.id = d.type_id
 			WHERE dt.uuid=? and dd.created >= ? and dd.created <= ?
+			AND NOT ISNULL(dd.\`data\`->'$.${field}')
 			${tts}
 			ORDER BY dd.created`
 }
