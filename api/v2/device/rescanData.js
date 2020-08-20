@@ -50,12 +50,16 @@ const deviceService = new sentiDeviceService(mysqlConn)
 
 const format = 'YYYY-MM-DD HH:mm:ss'
 const dateFormatter = (date, defaultDate) => {
+	console.log('dateFormatter', date, defaultDate)
 	if (moment.unix(date).isValid()) {
+		console.log('unix')
 		return moment.unix(date).format(format)
 	}
 	if (moment(date).isValid()) {
+		console.log('utc')
 		return moment(date).format(format)
 	}
+	console.log('default')
 	return defaultDate
 }
 const getDeviceType = async (deviceTypeId) => {
