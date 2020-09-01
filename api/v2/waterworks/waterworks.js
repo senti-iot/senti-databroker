@@ -720,9 +720,9 @@ router.get('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 	// 							AND dd.created >= ?
 	// 							AND dd.created <= ?
 	// 				WHERE NOT ISNULL(dd.data->?) ${clause}`
-	let select = `SELECT dd.created AS 'datetime', dd.data->? as value, dd.created AS t, dd.data->? as val, t.uuid AS uuid
+	let select = `SELECT dd.created AS 'datetime', dd.data->? as value
 					FROM (
-						SELECT  d.id, d.uuid
+						SELECT  d.id
 						FROM device d
 						WHERE 1 ${clause}
 					) t
@@ -763,9 +763,9 @@ router.post('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 	// 							AND dd.created >= ?
 	// 							AND dd.created <= ?
 	// 				WHERE NOT ISNULL(dd.data->?) ${clause}`
-	let select = `SELECT dd.created AS 'datetime', dd.data->? as value, dd.created AS t, dd.data->? as val, t.uuid AS uuid
+	let select = `SELECT dd.created AS 'datetime', dd.data->? as value
 					FROM (
-						SELECT  d.id, d.uuid
+						SELECT  d.id
 						FROM device d
 						WHERE 1 ${clause}
 					) t
