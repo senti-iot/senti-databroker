@@ -194,4 +194,29 @@ router.post('/v2/newsec/building/energyusage', async (req, res) => {
 	res.status(200).json(rs[0])
 })
 
+router.get('/v2/newsec/building/emissionyeartodate/:uuid', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	let access = await aclClient.testResources(lease.uuid, req.params.uuid, [sentiAclPriviledge.device.read])
+	if (access.allowed === false) {
+		res.status(403).json()
+		return
+	}
+	let select = `SELECT YEAR(NOW()) as y, SUM(ddc.data->'$.co2' * 1.000) as co2, SUM(ddc.data->'$.co2Budget' * 1.000) as co2Budget, d.name, d.uuid
+					FROM deviceDataClean ddc
+						INNER JOIN device d ON ddc.device_id = d.id
+					WHERE d.uuid = ?
+						AND YEAR(ddc.created) = YEAR(NOW())`
+	console.log(mysqlConn.format(select, [req.params.uuid]))
+	let rs = await mysqlConn.query(select, [req.params.uuid])
+	if (rs[0].length !== 0) {
+		res.status(404).json([])
+		return
+	}
+	res.status(200).json(rs[0][0])
+})
+
 module.exports = router
