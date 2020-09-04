@@ -200,7 +200,7 @@ router.get('/v2/newsec/building/emissionyeartodate/:uuid', async (req, res) => {
 		res.status(401).json()
 		return
 	}
-	let access = await aclClient.testResources(lease.uuid, req.params.uuid, [sentiAclPriviledge.device.read])
+	let access = await aclClient.testResource(lease.uuid, req.params.uuid, [sentiAclPriviledge.device.read])
 	if (access.allowed === false) {
 		res.status(403).json()
 		return
