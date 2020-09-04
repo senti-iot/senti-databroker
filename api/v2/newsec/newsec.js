@@ -212,7 +212,7 @@ router.get('/v2/newsec/building/emissionyeartodate/:uuid', async (req, res) => {
 						AND YEAR(ddc.created) = YEAR(NOW())`
 	console.log(mysqlConn.format(select, [req.params.uuid]))
 	let rs = await mysqlConn.query(select, [req.params.uuid])
-	if (rs[0].length !== 0) {
+	if (rs[0].length === 0) {
 		res.status(404).json([])
 		return
 	}
