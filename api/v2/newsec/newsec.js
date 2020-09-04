@@ -162,4 +162,36 @@ router.get('/v2/newsec/benchmarkbyday/:reg/:type/:from/:to', async (req, res) =>
 	res.status(200).json(rs[0])
 })
 
+router.post('/v2/newsec/building/energyusage', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	let queryUUIDs = (req.body.length) ? req.body : []
+	if (queryUUIDs.length === 0) {
+		res.status(404).json([])
+		return
+	}
+	let access = await aclClient.testResources(lease.uuid, queryUUIDs, [sentiAclPriviledge.device.read])
+	if (access.allowed === false) {
+		res.status(403).json()
+		return
+	}
+	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
+	let select = `SELECT YEAR(NOW()) as y, SUM(ddc.data->'$.usage' * 1.000) as v, d.name, d.uuid
+					FROM deviceDataClean ddc
+						INNER JOIN device d ON ddc.device_id = d.id
+					WHERE 1 ${clause}
+						AND YEAR(ddc.created) = YEAR(NOW())
+					GROUP BY d.id`
+	console.log(mysqlConn.format(select, [...queryUUIDs]))
+	let rs = await mysqlConn.query(select, [...queryUUIDs])
+	if (rs[0].length === 0) {
+		res.status(404).json([])
+		return
+	}
+	res.status(200).json(rs[0])
+})
+
 module.exports = router
