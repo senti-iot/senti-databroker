@@ -18,7 +18,7 @@ let selectCleanDataIdDevice = `SELECT id, data, created, device_id
 		FROM deviceDataClean
 		WHERE device_id=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
 
-const selectAllDevicesUnderReg = `SELECT d.name,d.uuid, d.uuname, dd.data from device d
+const selectAllDevicesUnderReg = `SELECT d.uuid, d.name, d.uuname, dd.data, dd.created from device d
 		INNER JOIN deviceDataClean dd on dd.device_id = d.id
 		WHERE d.reg_id=?
 		AND dd.data NOT LIKE '%null%'
@@ -31,7 +31,7 @@ FROM (
 		SELECT max(dd.created) as 'time', dd.device_id, d.uuid, d.name
 		FROM device d
 		INNER JOIN deviceDataClean dd on dd.device_id = d.id  AND dd.data NOT LIKE '%null%'
-		WHERE d.reg_id=16
+		WHERE d.reg_id=?
 		group by dd.device_id
 	) t
 	INNER JOIN deviceDataClean dd ON t.time=dd.created AND t.device_id=dd.device_id
@@ -83,14 +83,10 @@ router.get('/:token/registry/:regID/latest', async (req, res) => {
 			return null
 	})
 	console.log(regID)
-	let isValid = await tokenAPI.get(`validateToken/${token}/0/${regID}`).then(rs => rs.data)
+	let isValid = await tokenAPI.get(`validateToken/${token}/0/${rID}`).then(rs => rs.data)
 	console.log(isValid)
 
 	if (isValid) {
-		log({
-			msg: "Latest Data requested externally for Registries' device",
-			regId: rID
-		}, 'info')
 		let devices = await mysqlConn.query(selectLatestAllDevicesUnderReg, [regID]).then(rs => rs[0])
 
 		res.json(devices).status(200)
