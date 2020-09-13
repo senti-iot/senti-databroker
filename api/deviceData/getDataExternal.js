@@ -8,15 +8,15 @@ const log = require('../../server').log
 
 const selectLatestCleanData = `SELECT data
 		FROM deviceDataClean
-		WHERE deviceHash=? AND data NOT LIKE '%null%' ORDER BY created DESC LIMIT 1`
+		WHERE device_id=? AND data NOT LIKE '%null%' ORDER BY created DESC LIMIT 1`
 
 const selectCleanData = `SELECT data
 		FROM deviceDataClean
-		WHERE deviceHash=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
+		WHERE device_id=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
 
-let selectCleanDataIdDevice = `SELECT id, data, created, deviceHash
+let selectCleanDataIdDevice = `SELECT id, data, created, device_id
 		FROM deviceDataClean
-		WHERE deviceHash=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
+		WHERE device_id=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
 
 const selectAllDevicesUnderReg = `SELECT d.*, data from device d
 		INNER JOIN deviceDataClean dd on dd.device_id = d.id
@@ -28,14 +28,14 @@ const selectLatestAllDevicesUnderReg = `SELECT tt.uuid, tt.name, dd.created, dd.
 FROM (
 	SELECT max(dd.id) as did, t.uuid, t.name
 	FROM (
-		SELECT max(dd.created) as 'time', dd.deviceHash, d.uuid, d.name
-		FROM Device d
-		INNER JOIN deviceDataClean dd on dd.deviceHash = d.id  AND dd.data NOT LIKE '%null%'
+		SELECT max(dd.created) as 'time', dd.device_id, d.uuid, d.name
+		FROM device d
+		INNER JOIN deviceDataClean dd on dd.device_id = d.id  AND dd.data NOT LIKE '%null%'
 		WHERE d.reg_id=16
-		group by dd.deviceHash
+		group by dd.device_id
 	) t
-	INNER JOIN deviceDataClean dd ON t.time=dd.created AND t.deviceHash=dd.deviceHash
-	group by dd.deviceHash
+	INNER JOIN deviceDataClean dd ON t.time=dd.created AND t.device_id=dd.device_id
+	group by dd.device_id
 ) tt
 LEFT JOIN deviceDataClean dd ON tt.did=dd.id`
 
