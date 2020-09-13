@@ -44,7 +44,7 @@ const selectDeviceIDQ = `SELECT id from device where uuid=?`
 /**
  * Get all the devices & their data under the regID and between from / to period
  */
-router.get('/:token/registry/:regID/:from/:to/', async (req, res, next) => {
+router.get('/:token/registry/:regID/:from/:to/', async (req, res) => {
 	let token = req.params.token
 	let rID = req.params.regID
 	let to = req.params.to
@@ -76,7 +76,7 @@ router.get('/:token/registry/:regID/:from/:to/', async (req, res, next) => {
 /**
  * Get the last set of data for Registry
  */
-router.get('/:token/registry/:regID/latest', async (req, res, next) => {
+router.get('/:token/registry/:regID/latest', async (req, res) => {
 	let token = req.params.token
 	let rID = req.params.regID
 	console.log(token, rID)
@@ -108,7 +108,7 @@ router.get('/:token/registry/:regID/latest', async (req, res, next) => {
 /**
  * Get the last data set for a device
  */
-router.get('/:token/devicedata/:deviceID/latest', async (req, res, next) => {
+router.get('/:token/devicedata/:deviceID/latest', async (req, res) => {
 	let token = req.params.token
 	let deviceID = req.params.deviceID
 
@@ -133,7 +133,7 @@ router.get('/:token/devicedata/:deviceID/latest', async (req, res, next) => {
 	}
 })
 
-router.get('/:token/devicedata/:deviceID/:from/:to/', async (req, res, next) => {
+router.get('/:token/devicedata/:deviceID/:from/:to/', async (req, res) => {
 	let token = req.params.token
 	let deviceID = req.params.deviceID
 	let to = req.params.to
@@ -160,7 +160,7 @@ router.get('/:token/devicedata/:deviceID/:from/:to/', async (req, res, next) => 
 	}
 })
 
-router.get('/:token/devicedata/:deviceID/:from/:to/:dataKey/:cfId?', async (req, res, next) => {
+router.get('/:token/devicedata/:deviceID/:from/:to/:dataKey/:cfId?', async (req, res) => {
 	let token = req.params.token
 	let deviceID = req.params.deviceID
 	let to = req.params.to
