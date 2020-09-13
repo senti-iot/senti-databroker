@@ -18,7 +18,7 @@ let selectCleanDataIdDevice = `SELECT id, data, created, deviceHash
 		FROM deviceDataClean
 		WHERE deviceHash=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
 
-const selectAllDevicesUnderReg = `SELECT d.*, data from Device d
+const selectAllDevicesUnderReg = `SELECT d.*, data from device d
 		INNER JOIN deviceDataClean dd on dd.device_id = d.id
 		WHERE d.reg_id=?
 		AND data NOT LIKE '%null%'
