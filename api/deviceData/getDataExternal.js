@@ -24,7 +24,7 @@ const selectAllDevicesUnderReg = `SELECT d.uuid, d.name, d.uuname, dd.data, dd.c
 		AND dd.data NOT LIKE '%null%'
 		AND dd.created >= ? AND dd.created <= ? ORDER BY dd.created`
 
-const selectLatestAllDevicesUnderReg = `SELECT tt.uuid, tt.name, dd.created, dd.data
+const selectLatestAllDevicesUnderReg = `SELECT tt.uuid, tt.name, dd.data
 FROM (
 	SELECT max(dd.id) as did, t.uuid, t.name
 	FROM (
@@ -99,21 +99,21 @@ router.get('/:token/registry/:regID/latest', async (req, res) => {
 /**
  * Get the last data set for a device
  */
-router.get('/:token/devicedata/:deviceID/latest', async (req, res) => {
+router.get('/:token/devicedata/:deviceUUID/latest', async (req, res) => {
 	let token = req.params.token
-	let deviceID = req.params.deviceID
+	let deviceUuid = req.params.deviceUUID
 
-	deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceID]).then(rs => rs[0][0].id)
-	let isValid = await tokenAPI.get(`validateToken/${token}/1/${deviceID}`).then(rs => rs.data)
+	let deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceUuid]).then(rs => rs[0][0].id)
+	let isValid = await tokenAPI.get(`validateToken/${token}/1/${deviceUuid}`).then(rs => rs.data)
 
 	if (isValid) {
 
 		await mysqlConn.query(selectLatestCleanData, [deviceID]).then(async rs => {
 			let rawData = rs[0]
-			log({
-				msg: "Latest Data requested externally for Device",
-				deviceId: deviceID
-			}, 'info')
+			// log({
+			// 	msg: "Latest Data requested externally for Device",
+			// 	deviceId: deviceID
+			// }, 'info')
 			res.status(200).json(rawData)
 		}).catch(err => {
 			if (err) { res.status(500).json({ err, query: mysqlConn.format(selectLatestCleanData, [deviceID]) }) }
@@ -124,23 +124,23 @@ router.get('/:token/devicedata/:deviceID/latest', async (req, res) => {
 	}
 })
 
-router.get('/:token/devicedata/:deviceID/:from/:to/', async (req, res) => {
+router.get('/:token/devicedata/:deviceUUID/:from/:to/', async (req, res) => {
 	let token = req.params.token
-	let deviceID = req.params.deviceID
+	let deviceUuid = req.params.deviceUUID
 	let to = req.params.to
 	let from = req.params.from
 
-	deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceID]).then(rs => rs[0][0].id)
-	let isValid = await tokenAPI.get(`validateToken/${token}/1/${deviceID}`).then(rs => rs.data)
+	let deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceUuid]).then(rs => rs[0][0].id)
+	let isValid = await tokenAPI.get(`validateToken/${token}/1/${deviceUuid}`).then(rs => rs.data)
 
 	if (isValid) {
 
 		await mysqlConn.query(selectCleanData, [deviceID, from, to]).then(async rs => {
 			let rawData = rs[0]
-			log({
-				msg: "Data requested externally for Device",
-				deviceId: deviceID
-			}, 'info')
+			// log({
+			// 	msg: "Data requested externally for Device",
+			// 	deviceId: deviceID
+			// }, 'info')
 			res.status(200).json(rawData)
 		}).catch(err => {
 			if (err) { res.status(500).json({ err, query: mysqlConn.format(selectCleanData, [deviceID, from, to]) }) }
