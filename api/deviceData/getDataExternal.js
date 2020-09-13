@@ -88,7 +88,7 @@ router.get('/:token/registry/:regID/latest', async (req, res) => {
 			return null
 	})
 	console.log(regID)
-	let isValid = await tokenAPI.get(`validateToken/${token}/registry/${regID}`).then(rs => rs.data)
+	let isValid = await tokenAPI.get(`validateToken/${token}/0/${regID}`).then(rs => rs.data)
 	console.log(isValid)
 
 	if (isValid) {
@@ -113,7 +113,7 @@ router.get('/:token/devicedata/:deviceID/latest', async (req, res) => {
 	let deviceID = req.params.deviceID
 
 	deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceID]).then(rs => rs[0][0].id)
-	let isValid = await tokenAPI.get(`validateToken/${token}/device/${deviceID}`).then(rs => rs.data)
+	let isValid = await tokenAPI.get(`validateToken/${token}/1/${deviceID}`).then(rs => rs.data)
 
 	if (isValid) {
 
@@ -140,7 +140,7 @@ router.get('/:token/devicedata/:deviceID/:from/:to/', async (req, res) => {
 	let from = req.params.from
 
 	deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceID]).then(rs => rs[0][0].id)
-	let isValid = await tokenAPI.get(`validateToken/${token}/device/${deviceID}`).then(rs => rs.data)
+	let isValid = await tokenAPI.get(`validateToken/${token}/1/${deviceID}`).then(rs => rs.data)
 
 	if (isValid) {
 

@@ -1,8 +1,8 @@
 const createAPI = require('apisauce').create
-const dotenv = require('dotenv').load()
+// const dotenv = require('dotenv').load()
 const crypto = require('crypto')
 
-const IV_LENGTH = 16 
+const IV_LENGTH = 16
 
 const encrypt = (text) => {
 	let iv = crypto.randomBytes(IV_LENGTH)
@@ -16,11 +16,11 @@ const encrypt = (text) => {
 
 
 let tokenAPI = createAPI({
-	baseURL: 'http://127.0.0.1:3017',
-	headers: { 
-		'Accept': 'application/json', 
+	baseURL: 'http://127.0.0.1:3018',
+	headers: {
+		'Accept': 'application/json',
 		'Content-Type': 'application/json',
-		'auth': encrypt(process.env.ENCRYPTION_KEY) 
+		'auth': encrypt(process.env.ENCRYPTION_KEY)
 	}
 })
 
