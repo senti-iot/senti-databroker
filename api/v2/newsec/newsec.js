@@ -174,6 +174,7 @@ router.post('/v2/newsec/benchmarkbyday/:from/:to', async (req, res) => {
 		return
 	}
 	let access = await aclClient.testResources(lease.uuid, queryUUIDs, [sentiAclPriviledge.device.read])
+	console.log(access)
 	if (access.allowed === false) {
 		res.status(403).json()
 		return
