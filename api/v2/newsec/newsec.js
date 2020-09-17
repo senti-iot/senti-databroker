@@ -169,6 +169,7 @@ router.post('/v2/newsec/benchmarkbyday/:from/:to', async (req, res) => {
 		return
 	}
 	let queryUUIDs = (req.body.length) ? req.body : []
+	console.log(queryUUIDs)
 	if (queryUUIDs.length === 0) {
 		res.status(404).json([])
 		return
