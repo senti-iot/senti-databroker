@@ -58,7 +58,7 @@ router.get('/:token/registry/:regID/:from/:to/', async (req, res) => {
 			return null
 	})
 	console.log(regID)
-	let isValid = await tokenAPI.get(`validateToken/${token}/0/${rID}`).then(rs => rs.data)
+	let isValid = await tokenAPI.get(`validateToken/${token}/0/${regID}`).then(rs => rs.data)
 	console.log(isValid)
 	if (isValid) {
 		let devices = await mysqlConn.query(selectAllDevicesUnderReg, [regID, from, to]).then(rs => rs[0])
@@ -83,7 +83,7 @@ router.get('/:token/registry/:regID/latest', async (req, res) => {
 			return null
 	})
 	console.log(regID)
-	let isValid = await tokenAPI.get(`validateToken/${token}/0/${rID}`).then(rs => rs.data)
+	let isValid = await tokenAPI.get(`validateToken/${token}/0/${regID}`).then(rs => rs.data)
 	console.log(isValid)
 
 	if (isValid) {
