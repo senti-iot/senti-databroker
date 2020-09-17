@@ -39,7 +39,7 @@ FROM (
 ) tt
 LEFT JOIN deviceDataClean dd ON tt.did=dd.id`
 
-const selectRegistryIDQ = `SELECT id from registry where uuid=?`
+const selectRegistryIDQ = `SELECT id from registry where uuname=?`
 const selectDeviceIDQ = `SELECT id from device where uuid=?`
 /**
  * Get all the devices & their data under the regID and between from / to period
