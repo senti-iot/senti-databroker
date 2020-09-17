@@ -8,34 +8,34 @@ const log = require('../../server').log
 
 const selectLatestCleanData = `SELECT data
 		FROM deviceDataClean
-		WHERE deviceHash=? AND data NOT LIKE '%null%' ORDER BY created DESC LIMIT 1`
+		WHERE device_id=? AND data NOT LIKE '%null%' ORDER BY created DESC LIMIT 1`
 
-const selectCleanData = `SELECT data
+const selectCleanData = `SELECT ddc.data
+		FROM deviceDataClean ddc
+		WHERE device_id=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
+
+let selectCleanDataIdDevice = `SELECT id, data, created, device_id
 		FROM deviceDataClean
-		WHERE deviceHash=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
+		WHERE device_id=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
 
-let selectCleanDataIdDevice = `SELECT id, data, created, deviceHash
-		FROM deviceDataClean
-		WHERE deviceHash=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
-
-const selectAllDevicesUnderReg = `SELECT d.*, data from Device d
-		INNER JOIN deviceDataClean dd on dd.deviceHash = d.id
+const selectAllDevicesUnderReg = `SELECT d.uuid, d.name, d.uuname, dd.data, dd.created from device d
+		INNER JOIN deviceDataClean dd on dd.device_id = d.id
 		WHERE d.reg_id=?
-		AND data NOT LIKE '%null%'
-		AND created >= ? AND created <= ? ORDER BY created`
+		AND dd.data NOT LIKE '%null%'
+		AND dd.created >= ? AND dd.created <= ? ORDER BY dd.created`
 
-const selectLatestAllDevicesUnderReg = `SELECT tt.uuid, tt.name, dd.created, dd.data
+const selectLatestAllDevicesUnderReg = `SELECT tt.uuid, tt.name, dd.data
 FROM (
 	SELECT max(dd.id) as did, t.uuid, t.name
 	FROM (
-		SELECT max(dd.created) as 'time', dd.deviceHash, d.uuid, d.name
-		FROM Device d
-		INNER JOIN deviceDataClean dd on dd.deviceHash = d.id  AND dd.data NOT LIKE '%null%'
-		WHERE d.reg_id=16
-		group by dd.deviceHash
+		SELECT max(dd.created) as 'time', dd.device_id, d.uuid, d.name
+		FROM device d
+		INNER JOIN deviceDataClean dd on dd.device_id = d.id  AND dd.data NOT LIKE '%null%'
+		WHERE d.reg_id=?
+		group by dd.device_id
 	) t
-	INNER JOIN deviceDataClean dd ON t.time=dd.created AND t.deviceHash=dd.deviceHash
-	group by dd.deviceHash
+	INNER JOIN deviceDataClean dd ON t.time=dd.created AND t.device_id=dd.device_id
+	group by dd.device_id
 ) tt
 LEFT JOIN deviceDataClean dd ON tt.did=dd.id`
 
@@ -44,7 +44,7 @@ const selectDeviceIDQ = `SELECT id from device where uuid=?`
 /**
  * Get all the devices & their data under the regID and between from / to period
  */
-router.get('/:token/registry/:regID/:from/:to/', async (req, res, next) => {
+router.get('/:token/registry/:regID/:from/:to/', async (req, res) => {
 	let token = req.params.token
 	let rID = req.params.regID
 	let to = req.params.to
@@ -58,14 +58,9 @@ router.get('/:token/registry/:regID/:from/:to/', async (req, res, next) => {
 			return null
 	})
 	console.log(regID)
-	let isValid = await tokenAPI.get(`validateToken/${token}/registry/${regID}`).then(rs => rs.data)
+	let isValid = await tokenAPI.get(`validateToken/${token}/0/${rID}`).then(rs => rs.data)
 	console.log(isValid)
 	if (isValid) {
-		log({
-			msg: " Latest Datarequested externally for Registry",
-			regId: rID,
-			internalId: regID
-		}, 'info')
 		let devices = await mysqlConn.query(selectAllDevicesUnderReg, [regID, from, to]).then(rs => rs[0])
 		res.json(devices).status(200)
 	}
@@ -76,7 +71,7 @@ router.get('/:token/registry/:regID/:from/:to/', async (req, res, next) => {
 /**
  * Get the last set of data for Registry
  */
-router.get('/:token/registry/:regID/latest', async (req, res, next) => {
+router.get('/:token/registry/:regID/latest', async (req, res) => {
 	let token = req.params.token
 	let rID = req.params.regID
 	console.log(token, rID)
@@ -88,14 +83,10 @@ router.get('/:token/registry/:regID/latest', async (req, res, next) => {
 			return null
 	})
 	console.log(regID)
-	let isValid = await tokenAPI.get(`validateToken/${token}/registry/${regID}`).then(rs => rs.data)
+	let isValid = await tokenAPI.get(`validateToken/${token}/0/${rID}`).then(rs => rs.data)
 	console.log(isValid)
 
 	if (isValid) {
-		log({
-			msg: "Latest Data requested externally for Registries' device",
-			regId: rID
-		}, 'info')
 		let devices = await mysqlConn.query(selectLatestAllDevicesUnderReg, [regID]).then(rs => rs[0])
 
 		res.json(devices).status(200)
@@ -108,21 +99,21 @@ router.get('/:token/registry/:regID/latest', async (req, res, next) => {
 /**
  * Get the last data set for a device
  */
-router.get('/:token/devicedata/:deviceID/latest', async (req, res, next) => {
+router.get('/:token/devicedata/:deviceUUID/latest', async (req, res) => {
 	let token = req.params.token
-	let deviceID = req.params.deviceID
+	let deviceUuid = req.params.deviceUUID
 
-	deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceID]).then(rs => rs[0][0].id)
-	let isValid = await tokenAPI.get(`validateToken/${token}/device/${deviceID}`).then(rs => rs.data)
+	let deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceUuid]).then(rs => rs[0][0].id)
+	let isValid = await tokenAPI.get(`validateToken/${token}/1/${deviceUuid}`).then(rs => rs.data)
 
 	if (isValid) {
 
 		await mysqlConn.query(selectLatestCleanData, [deviceID]).then(async rs => {
 			let rawData = rs[0]
-			log({
-				msg: "Latest Data requested externally for Device",
-				deviceId: deviceID
-			}, 'info')
+			// log({
+			// 	msg: "Latest Data requested externally for Device",
+			// 	deviceId: deviceID
+			// }, 'info')
 			res.status(200).json(rawData)
 		}).catch(err => {
 			if (err) { res.status(500).json({ err, query: mysqlConn.format(selectLatestCleanData, [deviceID]) }) }
@@ -133,23 +124,24 @@ router.get('/:token/devicedata/:deviceID/latest', async (req, res, next) => {
 	}
 })
 
-router.get('/:token/devicedata/:deviceID/:from/:to/', async (req, res, next) => {
+router.get('/:token/devicedata/:deviceUUID/:from/:to/', async (req, res) => {
 	let token = req.params.token
-	let deviceID = req.params.deviceID
+	let deviceUuid = req.params.deviceUUID
 	let to = req.params.to
 	let from = req.params.from
 
-	deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceID]).then(rs => rs[0][0].id)
-	let isValid = await tokenAPI.get(`validateToken/${token}/device/${deviceID}`).then(rs => rs.data)
+	let deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceUuid]).then(rs => rs[0][0].id)
+	let isValid = await tokenAPI.get(`validateToken/${token}/1/${deviceUuid}`).then(rs => rs.data)
 
 	if (isValid) {
-
+		console.log(deviceID, isValid, from, to)
+		console.log(mysqlConn.format(selectCleanData, [deviceID, from, to ]))
 		await mysqlConn.query(selectCleanData, [deviceID, from, to]).then(async rs => {
 			let rawData = rs[0]
-			log({
-				msg: "Data requested externally for Device",
-				deviceId: deviceID
-			}, 'info')
+			// log({
+			// 	msg: "Data requested externally for Device",
+			// 	deviceId: deviceID
+			// }, 'info')
 			res.status(200).json(rawData)
 		}).catch(err => {
 			if (err) { res.status(500).json({ err, query: mysqlConn.format(selectCleanData, [deviceID, from, to]) }) }
@@ -160,16 +152,16 @@ router.get('/:token/devicedata/:deviceID/:from/:to/', async (req, res, next) => 
 	}
 })
 
-router.get('/:token/devicedata/:deviceID/:from/:to/:dataKey/:cfId?', async (req, res, next) => {
+router.get('/:token/devicedata/:deviceID/:from/:to/:dataKey/:cfId?', async (req, res) => {
 	let token = req.params.token
-	let deviceID = req.params.deviceID
+	let deviceUuid = req.params.deviceID
 	let to = req.params.to
 	let from = req.params.from
 	let cfId = req.params.cfId
 	let dataKey = req.params.dataKey
 
-	deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceID]).then(rs => rs[0][0].id)
-	let isValid = await tokenAPI.get(`validateToken/${token}/${deviceID}`).then(rs => rs.data)
+	let deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceUuid]).then(rs => rs[0][0].id)
+	let isValid = await tokenAPI.get(`validateToken/${token}/1/${deviceUuid}`).then(rs => rs.data)
 
 	if (isValid) {
 

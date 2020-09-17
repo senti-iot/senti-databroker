@@ -720,9 +720,9 @@ router.get('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 	// 							AND dd.created >= ?
 	// 							AND dd.created <= ?
 	// 				WHERE NOT ISNULL(dd.data->?) ${clause}`
-	let select = `SELECT dd.created AS 'datetime', dd.data->? as value, dd.created AS t, dd.data->? as val, t.uuid AS uuid
+	let select = `SELECT dd.created AS 'datetime', dd.data->? as value
 					FROM (
-						SELECT  d.id, d.uuid
+						SELECT  d.id
 						FROM device d
 						WHERE 1 ${clause}
 					) t
@@ -731,9 +731,9 @@ router.get('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 								AND dd.created <= ?
 					WHERE NOT ISNULL(dd.data->?)`
 
-	console.log(mysqlConn.format(select, ['$.'+req.params.field, '$.'+req.params.field, ...queryUUIDs, req.params.from, req.params.to, '$.'+req.params.field]))
+	console.log(mysqlConn.format(select, ['$.'+req.params.field, ...queryUUIDs, req.params.from, req.params.to, '$.'+req.params.field]))
 	console.time('get result')
-	let rs = await mysqlConn.query(select, ['$.'+req.params.field, '$.'+req.params.field, ...queryUUIDs, req.params.from, req.params.to, '$.'+req.params.field])
+	let rs = await mysqlConn.query(select, ['$.'+req.params.field, ...queryUUIDs, req.params.from, req.params.to, '$.'+req.params.field])
 	console.timeEnd('get result')
 	res.status(200).json(rs[0])
 })
@@ -763,9 +763,9 @@ router.post('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 	// 							AND dd.created >= ?
 	// 							AND dd.created <= ?
 	// 				WHERE NOT ISNULL(dd.data->?) ${clause}`
-	let select = `SELECT dd.created AS 'datetime', dd.data->? as value, dd.created AS t, dd.data->? as val, t.uuid AS uuid
+	let select = `SELECT dd.created AS 'datetime', dd.data->? as value
 					FROM (
-						SELECT  d.id, d.uuid
+						SELECT  d.id
 						FROM device d
 						WHERE 1 ${clause}
 					) t
@@ -774,9 +774,9 @@ router.post('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 								AND dd.created <= ?
 					WHERE NOT ISNULL(dd.data->?)`
 
-	console.log(mysqlConn.format(select, ['$.'+req.params.field, '$.'+req.params.field, ...queryUUIDs, req.params.from, req.params.to, '$.'+req.params.field]))
+	console.log(mysqlConn.format(select, ['$.'+req.params.field, ...queryUUIDs, req.params.from, req.params.to, '$.'+req.params.field]))
 	console.time('get result')
-	let rs = await mysqlConn.query(select, ['$.'+req.params.field, '$.'+req.params.field, ...queryUUIDs, req.params.from, req.params.to, '$.'+req.params.field])
+	let rs = await mysqlConn.query(select, ['$.'+req.params.field, ...queryUUIDs, req.params.from, req.params.to, '$.'+req.params.field])
 	console.timeEnd('get result')
 	// console.log(mysqlConn.format(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs]))
 	// console.time('get result')
