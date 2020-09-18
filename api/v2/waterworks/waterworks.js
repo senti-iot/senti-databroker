@@ -51,6 +51,7 @@ router.post('/v2/waterworks/acldevice/:deviceid', async (req, res) => {
 	rs[0][0].result2 = result2
 	res.status(200).json(rs[0][0])
 })
+
 router.post('/v2/waterworks/adddevice/:deviceuuid/touser/:useruuid', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
@@ -65,6 +66,7 @@ router.post('/v2/waterworks/adddevice/:deviceuuid/touser/:useruuid', async (req,
 	await aclClient.addPrivileges(req.params.useruuid, req.params.deviceuuid, [sentiAclPriviledge.device.read])
 	res.status(200).json()
 })
+
 router.get('/v2/waterworks/data/usage/:from/:to', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
@@ -763,9 +765,9 @@ router.post('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 	// 							AND dd.created >= ?
 	// 							AND dd.created <= ?
 	// 				WHERE NOT ISNULL(dd.data->?) ${clause}`
-	let select = `SELECT dd.created AS 'datetime', dd.data->? as value, d.uuid as uuid
+	let select = `SELECT dd.created AS 'datetime', dd.data->? as value, t.uuid as uuid
 					FROM (
-						SELECT  d.id
+						SELECT  d.id, d.uuid
 						FROM device d
 						WHERE 1 ${clause}
 					) t
