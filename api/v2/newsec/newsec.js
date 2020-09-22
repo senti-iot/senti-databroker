@@ -40,7 +40,7 @@ router.post('/v2/newsec/deviceco2byyear', async (req, res) => {
 	// 				GROUP BY y, uuid
 	// 				ORDER BY y, did`
 
-	let select = `SELECT sum(dd.val) as val, YEAR(dd.t) as y, dd.did, dd.uuid, dd.type_id, IF(dd.type_id=79, 'Fjernvarme', IF(dd.type_id=80, 'Vand', IF(dd.type_id=81, 'Elektricitet', null))) as type
+	let select = `SELECT sum(dd.val) as val, YEAR(dd.t) as y, dd.did, dd.uuid, dd.type_id, IF(dd.type_id=79, 'Varme', IF(dd.type_id=80, 'Vand', IF(dd.type_id=81, 'Elektricitet', IF(dd.type_id=104, 'Renovering', IF(dd.type_id=105, 'Affald', null))))) as type
 					FROM (
 						SELECT dd.created AS t, 1.000*dd.data->'$.co2' as val, dd.device_id AS did, d.uuid, d.type_id
 							FROM device d 
@@ -169,13 +169,11 @@ router.post('/v2/newsec/benchmarkbyday/:from/:to', async (req, res) => {
 		return
 	}
 	let queryUUIDs = (req.body.length) ? req.body : []
-	console.log(queryUUIDs)
 	if (queryUUIDs.length === 0) {
 		res.status(404).json([])
 		return
 	}
 	let access = await aclClient.testResources(lease.uuid, queryUUIDs, [sentiAclPriviledge.device.read])
-	console.log(access)
 	if (access.allowed === false) {
 		res.status(403).json()
 		return
