@@ -40,7 +40,7 @@ router.post('/v2/newsec/deviceco2byyear', async (req, res) => {
 	// 				GROUP BY y, uuid
 	// 				ORDER BY y, did`
 
-	let select = `SELECT sum(dd.val) as val, YEAR(dd.t) as y, dd.did, dd.uuid, dd.type_id, IF(dd.type_id=79, 'Varme', IF(dd.type_id=80, 'Vand', IF(dd.type_id=81, 'Elektricitet', IF(dd.type_id=104, 'Renovering', IF(dd.type_id=105, 'Affald', null))))) as type
+	let select = `SELECT sum(dd.val) as val, YEAR(dd.t) as y, dd.did, dd.uuid, dd.type_id, IF(dd.type_id=79, 'Varme', IF(dd.type_id=80, 'Vand', IF(dd.type_id=81, 'Elektricitet', IF(dd.type_id=104, 'Renovering', IF(dd.type_id=105, 'Affald', 'Undefined'))))) as type
 					FROM (
 						SELECT dd.created AS t, 1.000*dd.data->'$.co2' as val, dd.device_id AS did, d.uuid, d.type_id
 							FROM device d 
@@ -63,9 +63,12 @@ router.post('/v2/newsec/deviceco2byyear', async (req, res) => {
 			result[row.y] = {
 				"year": row.y,
 				"sum": 0,
-				"Fjernvarme": 0,
+				"Varme": 0,
 				"Vand": 0,
-				"Elektricitet": 0
+				"Elektricitet": 0,
+				"Renovering": 0,
+				"Affald": 0,
+				"Undefined": 0
 			}
 		}
 		result[row.y][row.type] = row.val
