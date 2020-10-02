@@ -116,7 +116,7 @@ router.post('/v2/newsec/actualresult', async (req, res) => {
 		2018: rs[0][0].val
 	}
 	console.log(mysqlConn.format(select, [today.format('YYYY-01-01'), today.format('YYYY-MM-DD'), ...queryUUIDs]))
-	let rs = await mysqlConn.query(select, [today.format('YYYY-01-01'), today.format('YYYY-MM-DD'), ...queryUUIDs])
+	rs = await mysqlConn.query(select, [today.format('YYYY-01-01'), today.format('YYYY-MM-DD'), ...queryUUIDs])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
 		return
