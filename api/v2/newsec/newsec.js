@@ -121,7 +121,7 @@ router.post('/v2/newsec/actualresult', async (req, res) => {
 		return
 	}
 	result[today.format('YYYY')] = rs[0][0].val
-	res.status(200).json(Object.values(result))
+	res.status(200).json(result)
 })
 
 router.post('/v2/newsec/buildingsum/:from/:to', async (req, res) => {
