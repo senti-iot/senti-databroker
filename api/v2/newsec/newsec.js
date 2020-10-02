@@ -102,7 +102,6 @@ router.post('/v2/newsec/actualresult', async (req, res) => {
 									AND dd.created >= ?
 									AND dd.created <= ?
 							WHERE 1 ${clause}
-							)
 					) dd
 					WHERE NOT ISNULL(val)`
 	let today = moment()
