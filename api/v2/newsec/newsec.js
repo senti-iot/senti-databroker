@@ -1,7 +1,7 @@
 
 const express = require('express')
 const router = express.Router()
-// const moment = require('moment')
+const moment = require('moment')
 
 var mysqlConn = require('../../../mysql/mysql_handler')
 
@@ -74,6 +74,54 @@ router.post('/v2/newsec/deviceco2byyear', async (req, res) => {
 		result[row.y][row.type] = row.val
 		result[row.y].sum += parseFloat(row.val)
 	})
+	res.status(200).json(Object.values(result))
+})
+
+router.post('/v2/newsec/actualresult', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	let queryUUIDs = (req.body.length) ? req.body : []
+	if (queryUUIDs.length === 0) {
+		res.status(404).json([])
+		return
+	}
+	let access = await aclClient.testResources(lease.uuid, queryUUIDs, [sentiAclPriviledge.device.read])
+	if (access.allowed === false) {
+		res.status(403).json()
+		return
+	}
+	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
+	let select = `SELECT sum(dd.val) as val
+					FROM (
+						SELECT dd.created AS t, 1.000*dd.data->'$.co2' as val, dd.device_id AS did, d.uuid, d.uuname
+							FROM device d 
+								INNER JOIN deviceDataClean dd ON dd.device_id = d.id
+									AND dd.created >= ?
+									AND dd.created <= ?
+							WHERE 1 ${clause}
+							)
+					) dd
+					WHERE NOT ISNULL(val)`
+	let today = moment()
+	console.log(mysqlConn.format(select, ['2018-01-01', today.format('2018-MM-DD'), ...queryUUIDs]))
+	let rs = await mysqlConn.query(select, ['2018-01-01', today.format('2018-MM-DD'), ...queryUUIDs])
+	if (rs[0].length === 0) {
+		res.status(404).json([])
+		return
+	}
+	let result = {
+		2018: rs[0][0].val
+	}
+	console.log(mysqlConn.format(select, [today.format('YYYY-01-01'), today.format('YYYY-MM-DD'), ...queryUUIDs]))
+	let rs = await mysqlConn.query(select, [today.format('YYYY-01-01'), today.format('YYYY-MM-DD'), ...queryUUIDs])
+	if (rs[0].length === 0) {
+		res.status(404).json([])
+		return
+	}
+	result[today.format('YYYY')] = rs[0][0].val
 	res.status(200).json(Object.values(result))
 })
 
