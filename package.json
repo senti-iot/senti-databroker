@@ -4,7 +4,9 @@
 	"deprecated": false,
 	"description": "Senti Data Broker service",
 	"main": "server.js",
-	"scripts": {},
+	"scripts": {
+		"test": "echo \"npm test temporarily disabled\""
+	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/senti-iot/senti-databroker.git"
