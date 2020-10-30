@@ -39,6 +39,79 @@ const colorState = (d, cfg) => {
 	}
 	return { ts: d.ts, color: Math.max(T_color, RH_color, CO2_color) }
 }
+router.get('/v2/climaidinsight/northq/occupancy/:min/:prhour', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	let select = `SELECT device_id, IF(ppmperhour > ? OR co2 > ?, 1 , 0) AS occupancy
+					FROM (
+						SELECT device_id, co2diff*3600/co2time AS ppmperhour, co2, oldco2
+						FROM (
+							SELECT device_id, time_to_sec(timediff(recent, older)) AS co2time, co2-oldco2 AS co2diff, co2, oldco2
+							FROM (
+								SELECT t2.device_id, t2.co2, t2.recent, DDC.created AS older, DDC.data->'$.co2'*1.0 AS oldco2
+								FROM (
+									SELECT t1.*, maX(DDC.id) AS oldid
+									FROM (
+										SELECT DDC.device_id, DDC.data->'$.co2'*1.0 AS co2, DDC.created AS recent
+										FROM (
+											SELECT max(id) AS id
+											FROM sentidatastorage.deviceDataClean DDC 
+											WHERE DDC.device_id IN (
+												SELECT D.id 
+												FROM sentidatastorage.registry R
+												INNER JOIN sentidatastorage.device D ON D.reg_id=R.id AND D.deleted=0
+												WHERE R.uuid='81ce2f29-d0dc-4f1e-17f2-e65b340fa7bd' 
+											)
+											AND DDC.created > DATE_SUB(NOW(), interval 60 minute) AND NOT ISNULL(DDC.data->'$.co2')
+											GROUP BY DDC.device_id
+										) t
+										INNER JOIN sentidatastorage.deviceDataClean DDC  ON DDC.id=t.id
+									) t1
+									INNER JOIN sentidatastorage.deviceDataClean DDC ON DDC.device_id=t1.device_id AND DDC.created<DATE_SUB(recent,INTERVAL 60 MINUTE) AND DDC.created>DATE_SUB(recent, INTERVAL 120 MINUTE) AND NOT ISNULL(DDC.data->'$.co2')
+									GROUP BY DDC.device_id
+								) t2
+								INNER JOIN sentidatastorage.deviceDataClean DDC ON t2.oldid=DDC.id
+							) t3
+						) t4
+					) t5`
+	console.log(mysqlConn.format(select, [req.params.prhour, req.params.min]))
+	let rs = await mysqlConn.query(select, [req.params.prhour, req.params.min])
+	if (rs[0].length === 0) {
+		res.status(404).json([])
+		return
+	}
+	res.status(200).json(rs[0])
+})
+router.get('/v2/climaidinsight/northq/kkpressed', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	let select = `SELECT t.device_id, IF(cold>0, 1,0) AS kkpressed, recent as mostrecent
+					FROM (
+						SELECT DDC.device_id, SUM(DDC.data->'$.cold'*1.0) AS cold, count(*) AS antal, MAX(DDC.created) AS recent
+						FROM (
+							SELECT D.id 
+							FROM sentidatastorage.registry R
+							INNER JOIN sentidatastorage.device D ON D.reg_id=R.id AND D.deleted=0
+							WHERE R.uuid='81ce2f29-d0dc-4f1e-17f2-e65b340fa7bd' 
+						) D
+						LEFT JOIN sentidatastorage.deviceDataClean DDC ON DDC.device_id=D.id
+						WHERE DDC.created > DATE_SUB(NOW(), interval 60 minute) AND NOT ISNULL(DDC.data->'$.cold')
+						GROUP BY D.id
+					) t`
+	console.log(mysqlConn.format(select, []))
+	let rs = await mysqlConn.query(select, [])
+	if (rs[0].length === 0) {
+		res.status(404).json([])
+		return
+	}
+	res.status(200).json(rs[0])
+})
 
 router.post('/v2/climaidinsight/qualitative/byhour/:from/:to', async (req, res) => {
 	let lease = await authClient.getLease(req)
@@ -387,4 +460,7 @@ router.post('/v2/climaidinsight/heatmap/:field/:from/:to', async (req, res) => {
 	let rs = await mysqlConn.query(select, ['$.' + req.params.field, req.params.from, req.params.to, '$.' + req.params.field, ...queryUUIDs])
 	res.status(200).json(rs[0])
 })
+
+
+
 module.exports = router
