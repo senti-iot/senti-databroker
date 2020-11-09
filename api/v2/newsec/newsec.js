@@ -143,7 +143,7 @@ router.post('/v2/newsec/buildingsum/:from/:to', async (req, res) => {
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
 	let select = `SELECT sum(dd.val) as val, dd.did, dd.uuid, REPLACE(dd.uuname, '-Emission', '') as buildingNo
 					FROM (
-						SELECT dd.created AS t, 1.000*dd.data->'$.co2' as val, dd.device_id AS did, d.uuid, d.uuname
+						SELECT dd.created AS t, 1.000*ifnull(dd.data->'$.co2', 0) as val, dd.device_id AS did, d.uuid, d.uuname
 							FROM device d 
 								INNER JOIN deviceDataClean dd ON dd.device_id = d.id
 									AND dd.created >= ?
