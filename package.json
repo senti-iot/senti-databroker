@@ -5,7 +5,7 @@
 	"description": "Senti Data Broker service",
 	"main": "server.js",
 	"scripts": {
-		"test" : "echo \"No tests\""
+		"test": "echo \"npm test temporarily disabled\""
 	},
 	"repository": {
 		"type": "git",
