@@ -7,8 +7,8 @@ const moment = require('moment')
 const SHA2 = require('sha2')
 const uuidv4 = require('uuid/v4')
 
-const { sentiAclPriviledge, sentiAclResourceType } = require('senti-apicore')
-const { aclClient, authClient } = require('../server')
+const { /* sentiAclPriviledge, */ sentiAclResourceType } = require('senti-apicore')
+const { aclClient, /* authClient */ } = require('../server')
 
 const format = 'YYYY-MM-DD HH:mm:ss'
 const dateFormatter = (date) => {
@@ -20,13 +20,13 @@ const dateFormatter = (date) => {
 	}
 	return 'NOW()'
 }
-const deviceQuery = `SELECT d.id, d.uuid, d.name, d.type_id, d.reg_id, r.uuid as reguuid, d.metadata, d.communication 
+const deviceQuery = `SELECT d.id, d.uuid, d.name, d.type_id, d.reg_id, r.uuid as reguuid, d.metadata, d.communication
 FROM device d
 	INNER JOIN registry r ON r.id = d.reg_id
 	INNER JOIN organisation o on o.id = r.orgId
 WHERE o.uuname=?
 	AND d.uuname=?
-	AND r.uuname=? 
+	AND r.uuname=?
 	AND d.deleted = 0;`
 // const insDeviceDataQuery = `INSERT INTO deviceData
 // 			(data, created, device_id, signature)
@@ -283,6 +283,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			}
 			console.log('STORING DATA BY DEVICE')
 			console.log(customerID, regName, deviceName)
+			// console.log(device)
 			if (device) {
 				await this.storeData(pData, device)
 			}

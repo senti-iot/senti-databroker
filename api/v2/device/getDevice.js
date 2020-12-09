@@ -140,7 +140,7 @@ router.get('/v2/internal/fixacldevice', async (req, res) => {
 		res.status(404).json()
 		return
 	}
-	let result = []
+	// let result = []
 
 	await rs[0].reduce(async (promise, row) => {
 		await promise;
