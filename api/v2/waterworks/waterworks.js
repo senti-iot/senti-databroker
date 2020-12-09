@@ -178,6 +178,9 @@ router.get('/v2/waterworks/data/device/:deviceuuid/usage/:from/:to', async (req,
 	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, req.params.deviceuuid, req.params.from, req.params.to, req.params.deviceuuid])
 	res.status(200).json(rs[0])
 })
+/**
+ * Usage by day with all access to devices
+ */
 router.get('/v2/waterworks/data/usagebyday/:from/:to', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
@@ -241,6 +244,9 @@ router.get('/v2/waterworks/data/usagebyday/:from/:to', async (req, res) => {
 	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, ...queryUUIDs, req.params.from, req.params.to, ...queryUUIDs])
 	res.status(200).json(rs[0])
 })
+/**
+ * Usage by day with body including UUIDs
+ */
 router.post('/v2/waterworks/data/usagebyday/:from/:to', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
@@ -1112,8 +1118,61 @@ router.get('/v2/waterworks/alarm/threshold/:orguuid', async (req, res) => {
 	})
 	res.status(200).json(rs[0])
 })
+/**
+ * Benchmark by UUIDs
+ */
 /*
-
+SELECT 86400*totalflow/daycount as value, d as 'datetime', 86400*totalflow as totalFlowPerDay, totalflow/daycount as averageFlowPerSecond, 86400*totalflow/daycount as averageFlowPerDay, d
+FROM (
+	SELECT SUM(flow) AS totalflow, count(*) AS daycount, date(t) AS d
+	FROM (
+		SELECT vdiff/diff as flow, t, did
+		FROM (
+			SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
+			FROM (
+				SELECT val, t, @row:=@row+1 as r, d3.did
+				FROM ( SELECT @row:=0) foo
+				INNER JOIN (
+					SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+					FROM (
+						SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
+						FROM (
+							SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+							FROM device d
+							INNER JOIN deviceDataClean dd ON dd.device_id = d.id
+							WHERE 1 ${clause}
+								AND dd.created >= DATE_SUB('2020-09-01', INTERVAL 1 DAY)
+								and dd.created <= '2020-12-01'
+						) dd
+						WHERE NOT ISNULL(val)
+					) ddd
+					GROUP BY did, y,m,d
+				) d3 ON 1
+			) d4
+			INNER JOIN (
+				SELECT val, t, @row2:=@row2+1 as r, did
+				FROM ( SELECT @row2:=0) foo
+				INNER JOIN (
+					SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+					FROM (
+						SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
+						FROM (
+							SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+							FROM device d
+							INNER JOIN deviceDataClean dd ON dd.device_id = d.id
+							WHERE 1 ${clause}
+								AND dd.created >= DATE_SUB('2020-09-01', INTERVAL 1 DAY)
+								and dd.created <= '2020-12-01'
+						) dd
+						WHERE NOT ISNULL(val)
+					) ddd
+					GROUP BY did,y,m,d
+				) ddd ON 1
+			) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
+		) kiddingme
+	) km2
+	GROUP BY date(t)
+) t;
 */
 
 module.exports = router
