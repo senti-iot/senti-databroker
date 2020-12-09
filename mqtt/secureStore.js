@@ -13,6 +13,9 @@ const { aclClient, /* authClient */ } = require('../server')
 const format = 'YYYY-MM-DD HH:mm:ss'
 const dateFormatter = (date) => {
 	if (moment.unix(date).isValid()) {
+		if (date.toString().length > 11) {
+			date = date / 1000
+		}
 		return moment.unix(date).format(format)
 	}
 	if (moment(date).isValid()) {
@@ -52,8 +55,8 @@ const createDeviceQuery = `INSERT INTO device
 			description,
 			lat, lng, address,
 			locType,
-			communication, uuid)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?)`
+			communication, uuid, created, modified)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())`
 
 const createMetaDataQuery = `INSERT INTO deviceMetadata
 			(device_id, data, inbound, outbound)
