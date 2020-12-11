@@ -74,18 +74,69 @@ const selectDeviceType = `SELECT * from deviceType where id=?`
 
 class SecureStoreMqttHandler extends SecureMqttHandler {
 	init() {
-		this.topics = ['v1/+/location/+/registries/+/devices/+/publish', 'v1/+/location/+/registries/+/publish']
-		// this.topics = ['v2/test']
+		this.topics = ['v1/+/location/+/registries/+/devices/+/publish', 'v1/+/location/+/registries/+/publish', 'v1/ttn-application', 'v2/#']
 		this.mqttClient.on('message', (topic, message) => {
 			let arr = topic.split('/')
-			if (arr.length === 9 && arr.indexOf('devices' > -1)) {
-				this.storeDataByDevice(message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] })
-			}
-			if (arr.length === 7) {
-				console.log(arr)
-				this.storeDataByRegistry(message.toString(), { regName: arr[5], customerID: arr[1] })
+			// console.log(arr)
+			switch (arr[0]) {
+				default:
+				case 'v1':
+					if (arr.length === 9 && arr.indexOf('devices' > -1)) {
+						this.storeDataByDevice(message.toString(), { deviceName: arr[7], regName: arr[5], customerID: arr[1] })
+					}
+					if (arr.length === 7) {
+						// console.log(arr)
+						this.storeDataByRegistry(message.toString(), { regName: arr[5], customerID: arr[1] })
+					}
+					if(arr[1] === 'ttn-application') {
+						this.ttnApplicationHandler(message)
+					}
+				break;
+				case 'v2':
+					this.getV2Handler(arr, message.toString())
+				break;
+
 			}
 		})
+	}
+
+	getV2Handler (topic, message) {
+		switch (topic[1]) {
+			default:
+			break;
+			case 'ttn-application':
+				this.ttnApplicationHandler(message)
+			break;
+		}
+	}
+
+	async ttnApplicationHandler (message) {
+		let data = JSON.parse(message)
+		let deviceUuname = data.app_id + '-' + data.dev_id
+		let device = await this.getDeviceByUuname(deviceUuname)
+		if (device !== false) {
+			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
+		} else {
+			let config = await this.getDeviceDataHandlerConfigByUuname(data.app_id)
+			console.log(config)
+			if (config !== false && config.handlerType === 'ttn-application') {
+				console.log(config.data)
+				data.sentiTtnDeviceId = deviceUuname
+				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
+			}
+		}
+	}
+
+	async getDeviceDataHandlerConfigByUuname (uuname) {
+		let uunameSql = `SELECT d.id, d.uuid, d.uuname, d.handlerType, d.data
+							FROM deviceDataHandlerConfig d
+							WHERE d.uuname=? AND d.deleted = 0;`
+		console.log(await mysqlConn.format(uunameSql, [uuname]))
+		let rs = await mysqlConn.query(uunameSql, [uuname])
+		if (rs[0].length === 1) {
+			return rs[0][0]
+		}
+		return false
 	}
 	async createDevice(data, regId, deviceTypeId) {
 		let uuname = data.uuname ? data.uuname : data.name
@@ -113,6 +164,20 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		let [device] = await mysqlConn.query(deviceQuery, [customerID, deviceName, regName])
 		return device[0]
 	}
+	async getDeviceByUuname(uuname) {
+		let uunameSql = `SELECT d.id, d.uuid, d.name, d.type_id, d.reg_id, r.uuid as reguuid, d.metadata, d.communication, o.uuname as orguuname, r.uuname as reguuname
+							FROM device d
+								INNER JOIN registry r ON r.id = d.reg_id
+								INNER JOIN organisation o on o.id = r.orgId
+							WHERE d.uuname=? AND d.deleted = 0;`
+		// console.log(await mysqlConn.format(uunameSql, [uuname]))
+		let rs = await mysqlConn.query(uunameSql, [uuname])
+		if (rs[0].length === 1) {
+			return rs[0][0]
+		}
+		return false
+	}
+
 	async getDeviceType(deviceTypeId) {
 		let [deviceType] = await mysqlConn.query(selectDeviceType, [deviceTypeId])
 		return deviceType[0]
