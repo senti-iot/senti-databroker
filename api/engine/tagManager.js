@@ -16,7 +16,7 @@ const encrypt = (text) => {
 
 
 let tagManager = createAPI({
-	baseURL: 'http://127.0.0.1:3029',
+	baseURL: process.env.TAGMANAGER,
 	headers: {
 		'Accept': 'application/json',
 		'Content-Type': 'application/json',
