@@ -104,7 +104,8 @@ router.get('/v2/waterworks/data/custom-benchmark/:tagUUID/:from/:to', async (req
 		return
 	}
 	tagManager.setHeader('Authorization', `Bearer ${lease.token}`)
-	let queryUUIDs = await tagManager.get(`/resources/${tagUUID}`).then(rs => rs.data)
+	console.log('TAGMANAGER', tagManager.getBaseURL())
+	let queryUUIDs = await tagManager.get(`/resources/${tagUUID}`).then(rs => rs.ok ? rs.data : [])
 	console.log('Query UUIDS', queryUUIDs)
 	if (queryUUIDs.length === 0) {
 		res.status(404).json([])
