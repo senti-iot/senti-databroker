@@ -33,7 +33,7 @@
 	"homepage": "https://github.com/senti-iot/senti-databroker#readme",
 	"dependencies": {
 		"apisauce": "^1.1.1",
-		"axios": "^0.19.1",
+		"axios": "^0.21.1",
 		"cli-table3": "^0.5.1",
 		"colors": "^1.4.0",
 		"cors": "^2.8.5",
