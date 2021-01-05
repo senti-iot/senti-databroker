@@ -39,7 +39,7 @@ const colorState = (d, cfg) => {
 	}
 	return { ts: d.ts, color: Math.max(T_color, RH_color, CO2_color) }
 }
-router.get('/v2/climaidinsight/northq/occupancy/:min/:prhour', async (req, res) => {
+router.get('/v2/climaidinsight/northq/occupancy/:registry/:min/:prhour', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
 		res.status(401).json()
@@ -63,7 +63,7 @@ router.get('/v2/climaidinsight/northq/occupancy/:min/:prhour', async (req, res) 
 												SELECT D.id 
 												FROM sentidatastorage.registry R
 												INNER JOIN sentidatastorage.device D ON D.reg_id=R.id AND D.deleted=0
-												WHERE R.uuid='81ce2f29-d0dc-4f1e-17f2-e65b340fa7bd' 
+												WHERE R.uuid=? 
 											)
 											AND DDC.created > DATE_SUB(NOW(), interval 60 minute) AND NOT ISNULL(DDC.data->'$.co2')
 											GROUP BY DDC.device_id
@@ -77,15 +77,15 @@ router.get('/v2/climaidinsight/northq/occupancy/:min/:prhour', async (req, res) 
 							) t3
 						) t4
 					) t5`
-	console.log(mysqlConn.format(select, [req.params.prhour, req.params.min]))
-	let rs = await mysqlConn.query(select, [req.params.prhour, req.params.min])
+	console.log(mysqlConn.format(select, [req.params.prhour, req.params.min, req.params.registry]))
+	let rs = await mysqlConn.query(select, [req.params.prhour, req.params.min, req.params.registry])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
 		return
 	}
 	res.status(200).json(rs[0])
 })
-router.get('/v2/climaidinsight/northq/kkpressed', async (req, res) => {
+router.get('/v2/climaidinsight/northq/kkpressed/:registry', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
 		res.status(401).json()
@@ -98,14 +98,14 @@ router.get('/v2/climaidinsight/northq/kkpressed', async (req, res) => {
 							SELECT D.id 
 							FROM sentidatastorage.registry R
 							INNER JOIN sentidatastorage.device D ON D.reg_id=R.id AND D.deleted=0
-							WHERE R.uuid='81ce2f29-d0dc-4f1e-17f2-e65b340fa7bd' 
+							WHERE R.uuid=? 
 						) D
 						LEFT JOIN sentidatastorage.deviceDataClean DDC ON DDC.device_id=D.id
 						WHERE DDC.created > DATE_SUB(NOW(), interval 60 minute) AND NOT ISNULL(DDC.data->'$.cold')
 						GROUP BY D.id
 					) t`
-	console.log(mysqlConn.format(select, []))
-	let rs = await mysqlConn.query(select, [])
+	console.log(mysqlConn.format(select, [req.params.registry]))
+	let rs = await mysqlConn.query(select, [req.params.registry])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
 		return
