@@ -461,6 +461,52 @@ router.post('/v2/climaidinsight/heatmap/:field/:from/:to', async (req, res) => {
 	res.status(200).json(rs[0])
 })
 
+router.get('/v2/climaidinsight/activeminutes/:device/:from/:to/', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
 
+	let select = `SELECT SUM(activeseconds)/60.0 AS activeminutes, ts
+					FROM (
+						SELECT	time_to_sec(TIMEDIFF(tt.tots, tt.fromts)) * tt.activity*1.0 AS activeseconds, date_add(DATE(tt.tots), INTERVAL HOUR(tt.tots) HOUR) AS ts
+						FROM (
+							SELECT	IF(f.created<?, ?, f.created) as fromts,
+									IF(t.created>=?, DATE_SUB(?, INTERVAL 1 SECOND), t.created) AS tots,
+									t.activity
+							FROM (
+								SELECT f.*
+								FROM (
+									select @a:=0
+								) d
+								INNER JOIN (
+									SELECT if(DDC.data->'$.motion'>2,1.0,0.0) AS activity, DDC.created, @a:=@a+1 AS r
+									FROM sentidatastorage.deviceDataClean DDC
+									WHERE DDC.created>=DATE_SUB(?, INTERVAL 1 HOUR) AND DDC.created < DATE_ADD(?, INTERVAL 1 HOUR) AND DDC.device_id=?
+									ORDER BY created
+								) f ON 1
+							) f
+							INNER JOIN  (
+								SELECT t.*
+								FROM (
+									select @aa:=0
+								) d
+								INNER JOIN (
+									SELECT if(DDC.data->'$.motion'>2,1,0) AS activity, DDC.created, @aa:=@aa+1 AS r
+									FROM sentidatastorage.deviceDataClean DDC
+									WHERE DDC.created>=DATE_SUB(?, INTERVAL 1 HOUR) AND DDC.created < DATE_add(?, INTERVAL 1 HOUR) AND DDC.device_id=?
+									ORDER BY created
+								) t ON 1
+							) t ON f.r=t.r-1
+							WHERE t.created>? AND f.created<?
+						) tt
+					) ttt
+					GROUP BY ts`;
+	console.log(mysqlConn.format(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs]))
+	let rs = await mysqlConn.query(select, [req.params.from, req.params.from, req.params.to, req.params.to, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to])
+	console.log(rs);
+	res.status(200).json(rs[0])
+})
 
 module.exports = router
