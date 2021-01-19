@@ -503,7 +503,7 @@ router.get('/v2/climaidinsight/activeminutes/:device/:from/:to/', async (req, re
 						) tt
 					) ttt
 					GROUP BY ts`;
-	console.log(mysqlConn.format(select, ['$.'+req.params.field, req.params.from, req.params.to, '$.'+req.params.field, ...queryUUIDs]))
+	console.log(mysqlConn.format(select, [req.params.from, req.params.from, req.params.to, req.params.to, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to]))
 	let rs = await mysqlConn.query(select, [req.params.from, req.params.from, req.params.to, req.params.to, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to])
 	console.log(rs);
 	res.status(200).json(rs[0])
