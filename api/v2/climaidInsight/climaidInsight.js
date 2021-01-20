@@ -475,9 +475,9 @@ router.get('/v2/climaidinsight/activeminutes/:device/:from/:to/', async (req, re
 					FROM (
 						SELECT	time_to_sec(TIMEDIFF(tt.tots, tt.fromts)) * tt.activity*1.0 AS activeseconds, date_add(DATE(tt.tots), INTERVAL HOUR(tt.tots) HOUR) AS ts, CONCAT(DATE(tt.tots), ' ',HOUR(tt.tots)) AS textTS
 						FROM (
-							SELECT	IF(f.created<?, ?, f.created) as fromts,
-									IF(t.created>=?, DATE_SUB(?, INTERVAL 1 SECOND), t.created) AS tots,
-									t.activity
+							SELECT	f.created as fromts,
+								t.created AS tots,
+								t.activity
 							FROM (
 								SELECT f.*
 								FROM (
