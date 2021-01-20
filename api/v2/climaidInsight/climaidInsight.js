@@ -141,7 +141,8 @@ router.post('/v2/climaidinsight/qualitative/byhour/:from/:to', async (req, res) 
 					sum(data->'$.heavyair') as heavyair,
 					sum(data->'$.lighting') as lighting,
 					sum(data->'$.itchyeyes') as itchyeyes,
-					sum(data->'$.concentration') as concentration
+					sum(data->'$.concentration') as concentration,
+					sum(data->'$.good') as good
 				FROM deviceDataClean ddc
 				WHERE ddc.created >= ?
 					AND ddc.created < ?
