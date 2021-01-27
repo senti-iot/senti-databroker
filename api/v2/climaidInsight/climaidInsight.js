@@ -475,9 +475,9 @@ router.get('/v2/climaidinsight/activeminutes/:device/:from/:to/', async (req, re
 					FROM (
 						SELECT	time_to_sec(TIMEDIFF(tt.tots, tt.fromts)) * tt.activity*1.0 AS activeseconds, date_add(DATE(tt.tots), INTERVAL HOUR(tt.tots) HOUR) AS ts, CONCAT(DATE(tt.tots), ' ',HOUR(tt.tots)) AS textTS
 						FROM (
-							SELECT	f.created as fromts,
-								t.created AS tots,
-								t.activity
+							SELECT	IF(f.created<?, ?, f.created) as fromts,
+									IF(t.created>=?, DATE_SUB(?, INTERVAL 1 SECOND), t.created) AS tots,
+									t.activity
 							FROM (
 								SELECT f.*
 								FROM (
@@ -507,8 +507,8 @@ router.get('/v2/climaidinsight/activeminutes/:device/:from/:to/', async (req, re
 					GROUP BY ts
 					) t4
 					WHERE t4.ts>=? AND t4.ts<?`;
-	// console.log(mysqlConn.format(select, [req.params.from, req.params.to, req.params.device, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to]))
-	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, req.params.device, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to])
+	// console.log(mysqlConn.format(select, [req.params.from, req.params.from, req.params.to, req.params.to, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to]))
+	let rs = await mysqlConn.query(select, [req.params.from, req.params.from, req.params.to, req.params.to, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to])
 	// console.log(rs);
 	res.status(200).json(rs[0])
 })
