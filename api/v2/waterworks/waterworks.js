@@ -10,8 +10,172 @@ const aclClient = require('../../../server').aclClient
 const secureMqttClient = require('../../../server').secureMqttClient
 
 const sentiDeviceService = require('../../../lib/device/sentiDeviceService')
+const tagManager = require('../../engine/tagManager')
+
 const deviceService = new sentiDeviceService(mysqlConn)
 
+router.post('/v2/waterworks/data/custom-benchmark/:from/:to', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	let startDate = req.params.from
+	let endDate = req.params.to
+	console.log(startDate, endDate)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	let queryUUIDs = (req.body.length) ? req.body : []
+	console.log('Query UUIDS', queryUUIDs)
+	if (queryUUIDs.length === 0) {
+		res.status(404).json([])
+		return
+	}
+	let access = await aclClient.testResources(lease.uuid, queryUUIDs, [sentiAclPriviledge.device.read])
+	if (access.allowed === false) {
+		res.status(403).json()
+		return
+	}
+	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
+	// res.status(200).json(access)
+	let select = `SELECT 86400*totalflow/daycount as value, d as 'datetime', 86400*totalflow as totalFlowPerDay, totalflow/daycount as averageFlowPerSecond, 86400*totalflow/daycount as averageFlowPerDay, d
+FROM (
+	SELECT SUM(flow) AS totalflow, count(*) AS daycount, date(t) AS d
+	FROM (
+		SELECT vdiff/diff as flow, t, did
+		FROM (
+			SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
+			FROM (
+				SELECT val, t, @row:=@row+1 as r, d3.did
+				FROM ( SELECT @row:=0) foo
+				INNER JOIN (
+					SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+					FROM (
+						SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
+						FROM (
+							SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+							FROM device d
+							INNER JOIN deviceDataClean dd ON dd.device_id = d.id
+							WHERE 1 ${clause}
+								AND dd.created >= DATE_SUB(?, INTERVAL 1 DAY)
+								and dd.created <= ?
+						) dd
+						WHERE NOT ISNULL(val)
+					) ddd
+					GROUP BY did, y,m,d
+				) d3 ON 1
+			) d4
+			INNER JOIN (
+				SELECT val, t, @row2:=@row2+1 as r, did
+				FROM ( SELECT @row2:=0) foo
+				INNER JOIN (
+					SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+					FROM (
+						SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
+						FROM (
+							SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+							FROM device d
+							INNER JOIN deviceDataClean dd ON dd.device_id = d.id
+							WHERE 1 ${clause}
+								AND dd.created >= DATE_SUB(?, INTERVAL 1 DAY)
+								and dd.created <= ?
+						) dd
+						WHERE NOT ISNULL(val)
+					) ddd
+					GROUP BY did,y,m,d
+				) ddd ON 1
+			) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
+		) kiddingme
+	) km2
+	GROUP BY date(t)
+) t;`
+	let formatSQL = await mysqlConn.format(select, [...queryUUIDs, startDate, endDate, ...queryUUIDs, startDate, endDate])
+	console.log(formatSQL)
+	let rs = await mysqlConn.query(select, [...queryUUIDs, startDate, endDate, ...queryUUIDs, startDate, endDate])
+	return res.status(200).json(rs[0])
+
+})
+router.get('/v2/waterworks/data/custom-benchmark/:tagUUID/:from/:to', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	let startDate = req.params.from
+	let endDate = req.params.to
+	let tagUUID = req.params.tagUUID
+	console.log(startDate, endDate)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	tagManager.setHeader('Authorization', `Bearer ${lease.token}`)
+	console.log('TAGMANAGER', tagManager.getBaseURL())
+	let queryUUIDs = await tagManager.get(`/resources/${tagUUID}`).then(rs => rs.ok ? rs.data : [])
+	console.log('Query UUIDS', queryUUIDs)
+	if (queryUUIDs.length === 0) {
+		res.status(404).json([])
+		return
+	}
+	queryUUIDs = queryUUIDs.map(q => q.resourceUUID)
+	let access = await aclClient.testResources(lease.uuid, queryUUIDs, [sentiAclPriviledge.device.read])
+	if (access.allowed === false) {
+		res.status(403).json()
+		return
+	}
+	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
+	// res.status(200).json(access)
+	let select = `SELECT 86400*totalflow/daycount as value, d as 'datetime', 86400*totalflow as totalFlowPerDay, totalflow/daycount as averageFlowPerSecond, 86400*totalflow/daycount as averageFlowPerDay, d
+FROM (
+	SELECT SUM(flow) AS totalflow, count(*) AS daycount, date(t) AS d
+	FROM (
+		SELECT vdiff/diff as flow, t, did
+		FROM (
+			SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
+			FROM (
+				SELECT val, t, @row:=@row+1 as r, d3.did
+				FROM ( SELECT @row:=0) foo
+				INNER JOIN (
+					SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+					FROM (
+						SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
+						FROM (
+							SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+							FROM device d
+							INNER JOIN deviceDataClean dd ON dd.device_id = d.id
+							WHERE 1 ${clause}
+								AND dd.created >= DATE_SUB(?, INTERVAL 1 DAY)
+								and dd.created <= ?
+						) dd
+						WHERE NOT ISNULL(val)
+					) ddd
+					GROUP BY did, y,m,d
+				) d3 ON 1
+			) d4
+			INNER JOIN (
+				SELECT val, t, @row2:=@row2+1 as r, did
+				FROM ( SELECT @row2:=0) foo
+				INNER JOIN (
+					SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+					FROM (
+						SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
+						FROM (
+							SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+							FROM device d
+							INNER JOIN deviceDataClean dd ON dd.device_id = d.id
+							WHERE 1 ${clause}
+								AND dd.created >= DATE_SUB(?, INTERVAL 1 DAY)
+								and dd.created <= ?
+						) dd
+						WHERE NOT ISNULL(val)
+					) ddd
+					GROUP BY did,y,m,d
+				) ddd ON 1
+			) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
+		) kiddingme
+	) km2
+	GROUP BY date(t)
+) t;`
+	let formatSQL = await mysqlConn.format(select, [...queryUUIDs, startDate, endDate, ...queryUUIDs, startDate, endDate])
+	console.log(formatSQL)
+	let rs = await mysqlConn.query(select, [...queryUUIDs, startDate, endDate, ...queryUUIDs, startDate, endDate])
+	return res.status(200).json(rs[0])
+
+})
 router.get('/v2/waterworks/organisation/:orguuid/device/:uuname', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
@@ -194,9 +358,10 @@ router.get('/v2/waterworks/data/usagebyday/:from/:to', async (req, res) => {
 	}
 	let queryUUIDs = (resources.length > 0) ? resources.map(item => { return item.uuid }) : []
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT (vdiff/diff)*86400 as value, date(t) as 'datetime', uuid, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*86400 as averageFlowPerDay, date(t) AS d, did
+	let select = `SELECT (vdiff/diff)*86400 as value, date(tto) as 'datetime', uuid, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*86400 as averageFlowPerDay, 
+					date(tfrom) AS datefrom, date(tto) as dateto, did
 					FROM (
-						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
+						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t AS tto, d5.t as tfrom, d4.did, d4.uuid
 						FROM (
 							SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
 							FROM ( SELECT @row:=0) foo
@@ -264,10 +429,10 @@ router.post('/v2/waterworks/data/usagebyday/:from/:to', async (req, res) => {
 		return
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-
-	let select = `SELECT (vdiff/diff)*86400 as value, date(t) as 'datetime', uuid, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*86400 as averageFlowPerDay, date(t) AS d, did
+	let select = `SELECT (vdiff/diff)*86400 as value, date(tto) as 'datetime', uuid, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*86400 as averageFlowPerDay, 
+					date(tfrom) AS datefrom, date(tto) as dateto, did
 					FROM (
-						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
+						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t AS tto, d5.t as tfrom, d4.did, d4.uuid
 						FROM (
 							SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
 							FROM ( SELECT @row:=0) foo
@@ -327,51 +492,56 @@ router.get('/v2/waterworks/data/usagebyhour/:from/:to', async (req, res) => {
 	}
 	let queryUUIDs = (resources.length > 0) ? resources.map(item => { return item.uuid }) : []
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT (vdiff/diff)*3600 as value, CONCAT(DATE(t),' ',HOUR(t),':00:00') as 'datetime', uuid, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*3600 as averageFlowPerHour, CONCAT(DATE(t),' ',HOUR(t),':00:00') AS datehour, did
+	let select = `SELECT (vdiff/diff)*3600 as value, CONCAT(DATE(intervalto),' ',HOUR(intervalto),':00:00') as 'datetime', 
+						uuid, vdiff/diff as averageFlowPerSecond, 
+						(vdiff/diff)*3600 as averageFlowPerHour, 
+						CONCAT(DATE(intervalfrom),' ',HOUR(intervalfrom),':00:00') AS datehourfrom, 
+						CONCAT(DATE(intervalto),' ',HOUR(intervalto),':00:00') AS datehourto, 
+						did
 					FROM (
-						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
-						FROM (
-							SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
-							FROM ( SELECT @row:=0) foo
-							INNER JOIN (
-								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did, ddd.uuid
-								FROM (
-									SELECT dd.val, DATE(dd.t) AS d, HOUR(dd.t) As h, dd.t, dd.did, dd.uuid
-									FROM (
-										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did, d.uuid
-										FROM device d
-											INNER JOIN deviceDataClean dd
-												ON dd.device_id = d.id
-													AND dd.created >= DATE_SUB(?, INTERVAL 1 HOUR)
-													AND dd.created < ?
-										WHERE 1 ${clause}
-									) dd
-									WHERE NOT ISNULL(val)
-								) ddd
-								GROUP BY did,d,h
-							) d3 ON 1
-						) d4
+					SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d5.t as intervalfrom, d4.t AS intervalto, d4.did, d4.uuid
+					FROM (
+						SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
+						FROM ( SELECT @row:=0) foo
 						INNER JOIN (
-							SELECT val, t, @row2:=@row2+1 as r, did
-							FROM ( SELECT @row2:=0) foo
-							INNER JOIN (
-								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+							SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did, ddd.uuid
+							FROM (
+								SELECT dd.val, DATE(dd.t) AS d, HOUR(dd.t) As h, dd.t, dd.did, dd.uuid
 								FROM (
-									SELECT dd.val, DATE(dd.t) AS d, HOUR(dd.t) As h, dd.t, dd.did
-									FROM (
-										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
-										FROM device d
-											INNER JOIN deviceDataClean dd
-												ON dd.device_id = d.id
-													AND dd.created >= DATE_SUB(?, INTERVAL 1 HOUR)
-													AND dd.created < ?
-										WHERE 1 ${clause}
-									) dd
-									WHERE NOT ISNULL(val)
-								) ddd
-								GROUP BY did,d,h
-							) ddd ON 1
-						) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
+									SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did, d.uuid
+									FROM device d
+										INNER JOIN deviceDataClean dd
+											ON dd.device_id = d.id
+												AND dd.created >= DATE_SUB(?, INTERVAL 1 HOUR)
+												AND dd.created < ?
+									WHERE 1 ${clause}
+								) dd
+								WHERE NOT ISNULL(val)
+							) ddd
+							GROUP BY did,d,h
+						) d3 ON 1
+					) d4
+					INNER JOIN (
+						SELECT val, t, @row2:=@row2+1 as r, did
+						FROM ( SELECT @row2:=0) foo
+						INNER JOIN (
+							SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+							FROM (
+								SELECT dd.val, DATE(dd.t) AS d, HOUR(dd.t) As h, dd.t, dd.did
+								FROM (
+									SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+									FROM device d
+										INNER JOIN deviceDataClean dd
+											ON dd.device_id = d.id
+												AND dd.created >= DATE_SUB(?, INTERVAL 1 HOUR)
+												AND dd.created < ?
+									WHERE 1 ${clause}
+								) dd
+								WHERE NOT ISNULL(val)
+							) ddd
+							GROUP BY did,d,h
+						) ddd ON 1
+					) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
 					) kiddingme;`
 	console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs, req.params.from, req.params.to, ...queryUUIDs]))
 	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, ...queryUUIDs, req.params.from, req.params.to, ...queryUUIDs])
@@ -394,51 +564,56 @@ router.post('/v2/waterworks/data/usagebyhour/:from/:to', async (req, res) => {
 		return
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	let select = `SELECT (vdiff/diff)*3600 as value, CONCAT(DATE(t),' ',HOUR(t),':00:00') as 'datetime', uuid, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*3600 as averageFlowPerHour, CONCAT(DATE(t),' ',HOUR(t),':00:00') AS datehour, did
+	let select = `SELECT (vdiff/diff)*3600 as value, CONCAT(DATE(intervalto),' ',HOUR(intervalto),':00:00') as 'datetime', 
+						uuid, vdiff/diff as averageFlowPerSecond, 
+						(vdiff/diff)*3600 as averageFlowPerHour, 
+						CONCAT(DATE(intervalfrom),' ',HOUR(intervalfrom),':00:00') AS datehourfrom, 
+						CONCAT(DATE(intervalto),' ',HOUR(intervalto),':00:00') AS datehourto, 
+						did
 					FROM (
-						SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
-						FROM (
-							SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
-							FROM ( SELECT @row:=0) foo
-							INNER JOIN (
-								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did, ddd.uuid
-								FROM (
-									SELECT dd.val, DATE(dd.t) AS d, HOUR(dd.t) As h, dd.t, dd.did, dd.uuid
-									FROM (
-										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did, d.uuid
-										FROM device d
-											INNER JOIN deviceDataClean dd
-												ON dd.device_id = d.id
-													AND dd.created >= DATE_SUB(?, INTERVAL 1 HOUR)
-													AND dd.created < ?
-										WHERE 1 ${clause}
-									) dd
-									WHERE NOT ISNULL(val)
-								) ddd
-								GROUP BY did,d,h
-							) d3 ON 1
-						) d4
+					SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d5.t as intervalfrom, d4.t AS intervalto, d4.did, d4.uuid
+					FROM (
+						SELECT val, t, @row:=@row+1 as r, d3.did, d3.uuid
+						FROM ( SELECT @row:=0) foo
 						INNER JOIN (
-							SELECT val, t, @row2:=@row2+1 as r, did
-							FROM ( SELECT @row2:=0) foo
-							INNER JOIN (
-								SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+							SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did, ddd.uuid
+							FROM (
+								SELECT dd.val, DATE(dd.t) AS d, HOUR(dd.t) As h, dd.t, dd.did, dd.uuid
 								FROM (
-									SELECT dd.val, DATE(dd.t) AS d, HOUR(dd.t) As h, dd.t, dd.did
-									FROM (
-										SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
-										FROM device d
-											INNER JOIN deviceDataClean dd
-												ON dd.device_id = d.id
-													AND dd.created >= DATE_SUB(?, INTERVAL 1 HOUR)
-													AND dd.created < ?
-										WHERE 1 ${clause}
-									) dd
-									WHERE NOT ISNULL(val)
-								) ddd
-								GROUP BY did,d,h
-							) ddd ON 1
-						) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
+									SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did, d.uuid
+									FROM device d
+										INNER JOIN deviceDataClean dd
+											ON dd.device_id = d.id
+												AND dd.created >= DATE_SUB(?, INTERVAL 1 HOUR)
+												AND dd.created < ?
+									WHERE 1 ${clause}
+								) dd
+								WHERE NOT ISNULL(val)
+							) ddd
+							GROUP BY did,d,h
+						) d3 ON 1
+					) d4
+					INNER JOIN (
+						SELECT val, t, @row2:=@row2+1 as r, did
+						FROM ( SELECT @row2:=0) foo
+						INNER JOIN (
+							SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+							FROM (
+								SELECT dd.val, DATE(dd.t) AS d, HOUR(dd.t) As h, dd.t, dd.did
+								FROM (
+									SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+									FROM device d
+										INNER JOIN deviceDataClean dd
+											ON dd.device_id = d.id
+												AND dd.created >= DATE_SUB(?, INTERVAL 1 HOUR)
+												AND dd.created < ?
+									WHERE 1 ${clause}
+								) dd
+								WHERE NOT ISNULL(val)
+							) ddd
+							GROUP BY did,d,h
+						) ddd ON 1
+					) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
 					) kiddingme;`
 	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, ...queryUUIDs, req.params.from, req.params.to, ...queryUUIDs])
 	res.status(200).json(rs[0])
@@ -1013,75 +1188,75 @@ router.get('/v2/waterworks/data/benchmark/byhour/:orguuid/:from/:to', async (req
 	res.status(200).json(rs[0])
 })
 
-router.post('/v2/waterworks/data/benchmark/:from/:to', async (req, res) => {
-	let lease = await authClient.getLease(req)
-	if (lease === false) {
-		res.status(401).json()
-		return
-	}
-	let access = await aclClient.testResources(lease.uuid, req.body, [sentiAclPriviledge.device.read])
-	console.log(access)
-	if (access.allowed === false) {
-		res.status(403).json()
-		return
-	}
-	res.status(200).json(access)
-	// let select = `SELECT totalflow/daycount as averageFlowPerSecond, 86400*totalflow/daycount as averageFlowPerDay, d
-	// 				FROM (
-	// 				SELECT SUM(flow) AS totalflow, count(*) AS daycount, date(t) AS d
-	// 				FROM (
-	// 				SELECT vdiff/diff as flow, t, did
-	// 				FROM (
-	// 					SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
-	// 					FROM (
-	// 						SELECT val, t, @row:=@row+1 as r, d3.did
-	// 						FROM ( SELECT @row:=0) foo
-	// 						INNER JOIN (
-	// 							SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
-	// 							FROM (
-	// 								SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
-	// 								FROM (
-	// 									SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
-	// 									FROM organisation o
-	// 									INNER JOIN registry r on o.id = r.orgId
-	// 									INNER JOIN device d on r.id = d.reg_id
-	// 									INNER JOIN deviceDataClean dd ON dd.device_id = d.id
-	// 									WHERE o.uuid = ?
-	// 										AND dd.created >= ?
-	// 										and dd.created <= ?
-	// 								) dd
-	// 							) ddd
-	// 							GROUP BY did, y,m,d
-	// 						) d3 ON 1
-	// 					) d4
-	// 					INNER JOIN (
-	// 						SELECT val, t, @row2:=@row2+1 as r, did
-	// 						FROM ( SELECT @row2:=0) foo
-	// 						INNER JOIN (
-	// 							SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
-	// 							FROM (
-	// 								SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
-	// 								FROM (
-	// 									SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
-	// 									FROM organisation o
-	// 									INNER JOIN registry r on o.id = r.orgId
-	// 									INNER JOIN device d on r.id = d.reg_id
-	// 									INNER JOIN deviceDataClean dd ON dd.device_id = d.id
-	// 									WHERE o.uuid = ?
-	// 										AND dd.created >= ?
-	// 										and dd.created <= ?
-	// 								) dd
-	// 							) ddd
-	// 							GROUP BY did,y,m,d
-	// 						) ddd ON 1
-	// 					) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
-	// 				) kiddingme
-	// 				) km2
-	// 				GROUP BY date(t)
-	// 				) t;`
-	// let rs = await mysqlConn.query(select, [req.params.orguuid, req.params.from, req.params.to, req.params.orguuid, req.params.from, req.params.to])
-	// res.status(200).json(rs[0])
-})
+// router.post('/v2/waterworks/data/benchmark/:from/:to', async (req, res) => {
+// 	let lease = await authClient.getLease(req)
+// 	if (lease === false) {
+// 		res.status(401).json()
+// 		return
+// 	}
+// 	let access = await aclClient.testResources(lease.uuid, req.body, [sentiAclPriviledge.device.read])
+// 	console.log(access)
+// 	if (access.allowed === false) {
+// 		res.status(403).json()
+// 		return
+// 	}
+// 	res.status(200).json(access)
+// let select = `SELECT totalflow/daycount as averageFlowPerSecond, 86400*totalflow/daycount as averageFlowPerDay, d
+// 				FROM (
+// 				SELECT SUM(flow) AS totalflow, count(*) AS daycount, date(t) AS d
+// 				FROM (
+// 				SELECT vdiff/diff as flow, t, did
+// 				FROM (
+// 					SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
+// 					FROM (
+// 						SELECT val, t, @row:=@row+1 as r, d3.did
+// 						FROM ( SELECT @row:=0) foo
+// 						INNER JOIN (
+// 							SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+// 							FROM (
+// 								SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
+// 								FROM (
+// 									SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+// 									FROM organisation o
+// 									INNER JOIN registry r on o.id = r.orgId
+// 									INNER JOIN device d on r.id = d.reg_id
+// 									INNER JOIN deviceDataClean dd ON dd.device_id = d.id
+// 									WHERE o.uuid = ?
+// 										AND dd.created >= ?
+// 										and dd.created <= ?
+// 								) dd
+// 							) ddd
+// 							GROUP BY did, y,m,d
+// 						) d3 ON 1
+// 					) d4
+// 					INNER JOIN (
+// 						SELECT val, t, @row2:=@row2+1 as r, did
+// 						FROM ( SELECT @row2:=0) foo
+// 						INNER JOIN (
+// 							SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
+// 							FROM (
+// 								SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
+// 								FROM (
+// 									SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
+// 									FROM organisation o
+// 									INNER JOIN registry r on o.id = r.orgId
+// 									INNER JOIN device d on r.id = d.reg_id
+// 									INNER JOIN deviceDataClean dd ON dd.device_id = d.id
+// 									WHERE o.uuid = ?
+// 										AND dd.created >= ?
+// 										and dd.created <= ?
+// 								) dd
+// 							) ddd
+// 							GROUP BY did,y,m,d
+// 						) ddd ON 1
+// 					) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
+// 				) kiddingme
+// 				) km2
+// 				GROUP BY date(t)
+// 				) t;`
+// let rs = await mysqlConn.query(select, [req.params.orguuid, req.params.from, req.params.to, req.params.orguuid, req.params.from, req.params.to])
+// res.status(200).json(rs[0])
+// })
 router.get('/v2/waterworks/alarm/threshold/:orguuid', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
@@ -1121,58 +1296,9 @@ router.get('/v2/waterworks/alarm/threshold/:orguuid', async (req, res) => {
 /**
  * Benchmark by UUIDs
  */
+
 /*
-SELECT 86400*totalflow/daycount as value, d as 'datetime', 86400*totalflow as totalFlowPerDay, totalflow/daycount as averageFlowPerSecond, 86400*totalflow/daycount as averageFlowPerDay, d
-FROM (
-	SELECT SUM(flow) AS totalflow, count(*) AS daycount, date(t) AS d
-	FROM (
-		SELECT vdiff/diff as flow, t, did
-		FROM (
-			SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did
-			FROM (
-				SELECT val, t, @row:=@row+1 as r, d3.did
-				FROM ( SELECT @row:=0) foo
-				INNER JOIN (
-					SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
-					FROM (
-						SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
-						FROM (
-							SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
-							FROM device d
-							INNER JOIN deviceDataClean dd ON dd.device_id = d.id
-							WHERE 1 ${clause}
-								AND dd.created >= DATE_SUB('2020-09-01', INTERVAL 1 DAY)
-								and dd.created <= '2020-12-01'
-						) dd
-						WHERE NOT ISNULL(val)
-					) ddd
-					GROUP BY did, y,m,d
-				) d3 ON 1
-			) d4
-			INNER JOIN (
-				SELECT val, t, @row2:=@row2+1 as r, did
-				FROM ( SELECT @row2:=0) foo
-				INNER JOIN (
-					SELECT MAX(ddd.val) AS val, max(ddd.t) AS t, ddd.did
-					FROM (
-						SELECT dd.val, YEAR(dd.t) as y, MONTH(dd.t) as m, DAY(dd.t) AS d, dd.t, dd.did
-						FROM (
-							SELECT dd.created AS t, dd.data->'$.volume' as val, dd.device_id AS did
-							FROM device d
-							INNER JOIN deviceDataClean dd ON dd.device_id = d.id
-							WHERE 1 ${clause}
-								AND dd.created >= DATE_SUB('2020-09-01', INTERVAL 1 DAY)
-								and dd.created <= '2020-12-01'
-						) dd
-						WHERE NOT ISNULL(val)
-					) ddd
-					GROUP BY did,y,m,d
-				) ddd ON 1
-			) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
-		) kiddingme
-	) km2
-	GROUP BY date(t)
-) t;
+
 */
 
 module.exports = router
