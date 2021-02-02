@@ -58,12 +58,12 @@ router.get('/v2/climaidinsight/northq/occupancy/:registry/:min/:prhour', async (
 										SELECT DDC.device_id, DDC.data->'$.co2'*1.0 AS co2, DDC.created AS recent
 										FROM (
 											SELECT max(id) AS id
-											FROM sentidatastorage.deviceDataClean DDC 
+											FROM sentidatastorage.deviceDataClean DDC
 											WHERE DDC.device_id IN (
-												SELECT D.id 
+												SELECT D.id
 												FROM sentidatastorage.registry R
 												INNER JOIN sentidatastorage.device D ON D.reg_id=R.id AND D.deleted=0
-												WHERE R.uuid=? 
+												WHERE R.uuid=?
 											)
 											AND DDC.created > DATE_SUB(NOW(), interval 60 minute) AND NOT ISNULL(DDC.data->'$.co2')
 											GROUP BY DDC.device_id
@@ -95,10 +95,10 @@ router.get('/v2/climaidinsight/northq/kkpressed/:registry', async (req, res) => 
 					FROM (
 						SELECT DDC.device_id, SUM(DDC.data->'$.cold'*1.0) AS cold, count(*) AS antal, MAX(DDC.created) AS recent
 						FROM (
-							SELECT D.id 
+							SELECT D.id
 							FROM sentidatastorage.registry R
 							INNER JOIN sentidatastorage.device D ON D.reg_id=R.id AND D.deleted=0
-							WHERE R.uuid=? 
+							WHERE R.uuid=?
 						) D
 						LEFT JOIN sentidatastorage.deviceDataClean DDC ON DDC.device_id=D.id
 						WHERE DDC.created > DATE_SUB(NOW(), interval 60 minute) AND NOT ISNULL(DDC.data->'$.cold')
@@ -486,7 +486,7 @@ router.get('/v2/climaidinsight/activeminutes/:device/:from/:to/', async (req, re
 								INNER JOIN (
 									SELECT if(DDC.data->'$.motion'>2,1.0,0.0) AS activity, DDC.created, @a:=@a+1 AS r
 									FROM sentidatastorage.deviceDataClean DDC
-									WHERE DDC.created>=DATE_SUB(?, INTERVAL 1 HOUR) AND DDC.created < DATE_ADD(?, INTERVAL 1 HOUR) AND DDC.device_id=? 
+									WHERE DDC.created>=DATE_SUB(?, INTERVAL 1 HOUR) AND DDC.created < DATE_ADD(?, INTERVAL 1 HOUR) AND DDC.device_id=?
 									ORDER BY created
 								) f ON 1
 							) f
@@ -498,7 +498,7 @@ router.get('/v2/climaidinsight/activeminutes/:device/:from/:to/', async (req, re
 								INNER JOIN (
 									SELECT if(DDC.data->'$.motion'>2,1,0) AS activity, DDC.created, @aa:=@aa+1 AS r
 									FROM sentidatastorage.deviceDataClean DDC
-									WHERE DDC.created>=DATE_SUB(?, INTERVAL 1 HOUR) AND DDC.created < DATE_add(?, INTERVAL 1 HOUR) AND DDC.device_id=? 
+									WHERE DDC.created>=DATE_SUB(?, INTERVAL 1 HOUR) AND DDC.created < DATE_add(?, INTERVAL 1 HOUR) AND DDC.device_id=?
 									ORDER BY created
 								) t ON 1
 							) t ON f.r=t.r-1
