@@ -63,7 +63,6 @@ const getDevicesV2 = require('./api/v2/device/getDevices')
 const createDeviceV2 = require('./api/v2/device/createDevice')
 const deleteDeviceV2 = require('./api/v2/device/deleteDevice')
 const updateDeviceV2 = require('./api/v2/device/updateDevice')
-const getWaterworksV2 = require('./api/v2/waterworks/waterworks')
 const climaidInsightV2 = require('./api/v2/climaidInsight/climaidInsight')
 const newsecV2 = require('./api/v2/newsec/newsec')
 const rescanV2 = require('./api/v2/device/rescanData')
@@ -153,7 +152,6 @@ app.use([getDeviceTypeV2, getDeviceTypesV2, createDeviceTypeV2, updateDeviceType
  * Registries V2
  */
 app.use([createRegistryV2, getRegistryV2, getRegistriesV2, updateRegistryV2, deleteRegistryV2])
-app.use([getWaterworksV2])
 app.use([climaidInsightV2])
 app.use([newsecV2])
 
@@ -161,6 +159,24 @@ app.use([newsecV2])
  * Cloud functions V2
  */
 app.use([getCF, getCFs, createCF, updateCF, deleteCF])
+
+/**
+ * Waterworks Endpoints
+ */
+const getWaterworksV2 = require('./api/v2/waterworks/waterworks')
+const customBenchmark = require('./api/v2/waterworks/customBenchmark')
+const customBenchmarkByTag = require('./api/v2/waterworks/customBenchmarkByTag')
+const deviceUuidUsage = require('./api/v2/waterworks/deviceUuidUsage')
+const totalUsageByDay = require('./api/v2/waterworks/totalUsageByDay')
+const usage = require('./api/v2/waterworks/usage')
+const usageByDay = require('./api/v2/waterworks/usageByDay')
+const usageByDayCustomUUIDs = require('./api/v2/waterworks/usageByDayCustomUUIDs')
+const usageByHour = require('./api/v2/waterworks/usageByHour')
+const usageByHourCustomUUIDs = require('./api/v2/waterworks/usageByHourCustomUUIDs')
+
+
+app.use([getWaterworksV2, customBenchmark, customBenchmarkByTag,
+	deviceUuidUsage, totalUsageByDay, usage, usageByDay, usageByDayCustomUUIDs, usageByHour, usageByHourCustomUUIDs])
 
 // V1 USE
 app.use([getMessages, getDeviceData, getDataExternal,
