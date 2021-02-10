@@ -88,13 +88,16 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 						// console.log(arr)
 						this.storeDataByRegistry(message.toString(), { regName: arr[5], customerID: arr[1] })
 					}
-					if(arr[1] === 'ttn-application') {
+					if (arr[1] === 'ttn-application') {
 						this.ttnApplicationHandler(message)
 					}
-				break;
+					if (arr[1] === 'comadan-application') {
+						this.comadanApplicationHandler(message)
+					}
+					break
 				case 'v2':
 					this.getV2Handler(arr, message.toString())
-				break;
+					break
 
 			}
 		})
@@ -103,10 +106,10 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 	getV2Handler (topic, message) {
 		switch (topic[1]) {
 			default:
-			break;
+				break
 			case 'ttn-application':
 				this.ttnApplicationHandler(message)
-			break;
+				break
 		}
 	}
 
@@ -120,6 +123,22 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			let config = await this.getDeviceDataHandlerConfigByUuname(data.app_id)
 			console.log(config)
 			if (config !== false && config.handlerType === 'ttn-application') {
+				console.log(config.data)
+				data.sentiTtnDeviceId = deviceUuname
+				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
+			}
+		}
+	}
+	async comadanApplicationHandler (message) {
+		let data = JSON.parse(message)
+		let deviceUuname = data.ID
+		let device = await this.getDeviceByUuname(deviceUuname)
+		if (device !== false) {
+			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
+		} else {
+			let config = await this.getDeviceDataHandlerConfigByUuname('COMA-' + data.TYPE)
+			console.log(config)
+			if (config !== false && config.handlerType === 'comadan-application') {
 				console.log(config.data)
 				data.sentiTtnDeviceId = deviceUuname
 				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
