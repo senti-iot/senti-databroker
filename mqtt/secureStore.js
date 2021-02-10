@@ -77,7 +77,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		this.topics = ['v1/+/location/+/registries/+/devices/+/publish', 'v1/+/location/+/registries/+/publish', 'v1/ttn-application', 'v1/comadan-application', 'v2/#']
 		this.mqttClient.on('message', (topic, message) => {
 			let arr = topic.split('/')
-			console.log('mqttarr', arr)
+			// console.log('mqttarr', arr)
 			switch (arr[0]) {
 				default:
 				case 'v1':
