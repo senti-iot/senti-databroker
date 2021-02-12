@@ -3,30 +3,37 @@ const router = express.Router()
 
 var mysqlConn = require('../../../mysql/mysql_handler')
 
-const { sentiAclPriviledge } = require('senti-apicore')
+const { sentiAclPriviledge, sentiAclResourceType } = require('senti-apicore')
 
 const authClient = require('../../../server').authClient
 const aclClient = require('../../../server').aclClient
 
-
-router.post('/v2/waterworks/data/totalusagebyday/:from/:to', async (req, res) => {
+/**
+ * Total usage by day based on org uuid - all accessible devices
+ */
+router.get('/v2/waterworks/data/totalusagebyday/:orguuid/:from/:to', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
 		res.status(401).json()
 		return
 	}
-	let queryUUIDs = (req.body.length) ? req.body : []
+
+	let resources = await aclClient.findResources(lease.uuid, req.params.orguuid, sentiAclResourceType.device, sentiAclPriviledge.device.read)
+	if (resources.length === 0) {
+		res.status(404).json([])
+		return
+	}
+	let queryUUIDs = (resources.length > 0) ? resources.map(item => { return item.uuid }) : []
 	if (queryUUIDs.length === 0) {
 		res.status(404).json([])
 		return
 	}
-	let access = await aclClient.testResources(lease.uuid, queryUUIDs, [sentiAclPriviledge.device.read])
-	if (access.allowed === false) {
-		res.status(403).json()
-		return
-	}
+	// let access = await aclClient.testResources(lease.uuid, queryUUIDs, [sentiAclPriviledge.device.read])
+	// if (access.allowed === false) {
+	// 	res.status(403).json()
+	// 	return
+	// }
 	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-
 	// let select = `SELECT sum((vdiff/diff)*86400) as value, date(t) as 'datetime', uuid, sum(vdiff/diff) as totalFlowPerSecond, sum((vdiff/diff)*86400) as totalFlowPerDay, date(t) AS d
 	// 				FROM (
 	// 					SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
@@ -89,8 +96,8 @@ FROM (
 					FROM device d
 						INNER JOIN deviceDataClean dd
 							ON dd.device_id = d.id
-								AND dd.created >= ?
-								AND dd.created < DATE_ADD(?, INTERVAL 1 day)
+								AND dd.created >= '2021-01-26'
+								AND dd.created < DATE_ADD('2021-02-01', INTERVAL 1 day)
 					WHERE 1 ${clause}
 				) dd
 				WHERE NOT ISNULL(val)
@@ -110,8 +117,8 @@ FROM (
 					FROM device d
 						INNER JOIN deviceDataClean dd
 							ON dd.device_id = d.id
-								AND dd.created >= ?
-								AND dd.created < DATE_ADD(?, INTERVAL 1 day)
+								AND dd.created >= '2021-01-26'
+								AND dd.created < DATE_ADD('2021-02-01', INTERVAL 1 day)
 					WHERE 1 ${clause}
 				) dd
 				WHERE NOT ISNULL(val)

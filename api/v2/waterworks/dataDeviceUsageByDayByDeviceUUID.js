@@ -9,25 +9,18 @@ const authClient = require('../../../server').authClient
 const aclClient = require('../../../server').aclClient
 
 
-router.post('/v2/waterworks/data/totalusagebyday/:from/:to', async (req, res) => {
+router.get('/v2/waterworks/data/device/:deviceuuid/usagebyday/:from/:to', async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
 		res.status(401).json()
 		return
 	}
-	let queryUUIDs = (req.body.length) ? req.body : []
-	if (queryUUIDs.length === 0) {
-		res.status(404).json([])
-		return
-	}
-	let access = await aclClient.testResources(lease.uuid, queryUUIDs, [sentiAclPriviledge.device.read])
+	let access = await aclClient.testPrivileges(lease.uuid, req.params.deviceuuid, [sentiAclPriviledge.device.read])
 	if (access.allowed === false) {
 		res.status(403).json()
 		return
 	}
-	let clause = (queryUUIDs.length > 0) ? ' AND d.uuid IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-
-	// let select = `SELECT sum((vdiff/diff)*86400) as value, date(t) as 'datetime', uuid, sum(vdiff/diff) as totalFlowPerSecond, sum((vdiff/diff)*86400) as totalFlowPerDay, date(t) AS d
+	// let select = `SELECT (vdiff/diff)*86400 as value, date(t) as 'datetime', uuid, vdiff/diff as averageFlowPerSecond, (vdiff/diff)*86400 as averageFlowPerDay, date(t) AS d, did
 	// 				FROM (
 	// 					SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
 	// 					FROM (
@@ -44,7 +37,7 @@ router.post('/v2/waterworks/data/totalusagebyday/:from/:to', async (req, res) =>
 	// 											ON dd.device_id = d.id
 	// 												AND dd.created >= ?
 	// 												AND dd.created <= ?
-	// 									WHERE 1 ${clause}
+	// 									WHERE d.uuid = ?
 	// 								) dd
 	// 								WHERE NOT ISNULL(val)
 	// 							) ddd
@@ -65,15 +58,14 @@ router.post('/v2/waterworks/data/totalusagebyday/:from/:to', async (req, res) =>
 	// 											ON dd.device_id = d.id
 	// 												AND dd.created >= ?
 	// 												AND dd.created <= ?
-	// 									WHERE 1 ${clause}
+	// 									WHERE d.uuid = ?
 	// 								) dd
 	// 								WHERE NOT ISNULL(val)
 	// 							) ddd
 	// 							GROUP BY did,y,m,d
 	// 						) ddd ON 1
 	// 					) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
-	// 				) kiddingme
-	// 				GROUP BY d;`
+	// 				) kiddingme;`
 	let select = `SELECT sum(vdiff) as value, date(t) as 'datetime', uuid, SUM(vdiff)/SUM(diff) as totalFlowPerSecond, sum(vdiff) as totalFlowPerDay, date(t) AS d
 FROM (
 	SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
@@ -91,7 +83,7 @@ FROM (
 							ON dd.device_id = d.id
 								AND dd.created >= ?
 								AND dd.created < DATE_ADD(?, INTERVAL 1 day)
-					WHERE 1 ${clause}
+					WHERE 1 AND d.uuid=?
 				) dd
 				WHERE NOT ISNULL(val)
 			) ddd
@@ -112,7 +104,7 @@ FROM (
 							ON dd.device_id = d.id
 								AND dd.created >= ?
 								AND dd.created < DATE_ADD(?, INTERVAL 1 day)
-					WHERE 1 ${clause}
+					WHERE 1 AND d.uuid=?
 				) dd
 				WHERE NOT ISNULL(val)
 			) ddd
@@ -121,7 +113,7 @@ FROM (
 	) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
 ) kiddingme
 GROUP BY d;`
-	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, ...queryUUIDs, req.params.from, req.params.to, ...queryUUIDs])
+	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, req.params.deviceuuid, req.params.from, req.params.to, req.params.deviceuuid])
 	res.status(200).json(rs[0])
 })
 

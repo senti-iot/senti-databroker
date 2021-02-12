@@ -168,15 +168,30 @@ const customBenchmark = require('./api/v2/waterworks/customBenchmark')
 const customBenchmarkByTag = require('./api/v2/waterworks/customBenchmarkByTag')
 const deviceUuidUsage = require('./api/v2/waterworks/deviceUuidUsage')
 const totalUsageByDay = require('./api/v2/waterworks/totalUsageByDay')
+const totalUsageByDayByOrgUUID = require('./api/v2/waterworks/totalUsageByDayByOrgUUID')
 const usage = require('./api/v2/waterworks/usage')
 const usageByDay = require('./api/v2/waterworks/usageByDay')
 const usageByDayCustomUUIDs = require('./api/v2/waterworks/usageByDayCustomUUIDs')
 const usageByHour = require('./api/v2/waterworks/usageByHour')
 const usageByHourCustomUUIDs = require('./api/v2/waterworks/usageByHourCustomUUIDs')
+const benchmarkByOrgUUID = require('./api/v2/waterworks/benchmarkByOrgUUID')
+const dataBenchmarkByHourOrgUUID = require('./api/v2/waterworks/dataBenchmarkByHourOrgUUID')
+const dataByField = require('./api/v2/waterworks/dataByField')
+const dataByFieldByUUIDs = require('./api/v2/waterworks/dataByFieldByUUIDs')
+const dataDeviceUsageByDayByDeviceUUID = require('./api/v2/waterworks/dataDeviceUsageByDayByDeviceUUID')
+const dataDeviceUsageByHourByDeviceUUID = require('./api/v2/waterworks/dataDeviceUsageByHourByDeviceUUID')
+const dataFieldByDeviceUUID = require('./api/v2/waterworks/dataFieldByDeviceUUID')
+const dataTotalByDayFieldByUUIDs = require('./api/v2/waterworks/dataTotalByDayFieldByUUIDs')
+
 
 
 app.use([getWaterworksV2, customBenchmark, customBenchmarkByTag,
-	deviceUuidUsage, totalUsageByDay, usage, usageByDay, usageByDayCustomUUIDs, usageByHour, usageByHourCustomUUIDs])
+	deviceUuidUsage, totalUsageByDay, totalUsageByDayByOrgUUID, usage,
+	usageByDay, usageByDayCustomUUIDs, usageByHour, usageByHourCustomUUIDs,
+	benchmarkByOrgUUID, dataBenchmarkByHourOrgUUID, dataByField, dataByFieldByUUIDs,
+	dataDeviceUsageByDayByDeviceUUID, dataDeviceUsageByHourByDeviceUUID,
+	dataFieldByDeviceUUID, dataTotalByDayFieldByUUIDs
+])
 
 // V1 USE
 app.use([getMessages, getDeviceData, getDataExternal,
