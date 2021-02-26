@@ -219,7 +219,7 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 * @param {Date} to - End date - YYYY-MM-DD HH:mm:ss format
 * @param {Number} cloudfunctionId - ID of the outbound cloud function
 */
-router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId', async (req, res) => {
+router.post('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId', async (req, res) => {
 
 	let deviceUUID = req.params.deviceUUID
 	let field = req.params.field
