@@ -208,7 +208,57 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 	})
 
 })
+/**
+* Route serving the clean device data packets for selected period and specified field
+* @function POST /v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId
+* @memberof module:routers/devicedata
+* @param {String} body - config to send to cloudfunction
+* @param {String} deviceUUID
+* @param {String} field
+* @param {Date} from - Start date - YYYY-MM-DD HH:mm:ss format
+* @param {Date} to - End date - YYYY-MM-DD HH:mm:ss format
+* @param {Number} cloudfunctionId - ID of the outbound cloud function
+*/
+router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId', async (req, res) => {
 
+	let deviceUUID = req.params.deviceUUID
+	let field = req.params.field
+	let from = req.params.from
+	let to = req.params.to
+	let cloudfunctionId = req.params.cloudfunctionId
+
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	console.log(deviceUUID, field, from, to, cloudfunctionId)
+
+	let deviceId = await deviceService.getIdByUUID(deviceUUID)
+	let query = mysqlConn.format(getDeviceDataFieldQuery(field), [deviceId, from, to])
+	await mysqlConn.query(getDeviceDataFieldQuery(field), [deviceId, from, to]).then(async rs => {
+		let cleanData = {
+			data: rs[0],
+			config: req.body
+		}
+		console.log(cleanData)
+		if (cloudfunctionId > 0) {
+			let cData = await engineAPI.post('/', { nIds: [cloudfunctionId], data: cleanData }).then(rss => {
+				console.log('EngineAPI Status:', rss.status)
+				console.log('EngineAPI Response:', rss.data)
+				return rss.ok ? rss.data : null
+			})
+			return res.status(200).json(cData)
+		}
+		res.status(200).json(cleanData)
+	}).catch(err => {
+		if (err) {
+			console.log(err)
+			res.status(500).json({ err, query })
+		}
+	})
+
+})
 /**
 * Route serving the total and average clean device data packets for selected devicetype, selected period, specified field and time type
 * @function GET /v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId
