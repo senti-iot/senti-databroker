@@ -31,7 +31,7 @@ router.get('/v2/waterworks/data/:field/:from/:to', async (req, res) => {
 	// 							AND dd.created >= ?
 	// 							AND dd.created <= ?
 	// 				WHERE NOT ISNULL(dd.data->?) ${clause}`
-	let select = `SELECT dd.created AS 'datetime', dd.data->? as value
+	let select = `SELECT dd.created AS 'datetime', dd.data->? as value, d.uuid as uuid
 					FROM (
 						SELECT  d.id
 						FROM device d
