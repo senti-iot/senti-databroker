@@ -51,7 +51,7 @@ router.get('/:token/registry/:regID/:from/:to/', async (req, res) => {
 	let from = req.params.from
 	console.log(token, rID, to, from)
 	let regID = await mysqlConn.query(selectRegistryIDQ, [rID]).then(rs => {
-		console.log(rs)
+		// console.log(rs)
 		if (rs[0][0])
 			return rs[0][0].id
 		else
@@ -76,7 +76,7 @@ router.get('/:token/registry/:regID/latest', async (req, res) => {
 	let rID = req.params.regID
 	console.log(token, rID)
 	let regID = await mysqlConn.query(selectRegistryIDQ, [rID]).then(rs => {
-		console.log(rs)
+		// console.log(rs)
 		if (rs[0][0])
 			return rs[0][0].id
 		else

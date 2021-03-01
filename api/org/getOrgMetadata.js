@@ -17,7 +17,7 @@ router.get('/:token/:version/orgMetadata/:orgId', async (req, res) => {
 
 		mysqlConn.query(getOrgMetadataByOrgId, [orgId]).then(rs => {
 			if (rs[0][0]) {
-				console.log(rs[0][0])
+				// console.log(rs[0][0])
 				res.json({ ...rs[0][0] }).status(200)
 			}
 		})
@@ -35,7 +35,7 @@ router.get('/orgMetadata/:hostname', async (req, res) => {
 		if (authenticate(authToken)) {
 			mysqlConn.query(getOrgMetadataByHostname, [hostname]).then(rs => {
 				if (rs[0][0]) {
-					console.log(rs[0][0])
+					// console.log(rs[0][0])
 					res.json({ ...rs[0][0] }).status(200)
 				}
 				else {
