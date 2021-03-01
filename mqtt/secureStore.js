@@ -74,7 +74,7 @@ const selectDeviceType = `SELECT * from deviceType where id=?`
 
 class SecureStoreMqttHandler extends SecureMqttHandler {
 	init() {
-		this.topics = ['v1/+/location/+/registries/+/devices/+/publish', 'v1/+/location/+/registries/+/publish', 'v1/ttn-application', 'v1/comadan-application', 'v2/#']
+		this.topics = ['v1/+/location/+/registries/+/devices/+/publish', 'v1/+/location/+/registries/+/publish', 'v1/ttn-application', 'v1/ttn-application-v3', 'v1/comadan-application', 'v2/#']
 		this.mqttClient.on('message', (topic, message) => {
 			let arr = topic.split('/')
 			// console.log(arr)
@@ -90,6 +90,9 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 					}
 					if(arr[1] === 'ttn-application') {
 						this.ttnApplicationHandler(message)
+					}
+					if (arr[1] === 'ttn-application-v3') {
+						this.ttnV3ApplicationHandler(message)
 					}
 					if(arr[1] === 'comadan-application') {
 						this.comadanApplicationHandler(message)
@@ -124,6 +127,23 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			let config = await this.getDeviceDataHandlerConfigByUuname(data.app_id)
 			console.log(config)
 			if (config !== false && config.handlerType === 'ttn-application') {
+				console.log(config.data)
+				data.sentiTtnDeviceId = deviceUuname
+				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
+			}
+		}
+	}
+	async ttnV3ApplicationHandler (message) {
+		let data = JSON.parse(message)
+		let applicationId = data.end_device_ids.application_ids.application_id 
+		let deviceUuname = applicationId + '-' + data.end_device_ids.device_id
+		let device = await this.getDeviceByUuname(deviceUuname)
+		if (device !== false) {
+			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
+		} else {
+			let config = await this.getDeviceDataHandlerConfigByUuname(applicationId)
+			console.log(config)
+			if (config !== false && config.handlerType === 'ttn-application-v3') {
 				console.log(config.data)
 				data.sentiTtnDeviceId = deviceUuname
 				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
