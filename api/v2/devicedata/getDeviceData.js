@@ -95,7 +95,7 @@ router.get('/v2/devicedata-clean/:deviceUUID/:from/:to/:cloudfunctionId', async 
 	let query = mysqlConn.format(getDeviceDataQuery, [deviceId, from, to])
 	await mysqlConn.query(getDeviceDataQuery, [deviceId, from, to]).then(async rs => {
 		let cleanData = rs[0]
-		console.log(cleanData)
+		// console.log(cleanData)
 		if (cloudfunctionId > 0) {
 			let cData = await engineAPI.post('/', { nIds: [cloudfunctionId], data: cleanData }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
@@ -144,7 +144,7 @@ router.post('/v2/devicedata-clean/:deviceUUID/:from/:to/:cloudfunctionId', async
 			data: rs[0],
 			config: req.body
 		}
-		console.log(cleanData)
+		// console.log(cleanData)
 		if (cloudfunctionId > 0) {
 			let cData = await engineAPI.post('/', { nIds: [cloudfunctionId], data: cleanData }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
@@ -190,7 +190,7 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 	let query = mysqlConn.format(getDeviceDataFieldQuery(field), [deviceId, from, to])
 	await mysqlConn.query(getDeviceDataFieldQuery(field), [deviceId, from, to]).then(async rs => {
 		let cleanData = rs[0]
-		console.log(cleanData)
+		// console.log(cleanData)
 		if (cloudfunctionId > 0) {
 			let cData = await engineAPI.post('/', { nIds: [cloudfunctionId], data: cleanData }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
@@ -241,7 +241,7 @@ router.post('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId'
 			data: rs[0],
 			config: req.body
 		}
-		console.log(cleanData)
+		// console.log(cleanData)
 		if (cloudfunctionId > 0) {
 			let cData = await engineAPI.post('/', { nIds: [cloudfunctionId], data: cleanData }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
@@ -290,7 +290,7 @@ router.get('/v2/devicedata-clean/all/:from/:to/:field/:deviceTypeUUID/timeseries
 	let formatsql = await mysqlConn.format(getDeviceDataFieldTimeSeries(field, timeType), [dtUUID, from, to])
 	await mysqlConn.query(query, [dtUUID, from, to]).then(async rs => {
 		let data = rs[0]
-		console.log(data)
+		// console.log(data)
 		let cleanData = {
 			avrg: {},
 			total: {}
