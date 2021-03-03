@@ -124,9 +124,9 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
 		} else {
 			let config = await this.getDeviceDataHandlerConfigByUuname(data.app_id)
-			console.log(config)
+			// console.log(config)
 			if (config !== false && config.handlerType === 'ttn-application') {
-				console.log(config.data)
+				// console.log(config.data)
 				data.sentiTtnDeviceId = deviceUuname
 				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
 			}
@@ -141,9 +141,9 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
 		} else {
 			let config = await this.getDeviceDataHandlerConfigByUuname(applicationId)
-			console.log(config)
+			// console.log(config)
 			if (config !== false && config.handlerType === 'ttn-application-v3') {
-				console.log(config.data)
+				// console.log(config.data)
 				data.sentiTtnDeviceId = deviceUuname
 				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
 			}
@@ -157,9 +157,9 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
 		} else {
 			let config = await this.getDeviceDataHandlerConfigByUuname('COMA-' + data.TYPE)
-			console.log(config)
+			// console.log(config)
 			if (config !== false && config.handlerType === 'comadan-application') {
-				console.log(config.data)
+				// console.log(config.data)
 				data.sentiTtnDeviceId = deviceUuname
 				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
 			}
@@ -170,7 +170,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		let uunameSql = `SELECT d.id, d.uuid, d.uuname, d.handlerType, d.data
 							FROM deviceDataHandlerConfig d
 							WHERE d.uuname=? AND d.deleted = 0;`
-		console.log(await mysqlConn.format(uunameSql, [uuname]))
+		// console.log(await mysqlConn.format(uunameSql, [uuname]))
 		let rs = await mysqlConn.query(uunameSql, [uuname])
 		if (rs[0].length === 1) {
 			return rs[0][0]
@@ -181,14 +181,14 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		let uuname = data.uuname ? data.uuname : data.name
 		let arr = [uuname, data.name, deviceTypeId, regId, '', data.lat, data.lng, data.address, data.locType, data.communication, uuidv4()]
 		return await mysqlConn.query(createDeviceQuery, arr).then(async rs => {
-			console.log('Device Created', rs[0].insertId)
-			console.log(data, regId, deviceTypeId)
+			// console.log('Device Created', rs[0].insertId)
+			// console.log(data, regId, deviceTypeId)
 			let [deviceType] = await mysqlConn.query(selectDeviceType, [deviceTypeId])
-			console.log(deviceType[0])
+			// console.log(deviceType[0])
 			let mtd = deviceType[0]
 			let mtdArr = [rs[0].insertId, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
 			await mysqlConn.query(createMetaDataQuery, mtdArr).then(r => {
-				console.log('Device Metadata Created', r[0].insertId)
+				// console.log('Device Metadata Created', r[0].insertId)
 			}).catch(err => {
 				console.log("error: ", err)
 			})
@@ -279,7 +279,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		 * Get the key name
 		 */
 		let deviceName = pData[registry[0].config.deviceId]
-		console.log(deviceName)
+		// console.log(deviceName)
 		/**
 		 *  Check if the device exists
 		 * */
@@ -289,13 +289,13 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		 */
 		if (!device) {
 			let deviceTypeId = registry[0].config.deviceTypeId
-			console.log(`DEVICE ${deviceName} DOES NOT EXIST`)
+			// console.log(`DEVICE ${deviceName} DOES NOT EXIST`)
 			await this.createDevice({ name: deviceName, communication: 1, ...pData }, registry[0].id, deviceTypeId)
 			device = await this.getDevice(customerID, deviceName, regName)
 			// ADD DEVICE TO ACL
 			await aclClient.registerResource(device.uuid, sentiAclResourceType.device)
 			await aclClient.addResourceToParent(device.uuid, device.reguuid)
-			console.log(device)
+			// console.log(device)
 		}
 		/**
 		* Check if device accepts communication
@@ -314,14 +314,14 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			let shaString = SHA2['SHA-256'](sData).toString('hex')
 
 			let check = await mysqlConn.query(packageCheckQ, [shaString, deviceName]).then(([res]) => {
-				console.log('\n')
-				console.log(SHA2['SHA-256'](sData).toString('hex'))
-				console.log('\n')
+				// console.log('\n')
+				// console.log(SHA2['SHA-256'](sData).toString('hex'))
+				// console.log('\n')
 				return res
 			})
 			if (check.length > 0) {
-				console.log(pData)
-				console.log('DUPLICATE: Package already exists!')
+				// console.log(pData)
+				// console.log('DUPLICATE: Package already exists!')
 				return false
 			}
 			await this.storeData(pData, device)
@@ -330,21 +330,21 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 
 	async storeDataByRegistry(data, { regName, customerID }) {
 		try {
-			console.log('STORING DATA BY REGISTRY')
-			console.log(regName, customerID)
+			// console.log('STORING DATA BY REGISTRY')
+			// console.log(regName, customerID)
 			let pData = JSON.parse(data)
-			console.log(pData)
+			// console.log(pData)
 
 			/**
 			 * Get the registry
 			 */
 			let [registry] = await mysqlConn.query(getRegistry, [regName])
 			if (registry[0]) {
-				console.log('STORING DATA BY REGISTRY')
+				// console.log('STORING DATA BY REGISTRY')
 				let deviceName = pData[registry[0].config.deviceId]
-				console.log(customerID, regName, deviceName)
+				// console.log(customerID, regName, deviceName)
 				if (deviceName === undefined) {
-					console.log(pData)
+					// console.log(pData)
 				}
 				if (!Array.isArray(pData)) {
 					await this.storeDeviceData(pData, registry, customerID, regName)
@@ -352,7 +352,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				else {
 					if (Array.isArray(pData)) {
 						asyncForEach(pData, async (d) => {
-							console.log(d)
+							// console.log(d)
 							await this.storeDeviceData(d, registry, customerID, regName)
 						})
 					}
@@ -373,8 +373,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				return res
 			})
 			if (check.length > 0) {
-				console.warn(pData)
-				console.warn('DUPLICATE: Package already exists!')
+				// console.warn(pData)
+				// console.warn('DUPLICATE: Package already exists!')
 				return false
 			}
 			/**
@@ -388,8 +388,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				console.warn('COMMUNICATION: Not allowed!')
 				return false
 			}
-			console.log('STORING DATA BY DEVICE')
-			console.log(customerID, regName, deviceName)
+			// console.log('STORING DATA BY DEVICE')
+			// console.log(customerID, regName, deviceName)
 			// console.log(device)
 			if (device) {
 				await this.storeData(pData, device)
