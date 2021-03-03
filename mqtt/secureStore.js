@@ -190,12 +190,12 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			await mysqlConn.query(createMetaDataQuery, mtdArr).then(r => {
 				// console.log('Device Metadata Created', r[0].insertId)
 			}).catch(err => {
-				console.log("error: ", err)
+				console.log("error: ", err, data, regId, deviceTypeId)
 			})
 			return rs[0].insertId
 		}).catch(async err => {
 			// if (err) {
-			console.log("error: ", err)
+			console.log("error: ", err, data, regId, deviceTypeId)
 		})
 	}
 	async getDevice(customerID, deviceName, regName) {
