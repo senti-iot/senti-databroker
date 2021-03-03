@@ -36,8 +36,8 @@ class SecureMqttHandler {
 	// Sends a mqtt message
 	sendMessage(topic, message) {
 		this.mqttClient.publish(topic, message)
-		console.log(topic)
-		console.log(message)
+		// console.log(topic)
+		// console.log(message)
 	}
 }
 module.exports = SecureMqttHandler
