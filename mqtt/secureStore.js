@@ -344,7 +344,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				let deviceName = pData[registry[0].config.deviceId]
 				// console.log(customerID, regName, deviceName)
 				if (deviceName === undefined) {
-					// console.log(pData)
+					console.log(customerID, regName)
+					console.log(pData)
 				}
 				if (!Array.isArray(pData)) {
 					await this.storeDeviceData(pData, registry, customerID, regName)
