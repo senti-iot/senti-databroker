@@ -65,7 +65,7 @@ router.get('/v2/climaidinsight/northq/occupancy/:registry/:min/:prhour', async (
 												INNER JOIN sentidatastorage.device D ON D.reg_id=R.id AND D.deleted=0
 												WHERE R.uuid=?
 											)
-											AND DDC.created > DATE_SUB(NOW(), interval 60 minute) AND NOT ISNULL(DDC.data->'$.co2')
+											AND DDC.created > DATE_SUB(NOW(), interval 24 hour) AND NOT ISNULL(DDC.data->'$.co2')
 											GROUP BY DDC.device_id
 										) t
 										INNER JOIN sentidatastorage.deviceDataClean DDC  ON DDC.id=t.id
@@ -77,7 +77,7 @@ router.get('/v2/climaidinsight/northq/occupancy/:registry/:min/:prhour', async (
 							) t3
 						) t4
 					) t5`
-	console.log(mysqlConn.format(select, [req.params.prhour, req.params.min, req.params.registry]))
+	// console.log(mysqlConn.format(select, [req.params.prhour, req.params.min, req.params.registry]))
 	let rs = await mysqlConn.query(select, [req.params.prhour, req.params.min, req.params.registry])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
@@ -101,10 +101,10 @@ router.get('/v2/climaidinsight/northq/kkpressed/:registry', async (req, res) => 
 							WHERE R.uuid=?
 						) D
 						LEFT JOIN sentidatastorage.deviceDataClean DDC ON DDC.device_id=D.id
-						WHERE DDC.created > DATE_SUB(NOW(), interval 60 minute) AND NOT ISNULL(DDC.data->'$.cold')
+						WHERE DDC.created > DATE_SUB(NOW(), interval 24 hour) AND NOT ISNULL(DDC.data->'$.cold')
 						GROUP BY D.id
 					) t`
-	console.log(mysqlConn.format(select, [req.params.registry]))
+	// console.log(mysqlConn.format(select, [req.params.registry]))
 	let rs = await mysqlConn.query(select, [req.params.registry])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
