@@ -52,7 +52,8 @@ FROM (
 							ON dd.device_id = d.id
 								AND dd.created >= ?
 								AND dd.created < DATE_ADD(?, INTERVAL 1 day)
-					WHERE 1 ${clause}
+					WHERE 1 AND ${clause}
+                    GROUP BY did, dd.created
 				) dd
 				WHERE NOT ISNULL(val)
 			) ddd
@@ -73,7 +74,8 @@ FROM (
 							ON dd.device_id = d.id
 								AND dd.created >= ?
 								AND dd.created < DATE_ADD(?, INTERVAL 1 day)
-					WHERE 1 ${clause}
+					WHERE 1 AND ${clause}
+                    GROUP BY did, dd.created
 				) dd
 				WHERE NOT ISNULL(val)
 			) ddd
