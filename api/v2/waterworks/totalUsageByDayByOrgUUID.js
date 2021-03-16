@@ -53,6 +53,7 @@ FROM (
 								AND dd.created >= ?
 								AND dd.created < DATE_ADD(?, INTERVAL 1 day)
 					WHERE 1 ${clause}
+                    GROUP BY did, dd.created
 				) dd
 				WHERE NOT ISNULL(val)
 			) ddd
@@ -74,6 +75,7 @@ FROM (
 								AND dd.created >= ?
 								AND dd.created < DATE_ADD(?, INTERVAL 1 day)
 					WHERE 1 ${clause}
+                    GROUP BY did, dd.created
 				) dd
 				WHERE NOT ISNULL(val)
 			) ddd

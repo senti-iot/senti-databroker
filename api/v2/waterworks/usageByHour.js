@@ -48,6 +48,7 @@ router.get('/v2/waterworks/data/usagebyhour/:from/:to', async (req, res) => {
 												AND dd.created >= DATE_SUB(?, INTERVAL 1 HOUR)
 												AND dd.created < ?
 									WHERE 1 ${clause}
+									GROUP BY did, dd.created
 								) dd
 								WHERE NOT ISNULL(val)
 							) ddd
@@ -69,6 +70,7 @@ router.get('/v2/waterworks/data/usagebyhour/:from/:to', async (req, res) => {
 												AND dd.created >= DATE_SUB(?, INTERVAL 1 HOUR)
 												AND dd.created < ?
 									WHERE 1 ${clause}
+									GROUP BY did, dd.created
 								) dd
 								WHERE NOT ISNULL(val)
 							) ddd
