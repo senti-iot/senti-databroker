@@ -97,7 +97,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 					if (arr[1] === 'comadan-application') {
 						this.comadanApplicationHandler(message)
 					}
-					break
+
+					break;
 				case 'v2':
 					this.getV2Handler(arr, message.toString())
 					break
@@ -134,7 +135,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 	}
 	async ttnV3ApplicationHandler (message) {
 		let data = JSON.parse(message)
-		let applicationId = data.end_device_ids.application_ids.application_id 
+		let applicationId = data.end_device_ids.application_ids.application_id
 		let deviceUuname = applicationId + '-' + data.end_device_ids.device_id
 		let device = await this.getDeviceByUuname(deviceUuname)
 		if (device !== false) {
@@ -165,7 +166,39 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			}
 		}
 	}
-
+	async ttnV3ApplicationHandler (message) {
+		let data = JSON.parse(message)
+		let applicationId = data.end_device_ids.application_ids.application_id
+		let deviceUuname = applicationId + '-' + data.end_device_ids.device_id
+		let device = await this.getDeviceByUuname(deviceUuname)
+		if (device !== false) {
+			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
+		} else {
+			let config = await this.getDeviceDataHandlerConfigByUuname(applicationId)
+			console.log(config)
+			if (config !== false && config.handlerType === 'ttn-application-v3') {
+				console.log(config.data)
+				data.sentiTtnDeviceId = deviceUuname
+				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
+			}
+		}
+	}
+	async comadanApplicationHandler (message) {
+		let data = JSON.parse(message)
+		let deviceUuname = data.ID
+		let device = await this.getDeviceByUuname(deviceUuname)
+		if (device !== false) {
+			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
+		} else {
+			let config = await this.getDeviceDataHandlerConfigByUuname('COMA-' + data.TYPE)
+			console.log(config)
+			if (config !== false && config.handlerType === 'comadan-application') {
+				console.log(config.data)
+				data.sentiTtnDeviceId = deviceUuname
+				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
+			}
+		}
+	}
 	async getDeviceDataHandlerConfigByUuname (uuname) {
 		let uunameSql = `SELECT d.id, d.uuid, d.uuname, d.handlerType, d.data
 							FROM deviceDataHandlerConfig d
