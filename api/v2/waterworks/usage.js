@@ -68,11 +68,7 @@ FROM (
 							ON dd.device_id = d.id
 								AND dd.created >= ?
 								AND dd.created < DATE_ADD(?, INTERVAL 1 day)
-<<<<<<< HEAD
 					WHERE 1 ${clause}
-=======
-					WHERE 1 AND ${clause}
->>>>>>> d264278a832254f09d0643c048f2a791d68075fc
                     GROUP BY did, dd.created
 				) dd
 				WHERE NOT ISNULL(val)
