@@ -71,7 +71,7 @@ router.get('/v2/waterworks/data/usagebyday/:from/:to', async (req, res) => {
 	// 	) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
 	// ) kiddingme
 	// GROUP BY datetime;`
-	let select = `SELECT sum(vdiff) as value, sum(vdiff) as totalFlowPerDay, SUM(vdiff)/SUM(diff) as totalFlowPerSecond, date(t) as 'datetime'
+	let select = `SELECT sum(vdiff) as value, 86400*sum(vdiff/diff) as totalFlowPerDay, SUM(vdiff/diff) as totalFlowPerSecond, date(t) as 'datetime'
 FROM (
 	SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
 	FROM (
@@ -110,11 +110,7 @@ FROM (
 							ON dd.device_id = d.id
 								AND dd.created >= ?
 								AND dd.created < DATE_ADD(?, INTERVAL 1 day)
-<<<<<<< HEAD
 					WHERE 1 ${clause}
-=======
-					WHERE 1 AND ${clause}
->>>>>>> d264278a832254f09d0643c048f2a791d68075fc
                     GROUP BY did, dd.created
 				) dd
 				WHERE NOT ISNULL(val)
