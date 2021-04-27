@@ -68,6 +68,32 @@ router.get('/v2/device/:uuid', async (req, res) => {
 	res.status(200).json(device)
 })
 
+/**
+ * Route serving a device based on UUName provided
+ * @function GET /v2/deviceByUUname/:uuname
+ * @memberof module:routers/devices
+ * @param {String} req.params.uuname UUName of the Requested Device
+ */
+router.get('/v2/deviceByUUname/:uuname', async (req, res) => {
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	let deviceId = await deviceService.getOrganisationDeviceByUUName(req.params.uuname)
+	let device = await deviceService.getDeviceByID(deviceId)
+	if (device === false) {
+		res.status(404).json()
+		return
+	}
+	let access = await aclClient.testPrivileges(lease.uuid, device.uuid, [sentiAclPriviledge.device.read])
+	if (access.allowed === false) {
+		res.status(403).json()
+		return
+	}
+	res.status(200).json(device)
+})
+
 router.get('/v2/internal/fixaclcloudfunctions', async (req, res) => {
 	let select = `SELECT CF.name as dtname, CF.uuid as dtuuid, O.name as orgname, O.uuid as orguuid, AOR.uuid as orgresuuid
 					FROM cloudFunction CF
