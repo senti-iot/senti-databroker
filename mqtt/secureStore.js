@@ -114,9 +114,12 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			case 'ttn-application':
 				this.ttnApplicationHandler(message)
 				break
+			case 'prefix-uuname':
+				this.prefixUunameHandler(topic[2], message)
+				break
 		}
 	}
-
+	
 	async ttnApplicationHandler (message) {
 		let data = JSON.parse(message)
 		let deviceUuname = data.app_id + '-' + data.dev_id
@@ -166,37 +169,13 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			}
 		}
 	}
-	async ttnV3ApplicationHandler (message) {
+	async prefixUunameHandler (deviceUuname, message) {
 		let data = JSON.parse(message)
-		let applicationId = data.end_device_ids.application_ids.application_id
-		let deviceUuname = applicationId + '-' + data.end_device_ids.device_id
 		let device = await this.getDeviceByUuname(deviceUuname)
 		if (device !== false) {
 			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
 		} else {
-			let config = await this.getDeviceDataHandlerConfigByUuname(applicationId)
-			console.log(config)
-			if (config !== false && config.handlerType === 'ttn-application-v3') {
-				console.log(config.data)
-				data.sentiTtnDeviceId = deviceUuname
-				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
-			}
-		}
-	}
-	async comadanApplicationHandler (message) {
-		let data = JSON.parse(message)
-		let deviceUuname = data.ID
-		let device = await this.getDeviceByUuname(deviceUuname)
-		if (device !== false) {
-			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
-		} else {
-			let config = await this.getDeviceDataHandlerConfigByUuname('COMA-' + data.TYPE)
-			console.log(config)
-			if (config !== false && config.handlerType === 'comadan-application') {
-				console.log(config.data)
-				data.sentiTtnDeviceId = deviceUuname
-				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
-			}
+			console.log('prefixUunameHandler device not found: ', deviceUuname, data)
 		}
 	}
 	async getDeviceDataHandlerConfigByUuname (uuname) {
