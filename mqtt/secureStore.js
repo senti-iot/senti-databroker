@@ -280,6 +280,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				// SEND MESSAGE TO EVENT BROKER device.type_id, device.reg_id, device.id
 				if (process.env.NODE_ENV === 'production' && cleanData.sentiNoEvent !== true) {
 					cleanData.sentiEventDeviceName = device.name
+					cleanData.sentiEventDevice = device
 					this.sendMessage(`v1/event/data/${device.type_id}/${device.reg_id}/${device.id}`, JSON.stringify(cleanData))
 				}
 			}))
