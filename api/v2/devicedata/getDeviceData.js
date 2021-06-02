@@ -241,6 +241,7 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 		if (cloudfunctionId > 0) {
 			let cData = await engineAPI.post('/', { nIds: [cloudfunctionId], data: cleanData }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
+				console.log('EngineAPI OK', rss.ok)
 				console.log('EngineAPI Response:', rss.data)
 				return rss.ok ? rss.data : null
 			})
@@ -292,6 +293,7 @@ router.post('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId'
 		if (cloudfunctionId > 0) {
 			let cData = await engineAPI.post('/', { nIds: [cloudfunctionId], data: cleanData }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
+				console.log('EngineAPI OK', rss.ok)
 				console.log('EngineAPI Response:', rss.data)
 				return rss.ok ? rss.data : null
 			})
