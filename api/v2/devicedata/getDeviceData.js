@@ -243,6 +243,7 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 				console.log('EngineAPI Status:', rss.status)
 				console.log('EngineAPI OK', rss.ok)
 				console.log('EngineAPI Response:', rss.data)
+				console.log('EngineAPI RSS', rss)
 				return rss.ok ? rss.data : null
 			})
 			return res.status(200).json(cData)
@@ -295,6 +296,7 @@ router.post('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId'
 				console.log('EngineAPI Status:', rss.status)
 				console.log('EngineAPI OK', rss.ok)
 				console.log('EngineAPI Response:', rss.data)
+				console.log('EngineAPI RSS', rss)
 				return rss.ok ? rss.data : null
 			})
 			return res.status(200).json(cData)
