@@ -77,7 +77,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		this.topics = ['v1/+/location/+/registries/+/devices/+/publish', 'v1/+/location/+/registries/+/publish', 'v1/ttn-application', 'v1/ttn-application-v3', 'v1/comadan-application', 'v2/#']
 		this.mqttClient.on('message', (topic, message) => {
 			let arr = topic.split('/')
-			// console.log('mqttarr', arr)
+			// console.log('mqttarr', arr, message.toString())
 			switch (arr[0]) {
 				default:
 				case 'v1':
@@ -274,7 +274,9 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 					cleanData = normalized
 				}
 				let sCleanData = JSON.stringify(cleanData)
-				let dataInsertRs = await mysqlConn.query(insertClean, [sCleanData, dataTime, device.id, lastId]).then(() => { }).catch(e => {
+				let dataInsertRs = await mysqlConn.query(insertClean, [sCleanData, dataTime, device.id, lastId]).then((rs) => {
+					return rs
+				}).catch(e => {
 					console.log(e)
 				})
 				// SEND MESSAGE TO EVENT BROKER device.type_id, device.reg_id, device.id
