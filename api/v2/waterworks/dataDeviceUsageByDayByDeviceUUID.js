@@ -66,7 +66,7 @@ router.get('/v2/waterworks/data/device/:deviceuuid/usagebyday/:from/:to', async 
 	// 						) ddd ON 1
 	// 					) d5 ON d5.r=d4.r-1 AND d4.did=d5.did
 	// 				) kiddingme;`
-	let select = `SELECT sum(vdiff) as value, date(t) as 'datetime', uuid, SUM(vdiff)/SUM(diff) as totalFlowPerSecond, 86400*sum(vdiff)/SUM(diff) as totalFlowPerDay, date(t) AS d
+	let select = `SELECT sum(vdiff) as value, date(t) as 'datetime', uuid, SUM(vdiff/diff) as totalFlowPerSecond, 86400*sum(vdiff/diff) as totalFlowPerDay, date(t) AS d
 FROM (
 	SELECT d4.val-d5.val as vdiff, time_to_sec((timediff(d4.t,d5.t))) as diff, d4.t, d4.did, d4.uuid
 	FROM (
