@@ -284,6 +284,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 					cleanData.sentiEventDeviceName = device.name
 					cleanData.sentiEventDevice = device
 					cleanData.sentiEventDeviceDataCleanId = dataInsertRs[0].insertId
+					cleanData.sentiEventDeviceDataCleanTime = dataTime
 					this.sendMessage(`v1/event/data/${device.type_id}/${device.reg_id}/${device.id}`, JSON.stringify(cleanData))
 				}
 			}))
