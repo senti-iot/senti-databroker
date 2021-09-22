@@ -83,21 +83,22 @@ router.get('/v2/devicedata-clean/:deviceUUID/:from/:to/:cloudfunctionId', async 
 	let from = req.params.from
 	let to = req.params.to
 	let cloudfunctionId = req.params.cloudfunctionId
+	let cloudfunctionIds = req.params.cloudfunctionId.split(',').filter(val => { return val > 0})
 
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
 		res.status(401).json()
 		return
 	}
-	console.log(deviceUUID, from, to, cloudfunctionId)
+	console.log(deviceUUID, from, to, cloudfunctionIds)
 
 	let deviceId = await deviceService.getIdByUUID(deviceUUID)
 	let query = mysqlConn.format(getDeviceDataQuery, [deviceId, from, to])
 	await mysqlConn.query(getDeviceDataQuery, [deviceId, from, to]).then(async rs => {
 		let cleanData = rs[0]
 		// console.log(cleanData)
-		if (cloudfunctionId > 0) {
-			let cData = await engineAPI.post('/', { nIds: [cloudfunctionId], data: cleanData }).then(rss => {
+		if (cloudfunctionIds.length > 0) {
+			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
 				console.log('EngineAPI Response:', rss.data)
 				return rss.ok ? rss.data : null
@@ -122,6 +123,56 @@ router.get('/v2/devicedata-clean/:deviceUUID/:from/:to/:cloudfunctionId', async 
 * @param {Date} to - End date - YYYY-MM-DD HH:mm:ss format
 * @param {Number} cloudfunctionId - ID of the outbound cloud function
 */
+router.post('/v2/devicedata-clean/:deviceUUID/:from/:to/:cloudfunctionId', async (req, res) => {
+
+	let deviceUUID = req.params.deviceUUID
+	let from = req.params.from
+	let to = req.params.to
+	let cloudfunctionId = req.params.cloudfunctionId
+	let cloudfunctionIds = req.params.cloudfunctionId.split(',').filter(val => { return val > 0})
+
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	console.log(deviceUUID, from, to, cloudfunctionIds)
+
+	let deviceId = await deviceService.getIdByUUID(deviceUUID)
+	let query = mysqlConn.format(getDeviceDataQuery, [deviceId, from, to])
+	await mysqlConn.query(getDeviceDataQuery, [deviceId, from, to]).then(async rs => {
+		let cleanData = {
+			data: rs[0],
+			config: req.body
+		}
+		// console.log(cleanData)
+		if (cloudfunctionIds.length > 0) {
+			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData }).then(rss => {
+				console.log('EngineAPI Status:', rss.status)
+				console.log('EngineAPI Response:', rss.data)
+				return rss.ok ? rss.data : null
+			})
+			return res.status(200).json(cData)
+		}
+		res.status(200).json(cleanData)
+	}).catch(err => {
+		if (err) {
+			console.log(err)
+			res.status(500).json({ err, query })
+		}
+	})
+})
+/**
+* Route serving the complete clean device data packets for selected period
+* @function POST /v2/devicedata-clean/:deviceUUID/:from/:to/:cloudfunctionId
+* @memberof module:routers/devicedata
+* @param {String} body - config to send to cloudfunction
+* @param {String} deviceUUID
+* @param {Date} from - Start date - YYYY-MM-DD HH:mm:ss format
+* @param {Date} to - End date - YYYY-MM-DD HH:mm:ss format
+* @param {Number} cloudfunctionId - ID of the outbound cloud function
+*/
+/*
 router.post('/v2/devicedata-clean/:deviceUUID/:from/:to/:cloudfunctionId', async (req, res) => {
 
 	let deviceUUID = req.params.deviceUUID
@@ -160,54 +211,7 @@ router.post('/v2/devicedata-clean/:deviceUUID/:from/:to/:cloudfunctionId', async
 		}
 	})
 })
-/**
-* Route serving the complete clean device data packets for selected period
-* @function POST /v2/devicedata-clean/:deviceUUID/:from/:to/:cloudfunctionId
-* @memberof module:routers/devicedata
-* @param {String} body - config to send to cloudfunction
-* @param {String} deviceUUID
-* @param {Date} from - Start date - YYYY-MM-DD HH:mm:ss format
-* @param {Date} to - End date - YYYY-MM-DD HH:mm:ss format
-* @param {Number} cloudfunctionId - ID of the outbound cloud function
 */
-router.post('/v2/devicedata-clean/:deviceUUID/:from/:to/:cloudfunctionId', async (req, res) => {
-
-	let deviceUUID = req.params.deviceUUID
-	let from = req.params.from
-	let to = req.params.to
-	let cloudfunctionId = req.params.cloudfunctionId
-
-	let lease = await authClient.getLease(req)
-	if (lease === false) {
-		res.status(401).json()
-		return
-	}
-	console.log(deviceUUID, from, to, cloudfunctionId)
-
-	let deviceId = await deviceService.getIdByUUID(deviceUUID)
-	let query = mysqlConn.format(getDeviceDataQuery, [deviceId, from, to])
-	await mysqlConn.query(getDeviceDataQuery, [deviceId, from, to]).then(async rs => {
-		let cleanData = {
-			data: rs[0],
-			config: req.body
-		}
-		// console.log(cleanData)
-		if (cloudfunctionId > 0) {
-			let cData = await engineAPI.post('/', { nIds: [cloudfunctionId], data: cleanData }).then(rss => {
-				console.log('EngineAPI Status:', rss.status)
-				console.log('EngineAPI Response:', rss.data)
-				return rss.ok ? rss.data : null
-			})
-			return res.status(200).json(cData)
-		}
-		res.status(200).json(cleanData)
-	}).catch(err => {
-		if (err) {
-			console.log(err)
-			res.status(500).json({ err, query })
-		}
-	})
-})
 /**
 * Route serving the clean device data packets for selected period and specified field
 * @function GET /v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId
@@ -225,21 +229,22 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 	let from = req.params.from
 	let to = req.params.to
 	let cloudfunctionId = req.params.cloudfunctionId
+	let cloudfunctionIds = req.params.cloudfunctionId.split(',').filter(val => { return val > 0})
 
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
 		res.status(401).json()
 		return
 	}
-	console.log(deviceUUID, field, from, to, cloudfunctionId)
+	console.log(deviceUUID, field, from, to, cloudfunctionIds)
 
 	let deviceId = await deviceService.getIdByUUID(deviceUUID)
 	let query = mysqlConn.format(getDeviceDataFieldQuery(field), [deviceId, from, to])
 	await mysqlConn.query(getDeviceDataFieldQuery(field), [deviceId, from, to]).then(async rs => {
 		let cleanData = rs[0]
 		// console.log(cleanData)
-		if (cloudfunctionId > 0) {
-			let cData = await engineAPI.post('/', { nIds: [cloudfunctionId], data: cleanData }).then(rss => {
+		if (cloudfunctionIds.length > 0) {
+			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
 				console.log('EngineAPI OK', rss.ok)
 				console.log('EngineAPI Response:', rss.data)
@@ -275,13 +280,14 @@ router.post('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId'
 	let from = req.params.from
 	let to = req.params.to
 	let cloudfunctionId = req.params.cloudfunctionId
+	let cloudfunctionIds = req.params.cloudfunctionId.split(',').filter(val => { return val > 0})
 
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
 		res.status(401).json()
 		return
 	}
-	console.log(deviceUUID, field, from, to, cloudfunctionId)
+	console.log(deviceUUID, field, from, to, cloudfunctionIds)
 
 	let deviceId = await deviceService.getIdByUUID(deviceUUID)
 	let query = mysqlConn.format(getDeviceDataFieldQuery(field), [deviceId, from, to])
@@ -291,8 +297,8 @@ router.post('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId'
 			config: req.body
 		}
 		// console.log(cleanData)
-		if (cloudfunctionId > 0) {
-			let cData = await engineAPI.post('/', { nIds: [cloudfunctionId], data: cleanData }).then(rss => {
+		if (cloudfunctionIds.length > 0) {
+			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
 				console.log('EngineAPI OK', rss.ok)
 				console.log('EngineAPI Response:', rss.data)
@@ -336,6 +342,9 @@ router.get('/v2/devicedata-clean/all/:from/:to/:field/:deviceTypeUUID/timeseries
 	let dtUUID = req.params.deviceTypeUUID
 	let timeType = req.params.timeType
 
+	let cloudfunctionIds = req.params.cfId.split(',').filter(val => { return val > 0})
+
+
 	let query = getDeviceDataFieldTimeSeries(field, timeType)
 	// let query = await mysqlConn.format(getDeviceDataFieldTimeSeries(field), [dtUUID, from, to])
 	let formatsql = await mysqlConn.format(getDeviceDataFieldTimeSeries(field, timeType), [dtUUID, from, to])
@@ -350,9 +359,9 @@ router.get('/v2/devicedata-clean/all/:from/:to/:field/:deviceTypeUUID/timeseries
 			cleanData.avrg[moment(r.created).startOf(timeType).format('YYYY-MM-DD HH:mm:ss')] = r.avrg
 			cleanData.total[moment(r.created).startOf(timeType).format('YYYY-MM-DD HH:mm:ss')] = r.total
 		})
-		if (cfId > 0) {
+		if (cloudfunctionIds.length > 0) {
 			console.log(cleanData)
-			let cData = await engineAPI.post('/', { nIds: [cfId], data: cleanData }).then((rss) => {
+			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData }).then((rss) => {
 				console.log('EngineAPI Status:', rss.status)
 				console.log('EngineAPI Response', rss.data)
 				return rss.ok ? rss.data : null
@@ -397,6 +406,8 @@ router.get('/v2/devicedata-clean/all/:from/:to/:field/:deviceTypeUUID/gauge/:cfI
 	let cfId = req.params.cfId
 	let dtUUID = req.params.deviceTypeUUID
 
+	let cloudfunctionIds = req.params.cfId.split(',').filter(val => { return val > 0})
+
 	let query = getDeviceDataFieldGauge(field)
 	// let query = await mysqlConn.format(getDeviceDataFieldTimeSeries(field), [dtUUID, from, to])
 	let formatsql = await mysqlConn.format(getDeviceDataFieldTimeSeries(field), [dtUUID, from, to])
@@ -405,8 +416,8 @@ router.get('/v2/devicedata-clean/all/:from/:to/:field/:deviceTypeUUID/gauge/:cfI
 		let data = rs[0][0]
 		data.avrg = parseFloat(parseFloat(data.avrg).toFixed(3))
 		data.total = parseFloat(parseFloat(data.total).toFixed(3))
-		if (cfId > 0) {
-			let cData = await engineAPI.post('/', { nIds: [cfId], data: data }).then((rss) => {
+		if (cloudfunctionIds.length > 0) {
+			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: data }).then((rss) => {
 				console.log('EngineAPI Status:', rss.status)
 				console.log('EngineAPI Response', rss.data)
 				return rss.ok ? rss.data : null
