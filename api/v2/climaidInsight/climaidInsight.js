@@ -372,49 +372,49 @@ router.post('/v2/climaidinsight/colorstate/room', async (req, res) => {
 		return
 	}
 	let clause = (queryUUIDs.length > 0) ? ' AND ddc.device_id IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
-	// let select = `SELECT
-	// 					CONCAT(date(created), ' ', hour(created)) AS ts,
-	// 					SUM(t)/count(*) AS T_rel,
-	// 					SUM(h)/count(*) AS RH_rel,
-	// 					SUM(co2)/count(*) AS CO2_rel
-	// 				FROM (
-	// 					SELECT data->'$.temperature' AS t, data->'$.humidity' AS h,  data->'$.co2' AS co2, d.device_id, d.created
-	// 					FROM (
-	// 						SELECT ddc.device_id, MAX(ddc.created) AS created
-	// 						FROM deviceDataClean ddc
-	// 						WHERE 1
-	// 							${clause}
-	// 						GROUP BY ddc.device_id
-	// 					) t
-	// 					INNER JOIN deviceDataClean d ON t.device_id=d.device_id AND t.created=d.created
-	// 				) t2`
 	let select = `SELECT
 						CONCAT(date(created), ' ', hour(created)) AS ts,
-						SUM(t) / count(*) AS T_rel,
-						SUM(h) / count(*) AS RH_rel,
-						SUM(co2) / count(*) AS CO2_rel
+						SUM(t)/count(*) AS T_rel,
+						SUM(h)/count(*) AS RH_rel,
+						SUM(co2)/count(*) AS CO2_rel
 					FROM (
-						SELECT
-							data -> '$.temperature' AS t,
-							data -> '$.humidity' AS h,
-							data -> '$.co2' AS co2,
-							d.device_id,
-							d.created
+						SELECT data->'$.temperature' AS t, data->'$.humidity' AS h,  data->'$.co2' AS co2, d.device_id, d.created
 						FROM (
-							SELECT
-								ddc.device_id,
-								MAX(ddc.created) AS created
-							FROM
-								deviceDataClean ddc
-							WHERE
-								1
+							SELECT ddc.device_id, MAX(ddc.created) AS created
+							FROM deviceDataClean ddc
+							WHERE 1
 								${clause}
-								AND NOT ISNULL(data -> '$.temperature')
-							GROUP BY
-								ddc.device_id) t
-							INNER JOIN deviceDataClean d ON t.device_id = d.device_id
-								AND t.created = d.created
-								AND NOT ISNULL(data -> '$.temperature')) t2`
+							GROUP BY ddc.device_id
+						) t
+						INNER JOIN deviceDataClean d ON t.device_id=d.device_id AND t.created=d.created
+					) t2`
+	// let select = `SELECT
+	// 					CONCAT(date(created), ' ', hour(created)) AS ts,
+	// 					SUM(t) / count(*) AS T_rel,
+	// 					SUM(h) / count(*) AS RH_rel,
+	// 					SUM(co2) / count(*) AS CO2_rel
+	// 				FROM (
+	// 					SELECT
+	// 						data -> '$.temperature' AS t,
+	// 						data -> '$.humidity' AS h,
+	// 						data -> '$.co2' AS co2,
+	// 						d.device_id,
+	// 						d.created
+	// 					FROM (
+	// 						SELECT
+	// 							ddc.device_id,
+	// 							MAX(ddc.created) AS created
+	// 						FROM
+	// 							deviceDataClean ddc
+	// 						WHERE
+	// 							1
+	// 							${clause}
+	// 							AND NOT ISNULL(data -> '$.temperature')
+	// 						GROUP BY
+	// 							ddc.device_id) t
+	// 						INNER JOIN deviceDataClean d ON t.device_id = d.device_id
+	// 							AND t.created = d.created
+	// 							AND NOT ISNULL(data -> '$.temperature')) t2`
 	console.log(mysqlConn.format(select, [...queryUUIDs]))
 	let rs = await mysqlConn.query(select, [...queryUUIDs])
 	if (rs[0].length === 0) {
