@@ -63,6 +63,7 @@ const createMetaDataQuery = `INSERT INTO deviceMetadata
 			VALUES(?, ?, ?, ?);`
 
 const selectDeviceType = `SELECT * from deviceType where id=?`
+const updateDeviceGPS = `UPDATE device SET lat = ?, lng = ? WHERE id=?`
 
 // function cleanUpSpecialChars(str) {
 // 	return str.toString()
@@ -256,6 +257,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			if (!Array.isArray(pData)) {
 				pData = [pData]
 			}
+			this.updateDeviceGPS(device, deviceType, pData)
+
 			let insertClean = `INSERT INTO deviceDataClean(data, created, device_id, device_data_id) VALUES(?, ?, ?, ?)`
 
 			await Promise.all(pData.map(async (d) => {
@@ -357,7 +360,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			 */
 			let [registry] = await mysqlConn.query(getRegistry, [regName])
 			if (registry[0]) {
-				// console.log('STORING DATA BY REGISTRY')
+				console.log('STORING DATA BY REGISTRY', registry)
 				let deviceName = pData[registry[0].config.deviceId]
 				// console.log(customerID, regName, deviceName)
 				if (deviceName === undefined) {
@@ -378,7 +381,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			}
 		}
 		catch (e) {
-			console.log(e.message)
+			console.log('storeDataByRegistry', e.message, JSON.parse(data), regName, customerID)
 		}
 	}
 	async storeDataByDevice(data, { deviceName, regName, customerID }) {
@@ -414,7 +417,17 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			}
 		}
 		catch (e) {
-			console.log(e.message)
+			console.log('storeDataByDevice', e.message, JSON.parse(data), deviceName, regName, customerID)
+		}
+	}
+	updateDeviceGPS(device, deviceType, data) {
+		if (deviceType.metadata.sentiUpdateGPS === 'YES' && device.metadata.sentiUpdateGPS !== 'NO' && data[0].lat !== undefined && data[0].lat !== null && data[0].lon !== undefined && data[0].lon !== null) {
+			try {
+				mysqlConn.query(updateDeviceGPS, [data[0].lat, data[0].lon, device.id])
+			} 
+			catch (e) {
+				console.log(e.message, device, deviceType, data)
+			}
 		}
 	}
 }
