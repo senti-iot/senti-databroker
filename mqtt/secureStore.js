@@ -381,7 +381,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			}
 		}
 		catch (e) {
-			console.log('storeDataByRegistry', e.message, pData, regName, customerID)
+			console.log('storeDataByRegistry', e.message, JSON.parse(data), regName, customerID)
 		}
 	}
 	async storeDataByDevice(data, { deviceName, regName, customerID }) {
@@ -417,7 +417,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			}
 		}
 		catch (e) {
-			console.log('storeDataByDevice', e.message, pData, deviceName, regName, customerID)
+			console.log('storeDataByDevice', e.message, JSON.parse(data), deviceName, regName, customerID)
 		}
 	}
 	updateDeviceGPS(device, deviceType, data) {
