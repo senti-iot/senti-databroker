@@ -4,7 +4,7 @@ var mysqlConn = require('../../mysql/mysql_handler')
 const moment = require('moment')
 const engineAPI = require('../engine/engine')
 const tokenAPI = require('../engine/token')
-const log = require('../../server').log
+// const log = require('../../server').log
 
 const selectLatestCleanData = `SELECT data
 		FROM deviceDataClean
@@ -39,8 +39,8 @@ FROM (
 ) tt
 LEFT JOIN deviceDataClean dd ON tt.did=dd.id`
 
-const selectRegistryIDQ = `SELECT id from registry where uuname=?`
-const selectDeviceIDQ = `SELECT id from device where uuid=?`
+const selectRegistryIDQ = `SELECT id, uuid from registry where uuname=?`
+const selectDeviceIDQ = `SELECT id, uuid from device where uuid=?`
 /**
  * Get all the devices & their data under the regID and between from / to period
  */
@@ -50,18 +50,19 @@ router.get('/:token/registry/:regID/:from/:to/', async (req, res) => {
 	let to = req.params.to
 	let from = req.params.from
 	console.log(token, rID, to, from)
-	let regID = await mysqlConn.query(selectRegistryIDQ, [rID]).then(rs => {
+	let reg = await mysqlConn.query(selectRegistryIDQ, [rID]).then(rs => {
 		// console.log(rs)
 		if (rs[0][0])
-			return rs[0][0].id
+			return rs[0][0]
 		else
 			return null
 	})
 	// console.log(regID)
-	let isValid = await tokenAPI.get(`validateToken/${token}/0/${regID}`).then(rs => rs.data)
+	let isValid = await tokenAPI.get(`validateToken/${token}/0/${reg.uuid}`).then(rs => rs.data)
 	// console.log(isValid)
 	if (isValid) {
-		let devices = await mysqlConn.query(selectAllDevicesUnderReg, [regID, from, to]).then(rs => rs[0])
+		let devices = await mysqlConn.query(selectAllDevicesUnderReg, [reg.id, from, to]).then(rs => rs[0])
+		await tokenAPI.get(`count/${token}`)
 		res.json(devices).status(200)
 	}
 	else {
@@ -75,19 +76,20 @@ router.get('/:token/registry/:regID/latest', async (req, res) => {
 	let token = req.params.token
 	let rID = req.params.regID
 	console.log(token, rID)
-	let regID = await mysqlConn.query(selectRegistryIDQ, [rID]).then(rs => {
+	let reg = await mysqlConn.query(selectRegistryIDQ, [rID]).then(rs => {
 		// console.log(rs)
 		if (rs[0][0])
-			return rs[0][0].id
+			return rs[0][0]
 		else
 			return null
 	})
 	// console.log(regID)
-	let isValid = await tokenAPI.get(`validateToken/${token}/0/${regID}`).then(rs => rs.data)
+	let isValid = await tokenAPI.get(`validateToken/${token}/0/${reg.uuid}`).then(rs => rs.data)
 	// console.log(isValid)
 
 	if (isValid) {
-		let devices = await mysqlConn.query(selectLatestAllDevicesUnderReg, [regID]).then(rs => rs[0])
+		let devices = await mysqlConn.query(selectLatestAllDevicesUnderReg, [reg.id]).then(rs => rs[0])
+		await tokenAPI.get(`count/${token}`)
 
 		res.json(devices).status(200)
 	}
@@ -103,20 +105,21 @@ router.get('/:token/devicedata/:deviceUUID/latest', async (req, res) => {
 	let token = req.params.token
 	let deviceUuid = req.params.deviceUUID
 
-	let deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceUuid]).then(rs => rs[0][0].id)
+	let device = await mysqlConn.query(selectDeviceIDQ, [deviceUuid]).then(rs => rs[0][0])
 	let isValid = await tokenAPI.get(`validateToken/${token}/1/${deviceUuid}`).then(rs => rs.data)
 
 	if (isValid) {
 
-		await mysqlConn.query(selectLatestCleanData, [deviceID]).then(async rs => {
+		await mysqlConn.query(selectLatestCleanData, [device.id]).then(async rs => {
 			let rawData = rs[0]
 			// log({
 			// 	msg: "Latest Data requested externally for Device",
 			// 	deviceId: deviceID
 			// }, 'info')
+			await tokenAPI.get(`count/${token}`)
 			res.status(200).json(rawData)
 		}).catch(err => {
-			if (err) { res.status(500).json({ err, query: mysqlConn.format(selectLatestCleanData, [deviceID]) }) }
+			if (err) { res.status(500).json({ err, query: mysqlConn.format(selectLatestCleanData, [device.id]) }) }
 		})
 	}
 	else {
@@ -130,21 +133,22 @@ router.get('/:token/devicedata/:deviceUUID/:from/:to/', async (req, res) => {
 	let to = req.params.to
 	let from = req.params.from
 
-	let deviceID = await mysqlConn.query(selectDeviceIDQ, [deviceUuid]).then(rs => rs[0][0].id)
+	let device = await mysqlConn.query(selectDeviceIDQ, [deviceUuid]).then(rs => rs[0][0])
 	let isValid = await tokenAPI.get(`validateToken/${token}/1/${deviceUuid}`).then(rs => rs.data)
 
 	if (isValid) {
-		console.log(deviceID, isValid, from, to)
-		console.log(mysqlConn.format(selectCleanData, [deviceID, from, to ]))
-		await mysqlConn.query(selectCleanData, [deviceID, from, to]).then(async rs => {
+		console.log(device, isValid, from, to)
+		console.log(mysqlConn.format(selectCleanData, [device.id, from, to ]))
+		await mysqlConn.query(selectCleanData, [device.id, from, to]).then(async rs => {
 			let rawData = rs[0]
 			// log({
 			// 	msg: "Data requested externally for Device",
 			// 	deviceId: deviceID
 			// }, 'info')
+			await tokenAPI.get(`count/${token}`)
 			res.status(200).json(rawData)
 		}).catch(err => {
-			if (err) { res.status(500).json({ err, query: mysqlConn.format(selectCleanData, [deviceID, from, to]) }) }
+			if (err) { res.status(500).json({ err, query: mysqlConn.format(selectCleanData, [device.id, from, to]) }) }
 		})
 	}
 	else {
@@ -185,10 +189,11 @@ router.get('/:token/devicedata/:deviceID/:from/:to/:dataKey/:cfId?', async (req,
 				})
 				return res.status(200).json(cData)
 			}
-			log({
-				msg: "Data requested externally for Device",
-				deviceId: deviceID
-			}, 'info')
+			// log({
+			// 	msg: "Data requested externally for Device",
+			// 	deviceId: deviceID
+			// }, 'info')
+			await tokenAPI.get(`count/${token}`)
 			res.status(200).json(cleanData)
 		}).catch(err => {
 			if (err) { res.status(500).json({ err, query: mysqlConn.format(selectCleanDataIdDevice, [deviceID, from, to]) }) }
