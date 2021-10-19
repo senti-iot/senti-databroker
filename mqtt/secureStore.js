@@ -360,7 +360,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			 */
 			let [registry] = await mysqlConn.query(getRegistry, [regName])
 			if (registry[0]) {
-				console.log('STORING DATA BY REGISTRY', registry)
+				// console.log('STORING DATA BY REGISTRY', registry)
 				let deviceName = pData[registry[0].config.deviceId]
 				// console.log(customerID, regName, deviceName)
 				if (deviceName === undefined) {
