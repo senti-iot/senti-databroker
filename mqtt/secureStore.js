@@ -180,7 +180,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
 		} else {
 			let config = await this.getDeviceDataHandlerConfigByUuname(data.deviceHandler)
-			// console.log(config)
+			console.log(data, config)
 			if (config !== false && config.handlerType === 'sigfox-application') {
 				// console.log(config.data)
 				data.sentiTtnDeviceId = deviceUuname
