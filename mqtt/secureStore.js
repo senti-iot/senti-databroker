@@ -75,7 +75,7 @@ const updateDeviceGPS = `UPDATE device SET lat = ?, lng = ? WHERE id=?`
 
 class SecureStoreMqttHandler extends SecureMqttHandler {
 	init() {
-		this.topics = ['v1/+/location/+/registries/+/devices/+/publish', 'v1/+/location/+/registries/+/publish', 'v1/ttn-application', 'v1/ttn-application-v3', 'v1/comadan-application', 'v2/#']
+		this.topics = ['v1/+/location/+/registries/+/devices/+/publish', 'v1/+/location/+/registries/+/publish', 'v1/ttn-application', 'v1/ttn-application-v3', 'v1/comadan-application', 'v1/sigfox-application', 'v2/#']
 		this.mqttClient.on('message', (topic, message) => {
 			let arr = topic.split('/')
 			// console.log('mqttarr', arr, message.toString())
@@ -180,7 +180,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
 		} else {
 			let config = await this.getDeviceDataHandlerConfigByUuname(data.deviceHandler)
-			// console.log(config)
+			// console.log(data, config)
 			if (config !== false && config.handlerType === 'sigfox-application') {
 				// console.log(config.data)
 				data.sentiTtnDeviceId = deviceUuname
