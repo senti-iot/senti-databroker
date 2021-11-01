@@ -98,7 +98,9 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 					if (arr[1] === 'comadan-application') {
 						this.comadanApplicationHandler(message)
 					}
-
+					if (arr[1] === 'sigfox-application') {
+						this.sigfoxApplicationHandler(message)
+					}
 					break;
 				case 'v2':
 					this.getV2Handler(arr, message.toString())
@@ -164,6 +166,22 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			let config = await this.getDeviceDataHandlerConfigByUuname('COMA-' + data.TYPE)
 			// console.log(config)
 			if (config !== false && config.handlerType === 'comadan-application') {
+				// console.log(config.data)
+				data.sentiTtnDeviceId = deviceUuname
+				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
+			}
+		}
+	}
+	async sigfoxApplicationHandler (message) {
+		let data = JSON.parse(message)
+		let deviceUuname = data.deviceHandler + '-' + data.device_id
+		let device = await this.getDeviceByUuname(deviceUuname)
+		if (device !== false) {
+			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
+		} else {
+			let config = await this.getDeviceDataHandlerConfigByUuname(data.deviceHandler)
+			// console.log(config)
+			if (config !== false && config.handlerType === 'sigfox-application') {
 				// console.log(config.data)
 				data.sentiTtnDeviceId = deviceUuname
 				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
