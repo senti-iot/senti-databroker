@@ -309,7 +309,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 						deviceType: deviceType,
 						messageMeta: {
 							cleanId: dataInsertRs[0].insertId,
-							// cleanTime = dataTime
+							cleanTime: dataTime
 						}
 					}
 					this.sendMessage(`v2/event/data/${deviceType.uuid}/${device.reguuid}/${device.uuid}`, JSON.stringify(eventMessage))
