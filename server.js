@@ -139,6 +139,10 @@ app.use(cors())
  */
 app.use([getDeviceDataV2])
 /**
+ * API Data V2
+ */
+app.use([getDataExternal])
+/**
  * Devices V2
  */
 app.use([getDeviceV2, getDevicesV2, createDeviceV2, updateDeviceV2, deleteDeviceV2, rescanV2])
@@ -194,7 +198,7 @@ app.use([getWaterworksV2, customBenchmark, customBenchmarkByTag,
 ])
 
 // V1 USE
-app.use([getMessages, getDeviceData, getDataExternal,
+app.use([getMessages, getDeviceData,
 	getDT, getDTs, createDT, updateDT, deleteDT,
 	getDevice, getDevices, createDevice, updateDevice, deleteDevice,
 	getRegistry, getRegistryDevices, getRegistries, createReg, updateReg, deleteReg,
