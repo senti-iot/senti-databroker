@@ -92,13 +92,13 @@ router.get('/v2/devicedata-clean/:deviceUUID/:from/:to/:cloudfunctionId', async 
 	}
 	console.log(deviceUUID, from, to, cloudfunctionIds)
 
-	let deviceId = await deviceService.getIdByUUID(deviceUUID)
-	let query = mysqlConn.format(getDeviceDataQuery, [deviceId, from, to])
-	await mysqlConn.query(getDeviceDataQuery, [deviceId, from, to]).then(async rs => {
+	let device = await deviceService.getDeviceByUUID(deviceUUID)
+	let query = mysqlConn.format(getDeviceDataQuery, [device.id, from, to])
+	await mysqlConn.query(getDeviceDataQuery, [device.id, from, to]).then(async rs => {
 		let cleanData = rs[0]
 		// console.log(cleanData)
 		if (cloudfunctionIds.length > 0) {
-			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData }).then(rss => {
+			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData, settings: { device: device } }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
 				console.log('EngineAPI Response:', rss.data)
 				return rss.ok ? rss.data : null
@@ -137,17 +137,16 @@ router.post('/v2/devicedata-clean/:deviceUUID/:from/:to/:cloudfunctionId', async
 		return
 	}
 	console.log(deviceUUID, from, to, cloudfunctionIds)
-
-	let deviceId = await deviceService.getIdByUUID(deviceUUID)
-	let query = mysqlConn.format(getDeviceDataQuery, [deviceId, from, to])
-	await mysqlConn.query(getDeviceDataQuery, [deviceId, from, to]).then(async rs => {
+	let device = await deviceService.getDeviceByUUID(deviceUUID)
+	let query = mysqlConn.format(getDeviceDataQuery, [device.id, from, to])
+	await mysqlConn.query(getDeviceDataQuery, [device.id, from, to]).then(async rs => {
 		let cleanData = {
 			data: rs[0],
 			config: req.body
 		}
 		// console.log(cleanData)
 		if (cloudfunctionIds.length > 0) {
-			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData }).then(rss => {
+			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData, settings: { device: device } }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
 				console.log('EngineAPI Response:', rss.data)
 				return rss.ok ? rss.data : null
@@ -237,14 +236,13 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 		return
 	}
 	console.log(deviceUUID, field, from, to, cloudfunctionIds)
-
-	let deviceId = await deviceService.getIdByUUID(deviceUUID)
-	let query = mysqlConn.format(getDeviceDataFieldQuery(field), [deviceId, from, to])
-	await mysqlConn.query(getDeviceDataFieldQuery(field), [deviceId, from, to]).then(async rs => {
+	let device = await deviceService.getDeviceByUUID(deviceUUID)
+	let query = mysqlConn.format(getDeviceDataFieldQuery(field), [device.id, from, to])
+	await mysqlConn.query(getDeviceDataFieldQuery(field), [device.id, from, to]).then(async rs => {
 		let cleanData = rs[0]
 		// console.log(cleanData)
 		if (cloudfunctionIds.length > 0) {
-			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData }).then(rss => {
+			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData, settings: { device: device } }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
 				console.log('EngineAPI OK', rss.ok)
 				console.log('EngineAPI Response:', rss.data)
@@ -289,16 +287,16 @@ router.post('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId'
 	}
 	console.log(deviceUUID, field, from, to, cloudfunctionIds)
 
-	let deviceId = await deviceService.getIdByUUID(deviceUUID)
-	let query = mysqlConn.format(getDeviceDataFieldQuery(field), [deviceId, from, to])
-	await mysqlConn.query(getDeviceDataFieldQuery(field), [deviceId, from, to]).then(async rs => {
+	let device = await deviceService.getDeviceByUUID(deviceUUID)
+	let query = mysqlConn.format(getDeviceDataFieldQuery(field), [device.id, from, to])
+	await mysqlConn.query(getDeviceDataFieldQuery(field), [device.id, from, to]).then(async rs => {
 		let cleanData = {
 			data: rs[0],
 			config: req.body
 		}
 		// console.log(cleanData)
 		if (cloudfunctionIds.length > 0) {
-			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData }).then(rss => {
+			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData, settings: { device: device }  }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
 				console.log('EngineAPI OK', rss.ok)
 				console.log('EngineAPI Response:', rss.data)
