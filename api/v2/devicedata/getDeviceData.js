@@ -237,7 +237,7 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 	}
 	console.log(deviceUUID, field, from, to, cloudfunctionIds)
 	let device = await deviceService.getDeviceByUUID(deviceUUID)
-	let syntheticField = dataKeys.filter(e => {
+	let syntheticField = device.dataKeys.filter(e => {
 		return (e.key === field && e.okey)
 	})
 	if (syntheticField.length > 0) {
