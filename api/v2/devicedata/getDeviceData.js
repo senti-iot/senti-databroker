@@ -238,13 +238,14 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 	}
 	console.log(deviceUUID, field, from, to, cloudfunctionIds)
 
-	let deviceId = await deviceService.getIdByUUID(deviceUUID)
+	let device = await deviceService.getDeviceByUUID(deviceUUID)
+	let deviceId = device.id //await deviceService.getIdByUUID(deviceUUID)
 	let query = mysqlConn.format(getDeviceDataFieldQuery(field), [deviceId, from, to])
 	await mysqlConn.query(getDeviceDataFieldQuery(field), [deviceId, from, to]).then(async rs => {
 		let cleanData = rs[0]
 		// console.log(cleanData)
 		if (cloudfunctionIds.length > 0) {
-			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData }).then(rss => {
+			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: { ...cleanData, ...device.metadata } }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
 				console.log('EngineAPI OK', rss.ok)
 				console.log('EngineAPI Response:', rss.data)
