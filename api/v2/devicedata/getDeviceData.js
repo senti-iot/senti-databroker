@@ -244,10 +244,10 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 	console.log(deviceUUID, field, asField, from, to, cloudfunctionIds)
 	let device = await deviceService.getDeviceByUUID(deviceUUID)
 	let syntheticField = device.dataKeys.filter(e => {
-		return (e.key === field && e.okey)
+		return (e.key === field && e.originalKey)
 	})
 	if (syntheticField.length > 0) {
-		field = syntheticField[0].okey
+		field = syntheticField[0].originalKey
 		cloudfunctionIds.unshift(syntheticField[0].nId)
 	}
 	let query = mysqlConn.format(getDeviceDataFieldQuery2(field, asField), [device.id, from, to])
@@ -271,7 +271,6 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 			res.status(500).json({ err, query })
 		}
 	})
-
 })
 /**
 * Route serving the clean device data packets for selected period and specified field
@@ -288,6 +287,7 @@ router.post('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId'
 
 	let deviceUUID = req.params.deviceUUID
 	let field = req.params.field
+	let asField = req.params.field
 	let from = req.params.from
 	let to = req.params.to
 	let cloudfunctionId = req.params.cloudfunctionId
@@ -301,8 +301,15 @@ router.post('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId'
 	console.log(deviceUUID, field, from, to, cloudfunctionIds)
 
 	let device = await deviceService.getDeviceByUUID(deviceUUID)
-	let query = mysqlConn.format(getDeviceDataFieldQuery(field), [device.id, from, to])
-	await mysqlConn.query(getDeviceDataFieldQuery(field), [device.id, from, to]).then(async rs => {
+	let syntheticField = device.dataKeys.filter(e => {
+		return (e.key === field && e.originalKey)
+	})
+	if (syntheticField.length > 0) {
+		field = syntheticField[0].originalKey
+		cloudfunctionIds.unshift(syntheticField[0].nId)
+	}
+	let query = mysqlConn.format(getDeviceDataFieldQuery2(field, asField), [device.id, from, to])
+	await mysqlConn.query(getDeviceDataFieldQuery2(field, asField), [device.id, from, to]).then(async rs => {
 		let cleanData = {
 			data: rs[0],
 			config: req.body
