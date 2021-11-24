@@ -246,7 +246,7 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 		let cleanData = rs[0]
 		// console.log(cleanData)
 		if (cloudfunctionIds.length > 0) {
-			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData, setting: { device: device } }).then(rss => {
+			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData, settings: { device: device } }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
 				console.log('EngineAPI OK', rss.ok)
 				console.log('EngineAPI Response:', rss.data)
