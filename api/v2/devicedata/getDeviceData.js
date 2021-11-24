@@ -237,6 +237,13 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 	}
 	console.log(deviceUUID, field, from, to, cloudfunctionIds)
 	let device = await deviceService.getDeviceByUUID(deviceUUID)
+	let syntheticField = dataKeys.filter(e => {
+		return (e.key === field && e.okey)
+	})
+	if (syntheticField.length > 0) {
+		field = syntheticField[0].okey
+		cloudfunctionIds.unshift(syntheticField[0].nId)
+	}
 	let query = mysqlConn.format(getDeviceDataFieldQuery(field), [device.id, from, to])
 	await mysqlConn.query(getDeviceDataFieldQuery(field), [device.id, from, to]).then(async rs => {
 		let cleanData = rs[0]
