@@ -28,6 +28,11 @@ const getDeviceDataFieldQuery = field => `SELECT \`data\`->'$.${field}' as \`${f
 											WHERE device_id=? AND NOT ISNULL(\`data\`->'$.${field}') AND created >= ? and created <= ? ORDER BY created`
 
 
+const getDeviceDataFieldQuery2 = (field, asField) => `SELECT \`data\`->'$.${field}' as \`${asField}\`, created as datetime
+											FROM deviceDataClean
+											WHERE device_id=? AND NOT ISNULL(\`data\`->'$.${field}') AND created >= ? and created <= ? ORDER BY created`
+
+
 const getDeviceDataFieldGauge = field => `
 			SELECT AVG(ROUND(dd.\`data\`->'$.${field}', 3)) as avrg, SUM(dd.\`data\`->'$.${field}') as total from deviceDataClean dd
 			INNER JOIN device d on d.id = dd.device_id
@@ -225,6 +230,7 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 
 	let deviceUUID = req.params.deviceUUID
 	let field = req.params.field
+	let asField = req.params.field
 	let from = req.params.from
 	let to = req.params.to
 	let cloudfunctionId = req.params.cloudfunctionId
@@ -235,7 +241,7 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 		res.status(401).json()
 		return
 	}
-	console.log(deviceUUID, field, from, to, cloudfunctionIds)
+	console.log(deviceUUID, field, asField, from, to, cloudfunctionIds)
 	let device = await deviceService.getDeviceByUUID(deviceUUID)
 	let syntheticField = device.dataKeys.filter(e => {
 		return (e.key === field && e.okey)
@@ -244,8 +250,8 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 		field = syntheticField[0].okey
 		cloudfunctionIds.unshift(syntheticField[0].nId)
 	}
-	let query = mysqlConn.format(getDeviceDataFieldQuery(field), [device.id, from, to])
-	await mysqlConn.query(getDeviceDataFieldQuery(field), [device.id, from, to]).then(async rs => {
+	let query = mysqlConn.format(getDeviceDataFieldQuery2(field, asField), [device.id, from, to])
+	await mysqlConn.query(getDeviceDataFieldQuery2(field, asField), [device.id, from, to]).then(async rs => {
 		let cleanData = rs[0]
 		// console.log(cleanData)
 		if (cloudfunctionIds.length > 0) {
