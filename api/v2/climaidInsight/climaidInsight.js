@@ -12,23 +12,29 @@ const authClient = require('../../../server').authClient
 
 const colorState = (d, cfg) => {
 	let T_color = 1
-	if (cfg.T_ben1 > d.T || cfg.T_ben6 < d.T) {
-		T_color = 4
-	} else if (d.T < cfg.T_ben2 || cfg.T_ben5 < d.T) {
-		T_color = 3
-	} else if (d.T < cfg.T_ben3 || cfg.T_ben4 < d.T) {
-		T_color = 2
+	if (d.T) {
+		if (cfg.T_ben1 > d.T || cfg.T_ben6 < d.T) {
+			T_color = 4
+		} else if (d.T < cfg.T_ben2 || cfg.T_ben5 < d.T) {
+			T_color = 3
+		} else if (d.T < cfg.T_ben3 || cfg.T_ben4 < d.T) {
+			T_color = 2
+		}
 	}
+
 	let RH_color = 1
-	if (cfg.RH_ben1 > d.RH || cfg.RH_ben6 < d.RH) {
-		RH_color = 4
-	} else if (d.RH < cfg.RH_ben2 || cfg.RH_ben5 < d.RH) {
-		RH_color = 3
-	} else if (d.RH < cfg.RH_ben3 || cfg.RH_ben4 < d.RH) {
-		RH_color = 2
+	if (d.RH) {
+		if (cfg.RH_ben1 > d.RH || cfg.RH_ben6 < d.RH) {
+			RH_color = 4
+		} else if (d.RH < cfg.RH_ben2 || cfg.RH_ben5 < d.RH) {
+			RH_color = 3
+		} else if (d.RH < cfg.RH_ben3 || cfg.RH_ben4 < d.RH) {
+			RH_color = 2
+		}
 	}
+
 	let CO2_color = 1
-	if (d.CO2 !== null) {
+	if (d.CO2) {
 		if (d.CO2 > cfg.CO2_ben3) {
 			CO2_color = 4
 		} else if (d.CO2 > cfg.CO2_ben2) {
@@ -37,7 +43,8 @@ const colorState = (d, cfg) => {
 			CO2_color = 2
 		}
 	}
-	return { ts: d.ts, color: Math.max(T_color, RH_color, CO2_color) }
+
+	return { ts: d.ts, color: Math.max(T_color, RH_color, CO2_color) }
 }
 router.get('/v2/climaidinsight/northq/occupancy/:registry/:min/:prhour', async (req, res) => {
 	let lease = await authClient.getLease(req)
@@ -371,14 +378,38 @@ router.post('/v2/climaidinsight/colorstate/room', async (req, res) => {
 		res.status(404).json([])
 		return
 	}
+
+	let temperature = 'temperature';
+	let useTemperature = false;
+	let co2 = 'co2';
+	let useCo2 = false;
+	let humidity = 'humidity';
+	let useHumidity = false;
+
+	if (req.body.gauges) {
+		if (req.body.gauges['temperature'] !== undefined) {
+			temperature = req.body.gauges['temperature'];
+			useTemperature = true;
+		}
+		if (req.body.gauges['co2'] !== undefined) {
+			co2 = req.body.gauges['co2'];
+			useCo2 = true;
+		}
+		if (req.body.gauges['humidity'] !== undefined) {
+			humidity = req.body.gauges['humidity'];
+			useHumidity = true;
+		}
+	}
+
 	let clause = (queryUUIDs.length > 0) ? ' AND ddc.device_id IN (?' + ",?".repeat(queryUUIDs.length - 1) + ') ' : ''
+
 	let select = `SELECT
 						CONCAT(date(created), ' ', hour(created)) AS ts,
 						SUM(t)/count(*) AS T_rel,
 						SUM(h)/count(*) AS RH_rel,
 						SUM(co2)/count(*) AS CO2_rel
 					FROM (
-						SELECT data->'$.temperature' AS t, data->'$.humidity' AS h,  data->'$.co2' AS co2, d.device_id, d.created
+						SELECT data->'$.${temperature}' AS t, data->'$.${humidity}' AS h,  data->'$.${co2}' AS co2, d.device_id, d.created
 						FROM (
 							SELECT ddc.device_id, MAX(ddc.created) AS created
 							FROM deviceDataClean ddc
@@ -388,40 +419,27 @@ router.post('/v2/climaidinsight/colorstate/room', async (req, res) => {
 						) t
 						INNER JOIN deviceDataClean d ON t.device_id=d.device_id AND t.created=d.created
 					) t2`
-	// let select = `SELECT
-	// 					CONCAT(date(created), ' ', hour(created)) AS ts,
-	// 					SUM(t) / count(*) AS T_rel,
-	// 					SUM(h) / count(*) AS RH_rel,
-	// 					SUM(co2) / count(*) AS CO2_rel
-	// 				FROM (
-	// 					SELECT
-	// 						data -> '$.temperature' AS t,
-	// 						data -> '$.humidity' AS h,
-	// 						data -> '$.co2' AS co2,
-	// 						d.device_id,
-	// 						d.created
-	// 					FROM (
-	// 						SELECT
-	// 							ddc.device_id,
-	// 							MAX(ddc.created) AS created
-	// 						FROM
-	// 							deviceDataClean ddc
-	// 						WHERE
-	// 							1
-	// 							${clause}
-	// 							AND NOT ISNULL(data -> '$.temperature')
-	// 						GROUP BY
-	// 							ddc.device_id) t
-	// 						INNER JOIN deviceDataClean d ON t.device_id = d.device_id
-	// 							AND t.created = d.created
-	// 							AND NOT ISNULL(data -> '$.temperature')) t2`
-	console.log(mysqlConn.format(select, [...queryUUIDs]))
+
+	// console.log(mysqlConn.format(select, [...queryUUIDs]))
 	let rs = await mysqlConn.query(select, [...queryUUIDs])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
 		return
 	}
-	res.status(200).json(colorState({ ts: rs[0][0].ts, T: rs[0][0].T_rel, RH: rs[0][0]. RH_rel, CO2: rs[0][0].CO2_rel }, req.body.config))
+
+	let data = { ts: rs[0][0].ts, T: null, RH: null, CO2: null };
+
+	if (useTemperature) {
+		data.T = rs[0][0].T_rel;
+	}
+	if (useCo2) {
+		data.CO2 = rs[0][0].CO2_rel;		
+	}
+	if (useHumidity) {
+		data.RH = rs[0][0].RH_rel;		
+	}
+
+	res.status(200).json(colorState(data, req.body.config))
 })
 router.post('/v2/climaidinsight/colorstate/building/:from/:to', async (req, res) => {
 	let lease = await authClient.getLease(req)
