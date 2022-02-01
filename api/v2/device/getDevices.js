@@ -30,6 +30,17 @@ router.get('/v2/devices', async (req, res) => {
 	res.status(200).json(await deviceService.getDevicesByUUID(queryUUIDs))
 })
 
+router.get(`/v2/total-devices/:orgUUID`, async (req, res) => {
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+
+	let orgUUID = req.params.orgUUID
+	let result = await deviceService.getTotalDevices(orgUUID)
+	return res.status(200).json(result)
+})
 /**
  * Route serving all devices based on the owner UUID of the devices
  * @function GET /v2/devices/:uuid
