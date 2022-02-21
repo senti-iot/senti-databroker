@@ -251,10 +251,10 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 	  */
 	let allSynthetics = []
 	if (device.dataKeys && device.dataKeys.length > 0) {
-		allSynthetics.push(device.dataKeys)
+		allSynthetics.push(...device.dataKeys)
 	}
 	if (device.syntheticKeys && device.syntheticKeys.length > 0) {
-		allSynthetics.push(device.syntheticKeys)
+		allSynthetics.push(...device.syntheticKeys)
 	}
 	/**
 	 * Set the synthetic field
