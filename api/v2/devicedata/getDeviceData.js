@@ -23,9 +23,9 @@ const getDeviceDataQuery = `SELECT \`data\`, created as datetime
 							FROM deviceDataClean
 							WHERE device_id=? AND NOT ISNULL(\`data\`) AND created >= ? AND created <= ? ORDER BY created`
 
-const getDeviceDataFieldQuery = field => `SELECT \`data\`->'$.${field}' as \`${field}\`, created as datetime
-											FROM deviceDataClean
-											WHERE device_id=? AND NOT ISNULL(\`data\`->'$.${field}') AND created >= ? and created <= ? ORDER BY created`
+// const getDeviceDataFieldQuery = field => `SELECT \`data\`->'$.${field}' as \`${field}\`, created as datetime
+// 											FROM deviceDataClean
+// 											WHERE device_id=? AND NOT ISNULL(\`data\`->'$.${field}') AND created >= ? and created <= ? ORDER BY created`
 
 
 const getDeviceDataFieldQuery2 = (field, asField) => `SELECT \`data\`->'$.${field}' as \`${asField}\`, created as datetime
@@ -87,7 +87,7 @@ router.get('/v2/devicedata-clean/:deviceUUID/:from/:to/:cloudfunctionId', async 
 	let deviceUUID = req.params.deviceUUID
 	let from = req.params.from
 	let to = req.params.to
-	let cloudfunctionId = req.params.cloudfunctionId
+	// let cloudfunctionId = req.params.cloudfunctionId
 	let cloudfunctionIds = req.params.cloudfunctionId.split(',').filter(val => { return val > 0})
 
 	let lease = await authClient.getLease(req)
@@ -133,7 +133,7 @@ router.post('/v2/devicedata-clean/:deviceUUID/:from/:to/:cloudfunctionId', async
 	let deviceUUID = req.params.deviceUUID
 	let from = req.params.from
 	let to = req.params.to
-	let cloudfunctionId = req.params.cloudfunctionId
+	// let cloudfunctionId = req.params.cloudfunctionId
 	let cloudfunctionIds = req.params.cloudfunctionId.split(',').filter(val => { return val > 0})
 
 	let lease = await authClient.getLease(req)
@@ -233,7 +233,7 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 	let asField = req.params.field
 	let from = req.params.from
 	let to = req.params.to
-	let cloudfunctionId = req.params.cloudfunctionId
+	// let cloudfunctionId = req.params.cloudfunctionId
 	let cloudfunctionIds = req.params.cloudfunctionId.split(',').filter(val => { return val > 0})
 
 	let lease = await authClient.getLease(req)
@@ -242,8 +242,24 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 		return
 	}
 	console.log(deviceUUID, field, asField, from, to, cloudfunctionIds)
-	let device = await deviceService.getDeviceByUUID(deviceUUID)
-	let syntheticField = device.dataKeys.filter(e => {
+	/**
+	 * Get Device
+	 */
+	 let device = await deviceService.getDeviceByUUID(deviceUUID)
+	 /**
+	  * Find where the synthetic field is located
+	  */
+	let allSynthetics = []
+	if (device.dataKeys && device.dataKeys.length > 0) {
+		allSynthetics.push(...device.dataKeys)
+	}
+	if (device.syntheticKeys && device.syntheticKeys.length > 0) {
+		allSynthetics.push(...device.syntheticKeys)
+	}
+	/**
+	 * Set the synthetic field
+	 */
+	let syntheticField = allSynthetics.filter(e => {
 		return (e.key === field && e.originalKey)
 	})
 	if (syntheticField.length > 0) {
@@ -251,6 +267,7 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 		cloudfunctionIds.unshift(syntheticField[0].nId)
 	}
 	let query = mysqlConn.format(getDeviceDataFieldQuery2(field, asField), [device.id, from, to])
+
 	await mysqlConn.query(getDeviceDataFieldQuery2(field, asField), [device.id, from, to]).then(async rs => {
 		let cleanData = rs[0]
 		// console.log(cleanData)
@@ -283,6 +300,7 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 * @param {Date} to - End date - YYYY-MM-DD HH:mm:ss format
 * @param {Number} cloudfunctionId - ID of the outbound cloud function
 */
+//:deviceUUID/:field/:from/:to/:cloudfunctionId
 router.post('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId', async (req, res) => {
 
 	let deviceUUID = req.params.deviceUUID
@@ -290,7 +308,7 @@ router.post('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId'
 	let asField = req.params.field
 	let from = req.params.from
 	let to = req.params.to
-	let cloudfunctionId = req.params.cloudfunctionId
+	// let cloudfunctionId = req.params.cloudfunctionId
 	let cloudfunctionIds = req.params.cloudfunctionId.split(',').filter(val => { return val > 0})
 
 	let lease = await authClient.getLease(req)
@@ -356,7 +374,7 @@ router.get('/v2/devicedata-clean/all/:from/:to/:field/:deviceTypeUUID/timeseries
 	let from = req.params.from
 	let to = req.params.to
 	let field = req.params.field
-	let cfId = req.params.cfId
+	// let cfId = req.params.cfId
 	let dtUUID = req.params.deviceTypeUUID
 	let timeType = req.params.timeType
 
@@ -421,7 +439,7 @@ router.get('/v2/devicedata-clean/all/:from/:to/:field/:deviceTypeUUID/gauge/:cfI
 	let from = req.params.from
 	let to = req.params.to
 	let field = req.params.field
-	let cfId = req.params.cfId
+	// let cfId = req.params.cfId
 	let dtUUID = req.params.deviceTypeUUID
 
 	let cloudfunctionIds = req.params.cfId.split(',').filter(val => { return val > 0})

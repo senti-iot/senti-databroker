@@ -101,7 +101,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 					if (arr[1] === 'sigfox-application') {
 						this.sigfoxApplicationHandler(message)
 					}
-					break;
+					break
 				case 'v2':
 					this.getV2Handler(arr, message.toString())
 					break
@@ -110,7 +110,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		})
 	}
 
-	getV2Handler (topic, message) {
+	getV2Handler(topic, message) {
 		switch (topic[1]) {
 			default:
 				break
@@ -122,8 +122,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				break
 		}
 	}
-	
-	async ttnApplicationHandler (message) {
+
+	async ttnApplicationHandler(message) {
 		let data = JSON.parse(message)
 		let deviceUuname = data.app_id + '-' + data.dev_id
 		let device = await this.getDeviceByUuname(deviceUuname)
@@ -139,7 +139,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			}
 		}
 	}
-	async ttnV3ApplicationHandler (message) {
+	async ttnV3ApplicationHandler(message) {
 		let data = JSON.parse(message)
 		let applicationId = data.end_device_ids.application_ids.application_id
 		let deviceUuname = applicationId + '-' + data.end_device_ids.device_id
@@ -156,7 +156,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			}
 		}
 	}
-	async comadanApplicationHandler (message) {
+	async comadanApplicationHandler(message) {
 		let data = JSON.parse(message)
 		let deviceUuname = data.ID
 		let device = await this.getDeviceByUuname(deviceUuname)
@@ -172,7 +172,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			}
 		}
 	}
-	async sigfoxApplicationHandler (message) {
+	async sigfoxApplicationHandler(message) {
 		let data = JSON.parse(message)
 		let deviceUuname = data.deviceHandler + '-' + data.device_id
 		let device = await this.getDeviceByUuname(deviceUuname)
@@ -188,7 +188,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			}
 		}
 	}
-	async prefixUunameHandler (deviceUuname, message) {
+	async prefixUunameHandler(deviceUuname, message) {
 		let data = JSON.parse(message)
 		let device = await this.getDeviceByUuname(deviceUuname)
 		if (device !== false) {
@@ -197,7 +197,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			console.log('prefixUunameHandler device not found: ', deviceUuname, data)
 		}
 	}
-	async getDeviceDataHandlerConfigByUuname (uuname) {
+	async getDeviceDataHandlerConfigByUuname(uuname) {
 		let uunameSql = `SELECT d.id, d.uuid, d.uuname, d.handlerType, d.data
 							FROM deviceDataHandlerConfig d
 							WHERE d.uuname=? AND d.deleted = 0;`
@@ -218,7 +218,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			// console.log(deviceType[0])
 			let mtd = deviceType[0]
 			let mtdArr = [rs[0].insertId, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
-			await mysqlConn.query(createMetaDataQuery, mtdArr).then(r => {
+			await mysqlConn.query(createMetaDataQuery, mtdArr).then(() => {
 				// console.log('Device Metadata Created', r[0].insertId)
 			}).catch(err => {
 				console.log("error: ", err, data, regId, deviceTypeId)
@@ -450,11 +450,45 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			console.log('storeDataByDevice', e.message, JSON.parse(data), deviceName, regName, customerID)
 		}
 	}
+	/**
+	 * Find metadata Key
+	 * @Mikkel
+	 */
+	// fmk(key, arr) {
+	// 	let obj = false
+	// 	let index = arr.findIndex(i => i.key === key)
+	// 	if (index > -1) {
+
+	// 		obj = {
+	// 			key: arr[index].key,
+	// 			value: arr[index].value
+	// 		}
+	// 	}
+	// 	return obj
+	// }
 	updateDeviceGPS(device, deviceType, data) {
+
+		/**
+		 * @Mikkel
+		 */
+		// let updDTGPS = this.fmk('sentiUpdateGPS', deviceType.metadata)
+		// let updDGPS = this.fmk('sentiUpdateGPS', device.metadata)
+
+		// if (updDTGPS.value === 'YES' && updDGPS.value !== 'NO' && data[0].lat !== undefined && data[0].lat !== null && data[0].lon !== undefined && data[0].lon !== null) {
+		// 	try {
+		// 		mysqlConn.query(updateDeviceGPS, [data[0].lat, data[0].lon, device.id])
+		// 	}
+		// 	catch (e) {
+		// 		console.log(e.message, device, deviceType, data)
+		// 	}
+		// }
+
+
+
 		if (deviceType.metadata.sentiUpdateGPS === 'YES' && device.metadata.sentiUpdateGPS !== 'NO' && data[0].lat !== undefined && data[0].lat !== null && data[0].lon !== undefined && data[0].lon !== null) {
 			try {
 				mysqlConn.query(updateDeviceGPS, [data[0].lat, data[0].lon, device.id])
-			} 
+			}
 			catch (e) {
 				console.log(e.message, device, deviceType, data)
 			}
