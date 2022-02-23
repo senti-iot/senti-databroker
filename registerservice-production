@@ -21,7 +21,9 @@ if [ ! -e "$service" ]; then
 	sudo systemctl daemon-reload
 	echo "Starting $service ..."
 	sudo systemctl start $service_name
-else 
+else
+	echo "Installing Senti Data Broker"
+	sudo cp $server_dir/$service_name $service_dir/$service_name
     echo "Senti Data Broker service is already installed"
 	echo "Enabling $service ..."
 	sudo systemctl enable $service_name
@@ -29,4 +31,4 @@ else
 	echo "Starting $service ..."
 	sudo systemctl stop $service_name
 	sudo systemctl start $service_name
-fi 
+fi
