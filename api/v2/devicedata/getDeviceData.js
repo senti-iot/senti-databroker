@@ -99,7 +99,7 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/latest/:cloudfunctionId', as
 		res.status(401).json()
 		return
 	}
-	console.log(deviceUUID, field, asField, from, to, cloudfunctionIds)
+	console.log(deviceUUID, field, asField, cloudfunctionIds)
 	/**
 	 * Get Device
 	 */
