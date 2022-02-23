@@ -6,7 +6,7 @@ Documentation=https://github.com/senti-iot/senti-databroker/blob/master/README.m
 
 [Service]
 WorkingDirectory=/srv/nodejs/senti/services/databroker/development
-ExecStart=/usr/bin/node server.js
+ExecStart=/usr/local/bin/node server.js
 Environment=NODE_PORT=3006
 Environment=NODE_ENV=development
 Type=simple
