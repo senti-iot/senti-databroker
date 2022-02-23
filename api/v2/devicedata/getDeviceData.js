@@ -33,6 +33,11 @@ const getDeviceDataFieldQuery2 = (field, asField) => `SELECT \`data\`->'$.${fiel
 											WHERE device_id=? AND NOT ISNULL(\`data\`->'$.${field}') AND created >= ? and created <= ? ORDER BY created`
 
 
+const getDeviceDataFieldLatestQuery = (field, asField) => `SELECT \`data\`->'$.${field}' as \`${asField}\`, created as datetime
+											FROM deviceDataClean
+											WHERE device_id=? AND NOT ISNULL(\`data\`->'$.${field}') ORDER BY created DESC LIMIT 1`
+
+
 const getDeviceDataFieldGauge = field => `
 			SELECT AVG(ROUND(dd.\`data\`->'$.${field}', 3)) as avrg, SUM(dd.\`data\`->'$.${field}') as total from deviceDataClean dd
 			INNER JOIN device d on d.id = dd.device_id
@@ -351,6 +356,75 @@ router.post('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId'
 		}
 	})
 
+})
+/**
+* Route serving the latest clean device data packets for specified field
+* @function GET /v2/devicedata-clean/:deviceUUID/:field/latest/:cloudfunctionId
+* @memberof module:routers/devicedata
+* @param {String} deviceUUID
+* @param {String} field
+* @param {Number} cloudfunctionId - ID of the outbound cloud function
+*/
+router.get('/v2/devicedata-clean/:deviceUUID/:field/latest/:cloudfunctionId', async (req, res) => {
+
+	let deviceUUID = req.params.deviceUUID
+	let field = req.params.field
+	let asField = req.params.field
+	// let cloudfunctionId = req.params.cloudfunctionId
+	let cloudfunctionIds = req.params.cloudfunctionId.split(',').filter(val => { return val > 0})
+
+	let lease = await authClient.getLease(req)
+	if (lease === false) {
+		res.status(401).json()
+		return
+	}
+	console.log(deviceUUID, field, asField, from, to, cloudfunctionIds)
+	/**
+	 * Get Device
+	 */
+	 let device = await deviceService.getDeviceByUUID(deviceUUID)
+	 /**
+	  * Find where the synthetic field is located
+	  */
+	let allSynthetics = []
+	if (device.dataKeys && device.dataKeys.length > 0) {
+		allSynthetics.push(...device.dataKeys)
+	}
+	if (device.syntheticKeys && device.syntheticKeys.length > 0) {
+		allSynthetics.push(...device.syntheticKeys)
+	}
+	/**
+	 * Set the synthetic field
+	 */
+	let syntheticField = allSynthetics.filter(e => {
+		return (e.key === field && e.originalKey)
+	})
+	if (syntheticField.length > 0) {
+		field = syntheticField[0].originalKey
+		cloudfunctionIds.unshift(syntheticField[0].nId)
+	}
+	let query = mysqlConn.format(getDeviceDataFieldLatestQuery(field, asField), [device.id])
+
+	await mysqlConn.query(getDeviceDataFieldLatestQuery(field, asField), [device.id]).then(async rs => {
+		let cleanData = rs[0]
+		// console.log(cleanData)
+		if (cloudfunctionIds.length > 0) {
+			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData, settings: { device: device } }).then(rss => {
+				console.log('EngineAPI Status:', rss.status)
+				console.log('EngineAPI OK', rss.ok)
+				console.log('EngineAPI Response:', rss.data)
+				console.log('EngineAPI RSS', rss)
+				return rss.ok ? rss.data : null
+			})
+			return res.status(200).json(cData)
+		}
+		res.status(200).json(cleanData)
+	}).catch(err => {
+		if (err) {
+			console.log(err)
+			res.status(500).json({ err, query })
+		}
+	})
 })
 /**
 * Route serving the total and average clean device data packets for selected devicetype, selected period, specified field and time type
