@@ -80,7 +80,7 @@ router.get('/v2/deviceByUUname/:uuname', async (req, res) => {
 		res.status(401).json()
 		return
 	}
-	let deviceId = await deviceService.getOrganisationDeviceByUUName(req.params.uuname)
+	let deviceId = await deviceService.getIdByUUName(req.params.uuname)
 	let device = await deviceService.getDeviceByID(deviceId)
 	if (device === false) {
 		res.status(404).json()
