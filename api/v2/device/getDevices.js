@@ -38,8 +38,11 @@ router.get(`/v2/total-devices/:orgUUID`, async (req, res) => {
 	}
 
 	let orgUUID = req.params.orgUUID
-	let result = await deviceService.getTotalDevices(orgUUID)
-	return res.status(200).json(result)
+	let orgDevices = await deviceService.getTotalDevices(orgUUID)
+	let subOrgs = await deviceService.getSubOrgs(orgUUID)
+	let subOrgDevices = await deviceService.getSubOrgDevices(subOrgs)
+
+	return res.status(200).json({ orgDevices, subOrgDevices })
 })
 /**
  * Route serving all devices based on the owner UUID of the devices
