@@ -7,6 +7,7 @@ const { sentiAclPriviledge, sentiAclResourceType } = require('senti-apicore')
 const { aclClient, authClient } = require('../../../server')
 
 const sentiDeviceService = require('../../../lib/device/sentiDeviceService')
+const tokenAPI = require('../../engine/token')
 const deviceService = new sentiDeviceService(mysqlConn)
 
 /**
@@ -44,13 +45,20 @@ router.get(`/v2/total-devices/:orgUUID`, async (req, res) => {
 
 	return res.status(200).json({ orgDevices, subOrgDevices })
 })
-router.get(`/v3/total-devices/:orgUUID`, async (req, res) => {
-	let orgUUID = req.params.orgUUID
-	let orgDevices = await deviceService.getTotalDevices(orgUUID)
-	let subOrgs = await deviceService.getSubOrgs(orgUUID)
-	let subOrgDevices = await deviceService.getSubOrgDevices(subOrgs)
+router.get(`/v2/:token/total-devices/:orgUUID`, async (req, res) => {
+	let token = req.params.token
+	let isValid = await tokenAPI.get(`validateGeneralToken/${token}/`).then(rs => rs.data)
 
-	return res.status(200).text({ orgDevices, subOrgDevices })
+	if (isValid) {
+
+		let orgUUID = req.params.orgUUID
+		let orgDevices = await deviceService.getTotalDevices(orgUUID)
+		let subOrgs = await deviceService.getSubOrgs(orgUUID)
+		let subOrgDevices = await deviceService.getSubOrgDevices(subOrgs)
+		let total = orgDevices + subOrgDevices.reduce((a, b) => (a = a + b.total), 0)
+		return res.status(200).json(total)
+	}
+	else res.status(401).json({ "Error": "Invalid token" })
 })
 /**
  * Route serving all devices based on the owner UUID of the devices
