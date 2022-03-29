@@ -8,20 +8,20 @@ const tokenAPI = require('../engine/token')
 
 const selectLatestCleanData = `SELECT data
 		FROM deviceDataClean
-		WHERE device_id=? AND data NOT LIKE '%null%' ORDER BY created DESC LIMIT 1`
+		WHERE device_id=? AND NOT ISNULL(data) ORDER BY created DESC LIMIT 1`
 
 const selectCleanData = `SELECT ddc.data
 		FROM deviceDataClean ddc
-		WHERE device_id=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
+		WHERE device_id=? AND NOT ISNULL(data) AND created >= ? AND created <= ? ORDER BY created`
 
 let selectCleanDataIdDevice = `SELECT id, data, created, device_id
 		FROM deviceDataClean
-		WHERE device_id=? AND data NOT LIKE '%null%' AND created >= ? AND created <= ? ORDER BY created`
+		WHERE device_id=? AND NOT ISNULL(data) AND created >= ? AND created <= ? ORDER BY created`
 
 const selectAllDevicesUnderReg = `SELECT d.uuid, d.name, d.uuname, dd.data, dd.created from device d
 		INNER JOIN deviceDataClean dd on dd.device_id = d.id
 		WHERE d.reg_id=?
-		AND dd.data NOT LIKE '%null%'
+		AND NOT ISNULL(dd.data)
 		AND dd.created >= ? AND dd.created <= ? ORDER BY dd.created`
 
 const selectLatestAllDevicesUnderReg = `SELECT tt.uuid, tt.name, dd.data
@@ -30,7 +30,7 @@ FROM (
 	FROM (
 		SELECT max(dd.created) as 'time', dd.device_id, d.uuid, d.name
 		FROM device d
-		INNER JOIN deviceDataClean dd on dd.device_id = d.id  AND dd.data NOT LIKE '%null%'
+		INNER JOIN deviceDataClean dd on dd.device_id = d.id  AND NOT ISNULL(dd.data)
 		WHERE d.reg_id=?
 		group by dd.device_id
 	) t
