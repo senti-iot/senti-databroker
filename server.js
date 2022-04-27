@@ -228,5 +228,7 @@ const startAPIServer = () => {
 }
 
 startAPIServer()
+console.log("Node Version: ", process.version)
+
 
 //#endregion
