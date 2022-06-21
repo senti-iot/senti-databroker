@@ -155,7 +155,7 @@ router.post('/v2/climaidinsight/qualitative/byhour/:from/:to', async (req, res) 
 					AND ddc.created < ?
 					${clause}
 				GROUP BY DATE(created), HOUR(created)`
-	console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs]))
+	// console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs]))
 	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, ...queryUUIDs])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
@@ -198,7 +198,7 @@ router.post('/v2/climaidinsight/qualitative/byday/:from/:to', async (req, res) =
 					AND ddc.created < ?
 					${clause}
 				GROUP BY DATE(created)`
-	console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs]))
+	// console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs]))
 	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, ...queryUUIDs])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
@@ -251,7 +251,7 @@ router.post('/v2/climaidinsight/activity/:from/:to', async (req, res) => {
 	) tt
 	GROUP BY date(ts)
 	) t3`
-	console.log(mysqlConn.format(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour]))
+	// console.log(mysqlConn.format(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour]))
 	let rs = await mysqlConn.query(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour])
 	if (rs[0].length !== 1) {
 		res.status(400).json([])
@@ -300,7 +300,7 @@ router.post('/v2/climaidinsight/activity/byquarter/:from/:to', async (req, res) 
 						GROUP BY did, d, h, q
 					) tt
 					GROUP BY ts`
-	console.log(mysqlConn.format(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour]))
+	// console.log(mysqlConn.format(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour]))
 	let rs = await mysqlConn.query(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
@@ -353,7 +353,7 @@ router.post('/v2/climaidinsight/activity/byday/:from/:to', async (req, res) => {
 						GROUP BY did, d, h, q
 					) tt
 					GROUP BY date(ts)`
-	console.log(mysqlConn.format(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour]))
+	// console.log(mysqlConn.format(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour]))
 	let rs = await mysqlConn.query(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
