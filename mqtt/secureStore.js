@@ -249,7 +249,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		return await mysqlConn.query(createDeviceQuery, arr).then(async rs => {
 			// console.log(Device Created', rs[0].insertId)
 			// console.log(data, regId, deviceTypeId)
-			let [deviceType] = await mysqlConn.qdeviceuery(selectDeviceType, [deviceTypeId])
+			let [deviceType] = await mysqlConn.query(selectDeviceType, [deviceTypeId])
 			// console.log(deviceType[0])			let mtd = deviceType[0]
 			let mtdArr = [rs[0].insertId, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
 			await mysqlConn.query(createMetaDataQuery, mtdArr).then(() => {
