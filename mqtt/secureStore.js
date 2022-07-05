@@ -54,8 +54,8 @@ const getRegistry = `SELECT * from registry r
 const createDeviceQuery = `INSERT INTO device
 			(uuname, name, type_id, reg_id,
 			description,
-			lat, devicelng, address,
-			locType,			communication, uuid, created, modified)
+			lat, lng, address,
+			locType, communication, uuid, created, modified)
 			VALUES (?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())`
 
 const createMetaDataQuery = `INSERT INTO deviceMetadata
