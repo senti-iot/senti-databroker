@@ -121,6 +121,10 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			case 'prefix-uuname':
 				this.prefixUunameHandler(topic[2], message)
 				break
+			case 'prefix-handler':
+				this.prefixHandler(topic[2], topic[3], message)
+				break
+	
 		}
 	}
 
@@ -170,6 +174,14 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				// console.log(config.data)
 				data.sentiTtnDeviceId = deviceUuname
 				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
+				// Lav selv device med
+				// await this.createDevice({ name: deviceName, communication: 1, ...pData }, registry[0].id, deviceTypeId)
+				// device = await this.getDevice(customerID, deviceName, regName)
+				// // ADD DEVICE TO ACL
+				// await aclClient.registerResource(device.uuid, sentiAclResourceType.device)
+				// await aclClient.addResourceToParent(device.uuid, device.reguuid)
+	
+
 			}
 		}
 	}
@@ -186,6 +198,27 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				// console.log(config.data)
 				data.sentiDeviceId = deviceUuname
 				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
+			}
+		}
+	}
+	async prefixHandler(configUuname, deviceUuname, message) {
+		let data = JSON.parse(message)
+		let device = await this.getDeviceByUuname(deviceUuname)
+		if (device !== false) {
+			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
+		} else {
+			let config = await this.getDeviceDataHandlerConfigByUuname(configUuname)
+			// console.log(data, config)
+			if (config !== false && config.handlerType === 'prefix-handler') {
+				// console.log(config.data)
+				data.sentiDeviceId = deviceUuname
+				// Lav selv device med
+				await this.createDevice({ name: deviceUuname, communication: 1, ...data }, config.data.regId, config.data.deviceTypeId)
+				device = await this.getDevice(customerID, deviceName, regName)
+				// // ADD DEVICE TO ACL
+				await aclClient.registerResource(device.uuid, sentiAclResourceType.device)
+				await aclClient.addResourceToParent(device.uuid, device.reguuid)
+				this.storeDataByDevice(JSON.stringify(data), { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
 			}
 		}
 	}
