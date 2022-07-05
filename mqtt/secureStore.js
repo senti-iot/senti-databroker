@@ -213,8 +213,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				console.log(config.data)
 				data.sentiDeviceId = deviceUuname
 				// Lav selv device med
-				await this.createDevice({ name: deviceUuname, communication: 1, ...data }, config.data.regId, config.data.deviceTypeId)
-				device = await this.getDevice(customerID, deviceName, regName)
+				await this.createDevice({ name: deviceUuname, communication: 1 }, config.data.regId, config.data.deviceTypeId)
+				device = await this.getDeviceByUuname(deviceUuname)
 				// // ADD DEVICE TO ACL
 				console.log(device)
 				await aclClient.registerResource(device.uuid, sentiAclResourceType.device)
@@ -246,7 +246,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 	async createDevice(data, regId, deviceTypeId) {
 		let uuname = data.uuname ? data.uuname : data.name
 		let arr = [uuname, data.name, deviceTypeId, regId, '', data.lat, data.lng, data.address, data.locType, data.communication, uuidv4()]
-		return await devicemysqlConn.query(createDeviceQuery, arr).then(async rs => {
+		return await mysqlConn.query(createDeviceQuery, arr).then(async rs => {
 			// console.log(Device Created', rs[0].insertId)
 			// console.log(data, regId, deviceTypeId)
 			let [deviceType] = await mysqlConn.qdeviceuery(selectDeviceType, [deviceTypeId])
