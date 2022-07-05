@@ -54,9 +54,8 @@ const getRegistry = `SELECT * from registry r
 const createDeviceQuery = `INSERT INTO device
 			(uuname, name, type_id, reg_id,
 			description,
-			lat, lng, address,
-			locType,
-			communication, uuid, created, modified)
+			lat, devicelng, address,
+			locType,			communication, uuid, created, modified)
 			VALUES (?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())`
 
 const createMetaDataQuery = `INSERT INTO deviceMetadata
@@ -121,6 +120,10 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			case 'prefix-uuname':
 				this.prefixUunameHandler(topic[2], message)
 				break
+			case 'prefix-handler':
+				this.prefixHandler(topic[2], topic[3], message)
+				break
+	
 		}
 	}
 
@@ -170,6 +173,14 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				// console.log(config.data)
 				data.sentiTtnDeviceId = deviceUuname
 				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
+				// Lav selv device med
+				// await this.createDevice({ name: deviceName, communication: 1, ...pData }, registry[0].id, deviceTypeId)
+				// device = await this.getDevice(customerID, deviceName, regName)
+				// // ADD DEVICE TO ACL
+				// await aclClient.registdeviceerResource(device.uuid, sentiAclResourceType.device)
+				// await aclClient.addResourceTParent(device.uuid, device.reguuid)
+	
+
 			}
 		}
 	}
@@ -186,6 +197,29 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				// console.log(config.data)
 				data.sentiDeviceId = deviceUuname
 				this.storeDataByRegistry(JSON.stringify(data), { regName: config.data.reguuname, customerID: config.data.orguuname })
+			}
+		}
+	}
+	async prefixHandler(configUuname, deviceUuname, message) {
+		console.log('prefixHandler', configUuname, deviceUuname, message)
+		let data = JSON.parse(message)
+		let device = await this.getDeviceByUuname(deviceUuname)
+		if (device !== false) {
+			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
+		} else {
+			let config = await this.getDeviceDataHandlerConfigByUuname(configUuname)
+			console.log(data, config)
+			if (config !== false && config.handlerType === 'prefix-handler') {
+				console.log(config.data)
+				data.sentiDeviceId = deviceUuname
+				// Lav selv device med
+				await this.createDevice({ name: deviceUuname, communication: 1, ...data }, config.data.regId, config.data.deviceTypeId)
+				device = await this.getDevice(customerID, deviceName, regName)
+				// // ADD DEVICE TO ACL
+				console.log(device)
+				await aclClient.registerResource(device.uuid, sentiAclResourceType.device)
+				await aclClient.addResourceToParent(device.uuid, device.reguuid)
+				this.storeDataByDevice(JSON.stringify(data), { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
 			}
 		}
 	}
@@ -212,12 +246,11 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 	async createDevice(data, regId, deviceTypeId) {
 		let uuname = data.uuname ? data.uuname : data.name
 		let arr = [uuname, data.name, deviceTypeId, regId, '', data.lat, data.lng, data.address, data.locType, data.communication, uuidv4()]
-		return await mysqlConn.query(createDeviceQuery, arr).then(async rs => {
-			// console.log('Device Created', rs[0].insertId)
+		return await devicemysqlConn.query(createDeviceQuery, arr).then(async rs => {
+			// console.log(Device Created', rs[0].insertId)
 			// console.log(data, regId, deviceTypeId)
-			let [deviceType] = await mysqlConn.query(selectDeviceType, [deviceTypeId])
-			// console.log(deviceType[0])
-			let mtd = deviceType[0]
+			let [deviceType] = await mysqlConn.qdeviceuery(selectDeviceType, [deviceTypeId])
+			// console.log(deviceType[0])			let mtd = deviceType[0]
 			let mtdArr = [rs[0].insertId, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
 			await mysqlConn.query(createMetaDataQuery, mtdArr).then(() => {
 				// console.log('Device Metadata Created', r[0].insertId)
@@ -344,8 +377,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			await this.createDevice({ name: deviceName, communication: 1, ...pData }, registry[0].id, deviceTypeId)
 			device = await this.getDevice(customerID, deviceName, regName)
 			// ADD DEVICE TO ACL
-			await aclClient.registerResource(device.uuid, sentiAclResourceType.device)
-			await aclClient.addResourceToParent(device.uuid, device.reguuid)
+			await aclClient.registdeviceerResource(device.uuid, sentiAclResourceType.device)
+			await aclClient.addResourceTParent(device.uuid, device.reguuid)
 			// console.log(device)
 		}
 		/**
