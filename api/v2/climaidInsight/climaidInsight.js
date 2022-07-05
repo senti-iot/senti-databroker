@@ -155,7 +155,7 @@ router.post('/v2/climaidinsight/qualitative/byhour/:from/:to', async (req, res) 
 					AND ddc.created < ?
 					${clause}
 				GROUP BY DATE(created), HOUR(created)`
-	console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs]))
+	// console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs]))
 	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, ...queryUUIDs])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
@@ -198,7 +198,7 @@ router.post('/v2/climaidinsight/qualitative/byday/:from/:to', async (req, res) =
 					AND ddc.created < ?
 					${clause}
 				GROUP BY DATE(created)`
-	console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs]))
+	// console.log(mysqlConn.format(select, [req.params.from, req.params.to, ...queryUUIDs]))
 	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, ...queryUUIDs])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
@@ -251,7 +251,7 @@ router.post('/v2/climaidinsight/activity/:from/:to', async (req, res) => {
 	) tt
 	GROUP BY date(ts)
 	) t3`
-	console.log(mysqlConn.format(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour]))
+	// console.log(mysqlConn.format(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour]))
 	let rs = await mysqlConn.query(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour])
 	if (rs[0].length !== 1) {
 		res.status(400).json([])
@@ -300,7 +300,7 @@ router.post('/v2/climaidinsight/activity/byquarter/:from/:to', async (req, res) 
 						GROUP BY did, d, h, q
 					) tt
 					GROUP BY ts`
-	console.log(mysqlConn.format(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour]))
+	// console.log(mysqlConn.format(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour]))
 	let rs = await mysqlConn.query(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
@@ -353,7 +353,7 @@ router.post('/v2/climaidinsight/activity/byday/:from/:to', async (req, res) => {
 						GROUP BY did, d, h, q
 					) tt
 					GROUP BY date(ts)`
-	console.log(mysqlConn.format(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour]))
+	// console.log(mysqlConn.format(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour]))
 	let rs = await mysqlConn.query(select, [...queryUUIDs, req.params.from, req.params.to, firstday, lastday, firsthour, lasthour])
 	if (rs[0].length === 0) {
 		res.status(404).json([])
@@ -507,11 +507,16 @@ router.post('/v2/climaidinsight/heatmap/:field/:from/:to', async (req, res) => {
 	res.status(200).json(rs[0])
 })
 
-router.get('/v2/climaidinsight/activeminutes/:device/:from/:to/', async (req, res) => {
+router.get(['/v2/climaidinsight/activeminutes/:device/:from/:to', '/v2/climaidinsight/activeminutes/:device/:from/:to/:field'], async (req, res) => {
 	let lease = await authClient.getLease(req)
 	if (lease === false) {
 		res.status(401).json()
 		return
+	}
+
+	let activityField = '$.motion';
+	if (req.params.field !== undefined) {
+		activityField = '$.' + req.params.field;
 	}
 
 	let select = `SELECT activeMinutes, textTS as ts
@@ -529,7 +534,7 @@ router.get('/v2/climaidinsight/activeminutes/:device/:from/:to/', async (req, re
 									select @a:=0
 								) d
 								INNER JOIN (
-									SELECT if(DDC.data->'$.motion'>2,1.0,0.0) AS activity, DDC.created, @a:=@a+1 AS r
+									SELECT if(CAST(DDC.data->? AS UNSIGNED)>0,1.0,0.0) AS activity, DDC.created, @a:=@a+1 AS r
 									FROM sentidatastorage.deviceDataClean DDC
 									WHERE DDC.created>=DATE_SUB(?, INTERVAL 1 HOUR) AND DDC.created < DATE_ADD(?, INTERVAL 1 HOUR) AND DDC.device_id=? 
 									ORDER BY created
@@ -541,7 +546,7 @@ router.get('/v2/climaidinsight/activeminutes/:device/:from/:to/', async (req, re
 									select @aa:=0
 								) d
 								INNER JOIN (
-									SELECT if(DDC.data->'$.motion'>2,1,0) AS activity, DDC.created, @aa:=@aa+1 AS r
+									SELECT if(CAST(DDC.data->? AS UNSIGNED)>0,1,0) AS activity, DDC.created, @aa:=@aa+1 AS r
 									FROM sentidatastorage.deviceDataClean DDC
 									WHERE DDC.created>=DATE_SUB(?, INTERVAL 1 HOUR) AND DDC.created < DATE_add(?, INTERVAL 1 HOUR) AND DDC.device_id=? 
 									ORDER BY created
@@ -553,7 +558,7 @@ router.get('/v2/climaidinsight/activeminutes/:device/:from/:to/', async (req, re
 					) t4
 					WHERE t4.ts>=? AND t4.ts<?`;
 	// console.log(mysqlConn.format(select, [req.params.from, req.params.from, req.params.to, req.params.to, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to]))
-	let rs = await mysqlConn.query(select, [req.params.from, req.params.to, req.params.device, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to])
+	let rs = await mysqlConn.query(select, [activityField, req.params.from, req.params.to, req.params.device, activityField, req.params.from, req.params.to, req.params.device, req.params.from, req.params.to])
 	// console.log(rs);
 	res.status(200).json(rs[0])
 })
