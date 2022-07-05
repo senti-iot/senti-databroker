@@ -249,7 +249,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		return await mysqlConn.query(createDeviceQuery, arr).then(async rs => {
 			// console.log(Device Created', rs[0].insertId)
 			// console.log(data, regId, deviceTypeId)
-			let [deviceType] = await mysqlConn.qdeviceuery(selectDeviceType, [deviceTypeId])
+			let [deviceType] = await mysqlConn.query(selectDeviceType, [deviceTypeId])
 			// console.log(deviceType[0])			let mtd = deviceType[0]
 			let mtdArr = [rs[0].insertId, JSON.stringify(mtd.metadata), JSON.stringify(mtd.inbound), JSON.stringify(mtd.outbound)]
 			await mysqlConn.query(createMetaDataQuery, mtdArr).then(() => {
@@ -286,6 +286,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		let [deviceType] = await mysqlConn.query(selectDeviceType, [deviceTypeId])
 		return deviceType[0]
 	}
+
 
 	async storeData(pData, device) {
 		let sData = JSON.stringify(pData)
@@ -377,8 +378,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			await this.createDevice({ name: deviceName, communication: 1, ...pData }, registry[0].id, deviceTypeId)
 			device = await this.getDevice(customerID, deviceName, regName)
 			// ADD DEVICE TO ACL
-			await aclClient.registdeviceerResource(device.uuid, sentiAclResourceType.device)
-			await aclClient.addResourceTParent(device.uuid, device.reguuid)
+			await aclClient.registerResource(device.uuid, sentiAclResourceType.device)
+			await aclClient.addResourceToParent(device.uuid, device.reguuid)
 			// console.log(device)
 		}
 		/**
