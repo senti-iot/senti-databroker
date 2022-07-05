@@ -287,6 +287,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		return deviceType[0]
 	}
 
+
 	async storeData(pData, device) {
 		let sData = JSON.stringify(pData)
 		/**
@@ -377,8 +378,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			await this.createDevice({ name: deviceName, communication: 1, ...pData }, registry[0].id, deviceTypeId)
 			device = await this.getDevice(customerID, deviceName, regName)
 			// ADD DEVICE TO ACL
-			await aclClient.registdeviceerResource(device.uuid, sentiAclResourceType.device)
-			await aclClient.addResourceTParent(device.uuid, device.reguuid)
+			await aclClient.registerResource(device.uuid, sentiAclResourceType.device)
+			await aclClient.addResourceToParent(device.uuid, device.reguuid)
 			// console.log(device)
 		}
 		/**
