@@ -213,7 +213,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				console.log(config.data)
 				data.sentiDeviceId = deviceUuname
 				// Lav selv device med
-				await this.createDevice({ name: deviceUuname, communication: 1 }, config.data.regId, config.data.deviceTypeId)
+				await this.createDevice({ name: deviceUuname, communication: 1, metadata: {} }, config.data.regId, config.data.deviceTypeId)
 				device = await this.getDeviceByUuname(deviceUuname)
 				// // ADD DEVICE TO ACL
 				console.log(device)
