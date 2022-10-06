@@ -55,8 +55,8 @@ const createDeviceQuery = `INSERT INTO device
 			(uuname, name, type_id, reg_id,
 			description,
 			lat, lng, address,
-			locType, communication, uuid, created, modified)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())`
+			locType, communication, uuid, created, modified, metadata)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW(), ?)`
 
 const createMetaDataQuery = `INSERT INTO deviceMetadata
 			(device_id, data, inbound, outbound)
@@ -245,7 +245,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 	}
 	async createDevice(data, regId, deviceTypeId) {
 		let uuname = data.uuname ? data.uuname : data.name
-		let arr = [uuname, data.name, deviceTypeId, regId, '', data.lat, data.lng, data.address, data.locType, data.communication, uuidv4()]
+		let metadata = data.metadata || data.metadata !== undefined ? data.metadata : {}
+		let arr = [uuname, data.name, deviceTypeId, regId, '', data.lat, data.lng, data.address, data.locType, data.communication, uuidv4(), metadata]
 		return await mysqlConn.query(createDeviceQuery, arr).then(async rs => {
 			// console.log(Device Created', rs[0].insertId)
 			// console.log(data, regId, deviceTypeId)
