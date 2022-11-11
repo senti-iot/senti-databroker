@@ -67,7 +67,8 @@ router.get('/v2/waterworks/data/benchmark/:orguuid/:from/:to', async (req, res) 
 					) kiddingme
 					) km2
 					GROUP BY date(t)
-					) t;`
+					) t
+					ORDER BY datetime;`
 	let rs = await mysqlConn.query(select, [req.params.orguuid, req.params.from, req.params.to, req.params.orguuid, req.params.from, req.params.to])
 	res.status(200).json(rs[0])
 })
