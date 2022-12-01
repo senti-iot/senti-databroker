@@ -33,9 +33,9 @@ const getDeviceDataFieldQuery2 = (field, asField) => `SELECT \`data\`->'$.${fiel
 											WHERE device_id=? AND NOT ISNULL(\`data\`->'$.${field}') AND created >= ? and created <= ? ORDER BY created`
 
 
-const getDeviceDataFieldLatestQuery = (field, asField) => `SELECT \`data\`->'$.${field}' as \`${asField}\`, created as datetime
+const getDeviceDataFieldLatestQuery = (field, asField) => `SELECT JSON_VALUE(\`data\`, '$.${field}') as \`${asField}\`, created as datetime
 											FROM deviceDataClean
-											WHERE device_id=? AND NOT ISNULL(\`data\`->'$.${field}') ORDER BY created DESC LIMIT 1`
+											WHERE device_id=? AND NOT ISNULL(JSON_VALUE(\`data\`, '$.${field}')) ORDER BY created DESC LIMIT 1`
 
 
 const getDeviceDataFieldGauge = field => `
