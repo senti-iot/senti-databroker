@@ -120,15 +120,187 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/latest/:cloudfunctionId', as
 	let syntheticField = allSynthetics.filter(e => {
 		return (e.key === field && e.originalKey)
 	})
+	let doConversion = false
 	if (syntheticField.length > 0) {
 		field = syntheticField[0].originalKey
-		cloudfunctionIds.unshift(syntheticField[0].nId)
+		if (syntheticField[0].nId > 0) {
+			cloudfunctionIds.unshift(syntheticField[0].nId)
+		} else if (syntheticField[0].conversionFactor) {
+			doConversion = true
+		}
 	}
-	let query = mysqlConn.format(getDeviceDataFieldLatestQuery(field, asField), [device.id])
-
+	// let query = mysqlConn.format(getDeviceDataFieldLatestQuery(field, asField), [device.id])
 	await mysqlConn.query(getDeviceDataFieldLatestQuery(field, asField), [device.id]).then(async rs => {
 		let cleanData = rs[0]
-		// console.log(cleanData)
+		if (doConversion) {
+			cleanData[0][asField] = cleanData[0][asField] * syntheticField[0].conversionFactor
+		}
+		if (cloudfunctionIds.length > 0) {
+			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData, settings: { device: device } }).then(rss => {
+				console.log('EngineAPI Status:', rss.status)
+				console.log('EngineAPI OK', rss.ok)
+				console.log('EngineAPI Response:', rss.data)
+				console.log('EngineAPI RSS', rss)
+				return rss.ok ? rss.data : null
+			})
+			return res.status(200).json(cData)
+		}
+		res.status(200).json(cleanData)
+	}).catch(err => {
+		if (err) {
+			console.log(err)
+			res.status(500).json({ err, query })
+		}
+	})
+})
+router.get('/v2/devicedata-clean-test/:deviceUUID/:field/latest/:cloudfunctionId', async (req, res) => {
+
+	let deviceUUID = req.params.deviceUUID
+	let field = req.params.field
+	let asField = req.params.field
+	// let cloudfunctionId = req.params.cloudfunctionId
+	let cloudfunctionIds = req.params.cloudfunctionId.split(',').filter(val => { return val > 0})
+
+	// let lease = await authClient.getLease(req)
+	// if (lease === false) {
+	// 	res.status(401).json()
+	// 	return
+	// }
+	console.log(deviceUUID, field, asField, cloudfunctionIds)
+	/**
+	 * Get Device
+	 */
+	//  let device = await deviceService.getDeviceByUUID(deviceUUID)
+	let device = {
+		dataKeys: [
+			{
+				"key": "temperature",
+				"nId": -1,
+				"type": 0
+			},
+			{
+				"key": "water",
+				"nId": -1,
+				"type": 0
+			},
+			{
+				"key": "kWh",
+				"nId": -1,
+				"type": 0
+			},
+			{
+				"key": "day",
+				"nId": -1,
+				"type": 0
+			},
+			{
+				"key": "waterDelta",
+				"nId": 188,
+				"type": 0,
+				"unit": "",
+				"label": "",
+				"originalKey": "waterCnt"
+			},
+			{
+				"key": "waterDeltaHour",
+				"nId": 189,
+				"type": 0,
+				"unit": "",
+				"label": "",
+				"originalKey": "waterCnt"
+			},
+			{
+				"key": "waterCnt",
+				"nId": -1,
+				"type": 0,
+				"unit": "",
+				"label": ""
+			},
+			{
+				"key": "alarm",
+				"nId": -1,
+				"type": 0,
+				"unit": "",
+				"label": ""
+			},
+			{
+				"key": "alarmStatus",
+				"nId": 192,
+				"type": 0,
+				"unit": "",
+				"label": "",
+				"originalKey": "alarm"
+			},
+			{
+				"key": "alarmText",
+				"nId": 193,
+				"type": 0,
+				"unit": "",
+				"label": "",
+				"originalKey": "alarm"
+			},
+			{
+				"key": "target",
+				"nId": -1,
+				"type": 0,
+				"unit": "",
+				"label": ""
+			},
+			{
+				"key": "waterAcc",
+				"nId": 205,
+				"type": 0,
+				"unit": "",
+				"label": "",
+				"originalKey": "waterCnt"
+			}
+		],
+		syntheticKeys: [
+			{
+				"key": "test1",
+				"nId": -1,
+				"type": 0,
+				"unit": "liter",
+				"label": "test1",
+				"originalKey": "kWh",
+				"conversionFactor": "10"
+			}
+		],
+		id: 8852
+	}
+	 /**
+	  * Find where the synthetic field is located
+	  */
+	let allSynthetics = []
+	if (device.dataKeys && device.dataKeys.length > 0) {
+		allSynthetics.push(...device.dataKeys)
+	}
+	if (device.syntheticKeys && device.syntheticKeys.length > 0) {
+		allSynthetics.push(...device.syntheticKeys)
+	}
+	/**
+	 * Set the synthetic field
+	 */
+	let syntheticField = allSynthetics.filter(e => {
+		return (e.key === field && e.originalKey)
+	})
+	let doConversion = false
+	if (syntheticField.length > 0) {
+		field = syntheticField[0].originalKey
+		if (syntheticField[0].nId > 0) {
+			cloudfunctionIds.unshift(syntheticField[0].nId)
+		} else if (syntheticField[0].conversionFactor) {
+			doConversion = true
+		}
+	}
+	// let query = mysqlConn.format(getDeviceDataFieldLatestQuery(field, asField), [device.id])
+	await mysqlConn.query(getDeviceDataFieldLatestQuery(field, asField), [device.id]).then(async rs => {
+		let cleanData = rs[0]
+		if (doConversion) {
+			console.log('doConversion', cleanData[0][asField], syntheticField[0].conversionFactor)
+			cleanData[0][asField] = cleanData[0][asField] * syntheticField[0].conversionFactor
+		}
+		console.log(cleanData)
 		if (cloudfunctionIds.length > 0) {
 			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData, settings: { device: device } }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
@@ -315,7 +487,6 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 		res.status(401).json()
 		return
 	}
-	console.log(deviceUUID, field, asField, from, to, cloudfunctionIds)
 	/**
 	 * Get Device
 	 */
@@ -336,15 +507,26 @@ router.get('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId',
 	let syntheticField = allSynthetics.filter(e => {
 		return (e.key === field && e.originalKey)
 	})
+
+	let doConversion = false
 	if (syntheticField.length > 0) {
 		field = syntheticField[0].originalKey
-		cloudfunctionIds.unshift(syntheticField[0].nId)
+		if (syntheticField[0].nId > 0) {
+			cloudfunctionIds.unshift(syntheticField[0].nId)
+		} else if (syntheticField[0].conversionFactor) {
+			doConversion = true
+		}
 	}
+
 	let query = mysqlConn.format(getDeviceDataFieldQuery2(field, asField), [device.id, from, to])
 
 	await mysqlConn.query(getDeviceDataFieldQuery2(field, asField), [device.id, from, to]).then(async rs => {
 		let cleanData = rs[0]
-		// console.log(cleanData)
+		if (doConversion) {
+			cleanData.forEach(function(part, index) {
+				this[index][asField] = this[index][asField] * syntheticField[0].conversionFactor
+			}, cleanData)
+		}
 		if (cloudfunctionIds.length > 0) {
 			let cData = await engineAPI.post('/', { nIds: cloudfunctionIds, data: cleanData, settings: { device: device } }).then(rss => {
 				console.log('EngineAPI Status:', rss.status)
@@ -390,21 +572,42 @@ router.post('/v2/devicedata-clean/:deviceUUID/:field/:from/:to/:cloudfunctionId'
 		res.status(401).json()
 		return
 	}
-	console.log(deviceUUID, field, from, to, cloudfunctionIds)
-
 	let device = await deviceService.getDeviceByUUID(deviceUUID)
-	let syntheticField = device.dataKeys.filter(e => {
+	 /**
+	  * Find where the synthetic field is located
+	  */
+	 let allSynthetics = []
+	 if (device.dataKeys && device.dataKeys.length > 0) {
+		 allSynthetics.push(...device.dataKeys)
+	 }
+	 if (device.syntheticKeys && device.syntheticKeys.length > 0) {
+		 allSynthetics.push(...device.syntheticKeys)
+	 }
+	 /**
+	  * Set the synthetic field
+	  */
+	 let syntheticField = allSynthetics.filter(e => {
 		return (e.key === field && e.originalKey)
 	})
+	let doConversion = false
 	if (syntheticField.length > 0) {
 		field = syntheticField[0].originalKey
-		cloudfunctionIds.unshift(syntheticField[0].nId)
+		if (syntheticField[0].nId > 0) {
+			cloudfunctionIds.unshift(syntheticField[0].nId)
+		} else if (syntheticField[0].conversionFactor) {
+			doConversion = true
+		}
 	}
-	let query = mysqlConn.format(getDeviceDataFieldQuery2(field, asField), [device.id, from, to])
+	// let query = mysqlConn.format(getDeviceDataFieldQuery2(field, asField), [device.id, from, to])
 	await mysqlConn.query(getDeviceDataFieldQuery2(field, asField), [device.id, from, to]).then(async rs => {
 		let cleanData = {
 			data: rs[0],
 			config: req.body
+		}
+		if (doConversion) {
+			cleanData.data.forEach(function(part, index) {
+				this[index][asField] = this[index][asField] * syntheticField[0].conversionFactor
+			}, cleanData.data)
 		}
 		// console.log(cleanData)
 		if (cloudfunctionIds.length > 0) {
