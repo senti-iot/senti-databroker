@@ -278,7 +278,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 							WHERE d.uuname=? AND d.deleted = 0;`
 		// console.log(await mysqlConn.format(uunameSql, [uuname]))
 		let rs = await mysqlConn.query(uunameSql, [uuname])
-		if (rs[0].length === 1) {
+		if (rs[0].length > 0) {
 			return rs[0][0]
 		}
 		return false
