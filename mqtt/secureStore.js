@@ -24,7 +24,7 @@ const dateFormatter = (date) => {
 	}
 	return 'NOW()'
 }
-const deviceQuery = `SELECT d.id, d.uuid, d.name, d.type_id, d.reg_id, r.uuid as reguuid, d.metadata, d.communication
+const deviceQuery = `SELECT d.id, d.uuid, d.name, d.uuname, d.type_id, d.reg_id, r.uuid as reguuid, d.metadata, d.communication
 FROM device d
 	INNER JOIN registry r ON r.id = d.reg_id
 	INNER JOIN organisation o on o.id = r.orgId
@@ -271,7 +271,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		return device[0]
 	}
 	async getDeviceByUuname(uuname) {
-		let uunameSql = `SELECT d.id, d.uuid, d.name, d.type_id, d.reg_id, r.uuid as reguuid, d.metadata, d.communication, o.uuname as orguuname, r.uuname as reguuname
+		let uunameSql = `SELECT d.id, d.uuid, d.name, d.uuname, d.type_id, d.reg_id, r.uuid as reguuid, d.metadata, d.communication, o.uuname as orguuname, r.uuname as reguuname
 							FROM device d
 								INNER JOIN registry r ON r.id = d.reg_id
 								INNER JOIN organisation o on o.id = r.orgId
