@@ -76,14 +76,14 @@ const updateDeviceGPS = async (device, deviceType, data) => {
 				baseURL: 'https://api.dataforsyningen.dk',
 			})
 			let rs = await api.get('/adgangsadresser/reverse', {
-				x: data.message.lon,
-				y: data.message.lat,
+				x: data[0].lon,
+				y: data[0].lat,
 				struktur: 'mini'
 			})
 			if (rs.ok) {
 				a = rs.data.betegnelse
 			}
-			mysqlConn.query(`UPDATE device SET lat = ?, lng = ?, address = ?  WHERE id=?`, [data[0].lat, data[0].lon, device.id, a])
+			mysqlConn.query(`UPDATE device SET lat = ?, lng = ?, address = ?  WHERE id=?`, [data[0].lat, data[0].lon, a, device.id])
 		}
 		catch (e) {
 			console.log(e.message, device, deviceType, data)

@@ -504,7 +504,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 				if (rs.ok) {
 					a = rs.data.betegnelse
 				}
-				mysqlConn.query(updateDeviceGPS, [data[0].lat, data[0].lon, device.id, a])
+				mysqlConn.query(updateDeviceGPS, [data[0].lat, data[0].lon, a, device.id])
 			}
 			catch (e) {
 				console.log(e.message, device, deviceType, data)
