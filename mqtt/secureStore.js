@@ -202,22 +202,22 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 		}
 	}
 	async prefixHandler(configUuname, deviceUuname, message) {
-		console.log('prefixHandler', configUuname, deviceUuname, message)
+		// console.log('prefixHandler', configUuname, deviceUuname, message)
 		let data = JSON.parse(message)
 		let device = await this.getDeviceByUuname(deviceUuname)
 		if (device !== false) {
 			this.storeDataByDevice(message, { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
 		} else {
 			let config = await this.getDeviceDataHandlerConfigByUuname(configUuname)
-			console.log(data, config)
+			// console.log(data, config)
 			if (config !== false && config.handlerType === 'prefix-handler') {
-				console.log(config.data)
+				// console.log(config.data)
 				data.sentiDeviceId = deviceUuname
 				// Lav selv device med
 				await this.createDevice({ name: deviceUuname, communication: 1, metadata: {} }, config.data.regId, config.data.deviceTypeId)
 				device = await this.getDeviceByUuname(deviceUuname)
 				// // ADD DEVICE TO ACL
-				console.log(device)
+				// console.log(device)
 				await aclClient.registerResource(device.uuid, sentiAclResourceType.device)
 				await aclClient.addResourceToParent(device.uuid, device.reguuid)
 				this.storeDataByDevice(JSON.stringify(data), { deviceName: deviceUuname, regName: device.reguuname, customerID: device.orguuname })
@@ -488,22 +488,7 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 			console.log('storeDataByDevice', e.message, JSON.parse(data), deviceName, regName, customerID)
 		}
 	}
-	/**
-	 * Find metadata Key
-	 * @Mikkel
-	 */
-	// fmk(key, arr) {
-	// 	let obj = false
-	// 	let index = arr.findIndex(i => i.key === key)
-	// 	if (index > -1) {
 
-	// 		obj = {
-	// 			key: arr[index].key,
-	// 			value: arr[index].value
-	// 		}
-	// 	}
-	// 	return obj
-	// }
 	async updateDeviceGPS(device, deviceType, data) {
 		if (deviceType.metadata.sentiUpdateGPS === 'YES' && device.metadata.sentiUpdateGPS !== 'NO' && data[0].lat !== undefined && data[0].lat !== null && data[0].lon !== undefined && data[0].lon !== null) {
 			try {
@@ -512,8 +497,8 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 					baseURL: 'https://api.dataforsyningen.dk',
 				})
 				let rs = await api.get('/adgangsadresser/reverse', {
-					x: data.message.lon,
-					y: data.message.lat,
+					x: data[0].lon,
+					y: data[0].lat,
 					struktur: 'mini'
 				})
 				if (rs.ok) {
