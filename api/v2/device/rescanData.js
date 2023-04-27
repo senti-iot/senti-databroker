@@ -21,6 +21,7 @@ const router = express.Router()
  */
 var mysqlConn = require('../../../mysql/mysql_handler')
 const engineAPI = require('../../engine/engine')
+const createAPI = require('apisauce').create
 const moment = require('moment')
 const SHA2 = require('sha2')
 const uuidv4 = require('uuid/v4')
@@ -65,6 +66,29 @@ const getDeviceType = async (deviceTypeId) => {
 	let selectDeviceType = `SELECT * from deviceType where id=?`
 	let [deviceType] = await mysqlConn.query(selectDeviceType, [deviceTypeId])
 	return deviceType[0]
+}
+
+const updateDeviceGPS = async (device, deviceType, data) => {
+	if (deviceType.metadata.sentiUpdateGPS === 'YES' && device.metadata.sentiUpdateGPS !== 'NO' && data[0].lat !== undefined && data[0].lat !== null && data[0].lon !== undefined && data[0].lon !== null) {
+		try {
+			let a = null
+			const api = createAPI({
+				baseURL: 'https://api.dataforsyningen.dk',
+			})
+			let rs = await api.get('/adgangsadresser/reverse', {
+				x: data.message.lon,
+				y: data.message.lat,
+				struktur: 'mini'
+			})
+			if (rs.ok) {
+				a = rs.data.betegnelse
+			}
+			mysqlConn.query(`UPDATE device SET lat = ?, lng = ?, address = ?  WHERE id=?`, [data[0].lat, data[0].lon, device.id, a])
+		}
+		catch (e) {
+			console.log(e.message, device, deviceType, data)
+		}
+	}
 }
 
 /**
@@ -124,6 +148,8 @@ router.get('/v2/rescandevicedata/:uuid/:from/:to', async (req, res) => {
 		if (!Array.isArray(pData)) {
 			pData = [pData]
 		}
+		updateDeviceGPS(device, deviceType, pData)
+
 		let insertClean = `INSERT INTO deviceDataClean(data, created, device_id, device_data_id) VALUES(?, ?, ?, ?)`
 
 		await Promise.all(pData.map(async (d) => {
