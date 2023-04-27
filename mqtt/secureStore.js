@@ -2,6 +2,7 @@
 const SecureMqttHandler = require(`senti-apicore`).secureMqttHandler
 var mysqlConn = require('../mysql/mysql_handler')
 const engineAPI = require('../api/engine/engine')
+const createAPI = require('apisauce').create
 const asyncForEach = require('../utils/asyncForEach')
 // const logService = require('../server').logService
 const moment = require('moment')
@@ -63,7 +64,7 @@ const createMetaDataQuery = `INSERT INTO deviceMetadata
 			VALUES(?, ?, ?, ?);`
 
 const selectDeviceType = `SELECT * from deviceType where id=?`
-const updateDeviceGPS = `UPDATE device SET lat = ?, lng = ? WHERE id=?`
+const updateDeviceGPS = `UPDATE device SET lat = ?, lng = ?, address = ? WHERE id=?`
 
 // function cleanUpSpecialChars(str) {
 // 	return str.toString()
@@ -503,28 +504,22 @@ class SecureStoreMqttHandler extends SecureMqttHandler {
 	// 	}
 	// 	return obj
 	// }
-	updateDeviceGPS(device, deviceType, data) {
-
-		/**
-		 * @Mikkel
-		 */
-		// let updDTGPS = this.fmk('sentiUpdateGPS', deviceType.metadata)
-		// let updDGPS = this.fmk('sentiUpdateGPS', device.metadata)
-
-		// if (updDTGPS.value === 'YES' && updDGPS.value !== 'NO' && data[0].lat !== undefined && data[0].lat !== null && data[0].lon !== undefined && data[0].lon !== null) {
-		// 	try {
-		// 		mysqlConn.query(updateDeviceGPS, [data[0].lat, data[0].lon, device.id])
-		// 	}
-		// 	catch (e) {
-		// 		console.log(e.message, device, deviceType, data)
-		// 	}
-		// }
-
-
-
+	async updateDeviceGPS(device, deviceType, data) {
 		if (deviceType.metadata.sentiUpdateGPS === 'YES' && device.metadata.sentiUpdateGPS !== 'NO' && data[0].lat !== undefined && data[0].lat !== null && data[0].lon !== undefined && data[0].lon !== null) {
 			try {
-				mysqlConn.query(updateDeviceGPS, [data[0].lat, data[0].lon, device.id])
+				let a = null
+				const api = createAPI({
+					baseURL: 'https://api.dataforsyningen.dk',
+				})
+				let rs = await api.get('/adgangsadresser/reverse', {
+					x: data.message.lon,
+					y: data.message.lat,
+					struktur: 'mini'
+				})
+				if (rs.ok) {
+					a = rs.data.betegnelse
+				}
+				mysqlConn.query(updateDeviceGPS, [data[0].lat, data[0].lon, device.id, a])
 			}
 			catch (e) {
 				console.log(e.message, device, deviceType, data)
