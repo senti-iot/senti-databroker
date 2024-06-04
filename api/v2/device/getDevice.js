@@ -94,6 +94,7 @@ router.get('/v2/deviceByUUname/:uuname', async (req, res) => {
 	res.status(200).json(device)
 })
 
+
 router.get('/v2/internal/fixaclcloudfunctions', async (req, res) => {
 	let select = `SELECT CF.name as dtname, CF.uuid as dtuuid, O.name as orgname, O.uuid as orguuid, AOR.uuid as orgresuuid
 					FROM cloudFunction CF
