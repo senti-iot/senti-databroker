@@ -25,7 +25,12 @@ router.delete('/v2/device/:uuid', async (req, res) => {
 		if (!device) {
 			return res.status(404).json()
 		}
-		res.status(200).json(await deviceService.deleteDevice(device))
+		let result = await deviceService.deleteDevice(device)
+		if (result === false) {
+			return res.status(500).json()
+		}
+		await aclClient.deleteResource(device.uuid)
+		res.status(200).json(result)
 	}
 	catch (error) {
 		res.status(500).json({ message: error.message, stack: error.stack })
